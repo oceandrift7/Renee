@@ -16,7 +16,7 @@ class StreamingPlaybackCoordinator {
     this.policy = const StreamingProviderPolicy(),
   });
 
-  final MusicPlayerService player;
+  final MusicPlayerHandler player;
   final StreamingProviderPolicy policy;
 
   /// Returns false without altering the current queue when nothing playable
