@@ -17,15 +17,31 @@ import 'youtube_music_streaming_source.dart';
 ///
 /// Experimental: YouTube's private resource endpoint may deny or change its
 /// responses; a successful URL lookup is not proof the media plays on-device.
+enum ReneeOnlinePlaybackResult { prepared, unavailable, superseded }
+
 class ReneeOnlinePlayback {
   const ReneeOnlinePlayback();
 
-  Future<bool> tryPlay(WidgetRef ref, Track track) async {
+  // Shared across track buttons. A later Play tap supersedes an older network
+  // lookup, preventing a slow response from replacing the new song.
+  static int _requestGeneration = 0;
+
+  Future<bool> tryPlay(WidgetRef ref, Track track) async =>
+      await tryPlayWithStatus(ref, track) == ReneeOnlinePlaybackResult.prepared;
+
+  Future<ReneeOnlinePlaybackResult> tryPlayWithStatus(
+    WidgetRef ref,
+    Track track,
+  ) async {
+    final generation = ++_requestGeneration;
+    bool isCurrent() => _requestGeneration == generation;
     final handler = await ref.read(musicPlayerControllerProvider)
         .ensureInitialized();
-    if (handler == null) return false;
+    if (!isCurrent()) return ReneeOnlinePlaybackResult.superseded;
+    if (handler == null) return ReneeOnlinePlaybackResult.unavailable;
 
     final prefs = await SharedPreferences.getInstance();
+    if (!isCurrent()) return ReneeOnlinePlaybackResult.superseded;
     final provider = track.source ?? 'catalog';
     final requested = CatalogTrack(
       provider: provider,
@@ -42,7 +58,7 @@ class ReneeOnlinePlayback {
     );
     try {
       final coordinator = StreamingPlaybackCoordinator(player: handler);
-      return await coordinator.playCatalog(
+      final prepared = await coordinator.playCatalog(
         catalog: requested,
         youtubeMusic: youtube,
         // SoundCloud is not wired up yet. Never claim a full/free match
@@ -51,7 +67,12 @@ class ReneeOnlinePlayback {
         matching: StreamingMatchResolver(
           manualMatches: ManualMatchStore(prefs),
         ),
+        isCurrentRequest: isCurrent,
       );
+      if (!isCurrent()) return ReneeOnlinePlaybackResult.superseded;
+      return prepared
+          ? ReneeOnlinePlaybackResult.prepared
+          : ReneeOnlinePlaybackResult.unavailable;
     } finally {
       youtube.close();
       directResolver.close();
