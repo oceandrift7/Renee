@@ -19,9 +19,9 @@ void main() {
     final json = item.toJson();
     expect(json.containsKey('networkHeaders'), isFalse);
     expect(json.toString(), isNot(contains('session-secret')));
+    expect(json.toString(), isNot(contains('cdn.example.org')));
 
     final restored = PlayableMedia.fromJson(json);
-    expect(restored, isNotNull);
-    expect(restored!.networkHeaders, isEmpty);
+    expect(restored, isNull, reason: 'Expired signed stream URLs must be re-resolved');
   });
 }
