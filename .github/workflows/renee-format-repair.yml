@@ -1,6 +1,7 @@
 name: Renée one-time Dart format repair
 
-# Fires when this workflow is first added on dev. Its formatting commit does
+# Triggered on explicit workflow-file revisions during dev stabilization.
+# Its formatting commit does
 # not change this workflow, so it cannot create a push loop.
 on:
   push:
