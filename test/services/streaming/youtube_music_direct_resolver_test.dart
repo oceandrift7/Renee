@@ -11,7 +11,7 @@ void main() {
     'itag': 140,
     'mimeType': 'audio/mp4; codecs="mp4a.40.2"',
     'bitrate': 128000,
-    'url': 'https://rr1.googlevideo.com/videoplayback?expire=99999999',
+    'url': 'https://rr1.googlevideo.com/videoplayback?expire=9999999999',
   };
   final opus = {
     'itag': 251,
@@ -30,6 +30,24 @@ void main() {
     );
     expect(result?.uri.host, 'rr1.googlevideo.com');
     expect(result?.headers, isEmpty);
+  });
+
+  test('rejects expired audio URLs and accepts fresh alternatives', () {
+    final result = YouTubeMusicDirectResolver.resourceFromPlayerResponse(
+      payload([
+        {...aac, 'url': 'https://rr1.googlevideo.com/videoplayback?expire=1000'},
+        {...aac, 'itag': 139, 'url': 'https://rr2.googlevideo.com/videoplayback?expire=9999999999'},
+      ]),
+    );
+    expect(result?.uri.host, 'rr2.googlevideo.com');
+    expect(
+      YouTubeMusicDirectResolver.resourceFromPlayerResponse(
+        payload([
+          {...aac, 'url': 'https://rr1.googlevideo.com/videoplayback?expire=1000'},
+        ]),
+      ),
+      isNull,
+    );
   });
 
   test('declines gated and unavailable videos', () {
