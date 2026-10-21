@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mornye/models/track.dart';
+import 'package:mornye/services/streaming/youtube_music_search.dart';
+import 'package:mornye/services/streaming/streaming_source.dart';
 import 'package:mornye/services/streaming/manual_match_store.dart';
 import 'package:mornye/services/streaming/track_matcher.dart';
 
@@ -28,6 +30,11 @@ class _ManualMatchSheetState extends State<ManualMatchSheet> {
   ManualMatchStore? store;
   late final CatalogTrack catalog;
   bool busy = true;
+  bool searching = false;
+  String? searchError;
+  List<StreamingTrack> results = const [];
+  final queryController = TextEditingController();
+  final searchClient = YouTubeMusicSearch();
 
   @override
   void initState() {
@@ -42,6 +49,7 @@ class _ManualMatchSheetState extends State<ManualMatchSheet> {
           : null,
       isrc: widget.track.isrc,
     );
+    queryController.text = '${widget.track.name} ${widget.track.artistName}';
     _load();
   }
 
@@ -56,7 +64,23 @@ class _ManualMatchSheetState extends State<ManualMatchSheet> {
   @override
   void dispose() {
     controller.dispose();
+    queryController.dispose();
+    searchClient.close();
     super.dispose();
+  }
+
+  Future<void> _search() async {
+    setState(() { searching = true; searchError = null; results = const []; });
+    try {
+      final found = await searchClient.search(queryController.text);
+      if (!mounted) return;
+      setState(() => results = found);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => searchError = error.toString());
+    } finally {
+      if (mounted) setState(() => searching = false);
+    }
   }
 
   Future<void> _save() async {
@@ -89,14 +113,48 @@ class _ManualMatchSheetState extends State<ManualMatchSheet> {
           const SizedBox(height: 8),
           Text('${catalog.title} — ${catalog.artist}'),
           const SizedBox(height: 16),
-          const Text('YouTube Music search is not connected yet. '
-              'For now, you can save a recording/video ID manually. '
-              'This does not enable streaming.'),
+          TextField(
+            controller: queryController,
+            textInputAction: TextInputAction.search,
+            onSubmitted: (_) => _search(),
+            decoration: InputDecoration(
+              labelText: 'Search YouTube Music',
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: searching ? null : _search,
+              ),
+            ),
+          ),
+          if (searching) const LinearProgressIndicator(),
+          if (searchError != null)
+            Text('Search unavailable: $searchError'),
+          if (results.isNotEmpty)
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 260),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: results.length,
+                itemBuilder: (context, index) {
+                  final result = results[index];
+                  return ListTile(
+                    title: Text(result.title),
+                    subtitle: Text(result.artist),
+                    selected: controller.text == result.id,
+                    onTap: () => setState(() => controller.text = result.id),
+                    trailing: controller.text == result.id
+                        ? const Icon(Icons.check_circle)
+                        : null,
+                  );
+                },
+              ),
+            ),
+          const Text('Select a search result, then save. Search uses an unofficial '
+              'YouTube Music endpoint and may stop working. This does not enable playback.'),
           const SizedBox(height: 12),
           TextField(
             controller: controller,
             decoration: const InputDecoration(
-              labelText: 'YouTube Music video ID',
+              labelText: 'Selected video ID (or enter manually)',
               border: OutlineInputBorder(),
             ),
           ),
