@@ -19,15 +19,18 @@ class _ReneeStreamButtonState extends ConsumerState<ReneeStreamButton> {
   Future<void> _play() async {
     if (_starting) return;
     setState(() => _starting = true);
-    var played = false;
+    var result = ReneeOnlinePlaybackResult.unavailable;
     try {
-      played = await const ReneeOnlinePlayback().tryPlay(ref, widget.track);
+      result = await const ReneeOnlinePlayback().tryPlayWithStatus(
+        ref,
+        widget.track,
+      );
     } catch (_) {
-      played = false;
+      result = ReneeOnlinePlaybackResult.unavailable;
     } finally {
       if (mounted) setState(() => _starting = false);
     }
-    if (!mounted || played) return;
+    if (!mounted || result != ReneeOnlinePlaybackResult.unavailable) return;
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       const SnackBar(
         content: Text(
