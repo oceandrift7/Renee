@@ -63,6 +63,9 @@ class StreamingPlaybackCoordinator {
     if (selected == null) return false;
 
     final resource = selected.resource;
+    // audioplayers currently cannot forward request headers to AVPlayer.
+    // Reject these until a supported native transport is implemented.
+    if (resource.headers.isNotEmpty) return false;
     if (resource.uri.scheme != 'https') return false;
 
     final track = selected.track;
