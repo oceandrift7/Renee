@@ -55,9 +55,12 @@ class TrackMatcher {
     Iterable<StreamingTrack> candidates,
   ) {
     final results = rank(catalog, candidates);
-    if (results.isEmpty || results.first.score < 0.88) return null;
-    if (results.length > 1 && results.first.score - results[1].score < 0.08)
+    if (results.isEmpty || results.first.score < 0.88) {
       return null;
+    }
+    if (results.length > 1 && results.first.score - results[1].score < 0.08) {
+      return null;
+    }
     return results.first;
   }
 
