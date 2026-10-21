@@ -1,6 +1,6 @@
 name: Renée one-time Dart format repair
 
-# Triggered on explicit workflow-file revisions during dev stabilization.
+# Final run after request-race fixes on the Renée development branch.
 # Its formatting commit does
 # not change this workflow, so it cannot create a push loop.
 on:
