@@ -99,7 +99,46 @@ class YouTubeMusicSearch {
             }
             if (const {'Song','Album','Video','Single','EP','Playlist'}
                 .contains(text)) continue;
-            if (RegExp(r'^\\d{4}$').hasMatch(text)) continue;
+            if (RegExp(r'^\d{4}).hasMatch(text)) continue;
+            final nav = item['navigationEndpoint'];
+            final browse = nav is Map ? nav['browseEndpoint'] : null;
+            final browseId = browse is Map ? browse['browseId']?.toString() : null;
+            if (browseId != null && browseId.startsWith('UC')) {
+              artistParts.add(text);
+            } else if (artistParts.isEmpty) {
+              artistParts.add(text);
+            }
+          }
+          final artwork = data['thumbnail'];
+          final musicThumb = artwork is Map ? artwork['musicThumbnailRenderer'] : null;
+          final thumb = musicThumb is Map ? musicThumb['thumbnail'] : null;
+          final imgs = thumb is Map ? thumb['thumbnails'] : null;
+          final coverUrl = imgs is List && imgs.isNotEmpty && imgs.last is Map
+              ? Uri.tryParse((imgs.last as Map)['url']?.toString() ?? '')
+              : null;
+          if (title.isNotEmpty && artistParts.isNotEmpty) {
+            tracks.add(StreamingTrack(
+              id: id,
+              title: title,
+              artist: artistParts.join(', '),
+              duration: duration,
+              artworkUrl: coverUrl,
+            ));
+          }
+        }
+      }
+      for (final child in node.values) { visit(child); }
+    }
+
+    visit(payload);
+    return tracks;
+  }
+
+  void close() {
+    if (_ownsClient) _client.close();
+  }
+}
+).hasMatch(text)) continue;
             final nav = item['navigationEndpoint'];
             final browse = nav is Map ? nav['browseEndpoint'] : null;
             final browseId = browse is Map ? browse['browseId']?.toString() : null;
