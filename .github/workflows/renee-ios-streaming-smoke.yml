@@ -5,9 +5,16 @@ on:
     branches: [dev]
     paths:
       - 'integration_test/renee_streaming_transport_test.dart'
+      - 'integration_test/renee_youtube_music_live_test.dart'
       - 'third_party/audioplayers_darwin/**'
       - '.github/workflows/renee-ios-streaming-smoke.yml'
   workflow_dispatch:
+    inputs:
+      youtube_video_id:
+        description: 'Optional public 11-character video ID for live provider playback validation'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -62,3 +69,35 @@ jobs:
         run: |
           flutter test integration_test/renee_streaming_transport_test.dart \
             -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded
+      - name: Optional real YouTube Music resource playback
+        if: ${{ inputs.youtube_video_id != '' }}
+        shell: bash
+        env:
+          RENEE_TEST_ID: ${{ inputs.youtube_video_id }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RENEE_TEST_ID" =~ ^[A-Za-z0-9_-]{11}$ ]]; then
+            echo "Expected an 11-character video ID." >&2
+            exit 1
+          fi
+          flutter test integration_test/renee_youtube_music_live_test.dart \\
+            -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded \\
+            --dart-define="RENEE_YTM_TEST_VIDEO_ID=$RENEE_TEST_ID"
+      - name: Build unsigned iPhone app for physical-device testing
+        if: always()
+        run: |
+          set -euo pipefail
+          flutter build ios --release --no-codesign --target lib/main.dart
+          test -d build/ios/iphoneos/Runner.app
+          mkdir -p build/renee-unsigned/Payload
+          cp -R build/ios/iphoneos/Runner.app build/renee-unsigned/Payload/
+          (cd build/renee-unsigned && zip -qr Renee-dev-unsigned.ipa Payload)
+          test -s build/renee-unsigned/Renee-dev-unsigned.ipa
+      - name: Upload unsigned IPA for signing and sideloading
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Renee-dev-unsigned-ipa
+          path: build/renee-unsigned/Renee-dev-unsigned.ipa
+          if-no-files-found: warn
+          retention-days: 7
