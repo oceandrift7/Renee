@@ -41,7 +41,7 @@ void main() {
         },
         {
           ...aac,
-          'itag': 139,
+          'itag': 140,
           'url': 'https://rr2.googlevideo.com/videoplayback?expire=9999999999',
         },
       ]),
@@ -60,19 +60,49 @@ void main() {
     );
   });
 
-  test('keeps one lower-bitrate AAC alternative for network preparation', () {
-    final low = {
+  test('allows a 96 kbps AAC preparation fallback but never 48 kbps', () {
+    final acceptableFallback = {
+      ...aac,
+      'bitrate': 96000,
+      'url': 'https://rr2.googlevideo.com/videoplayback?expire=9999999999',
+    };
+    final rejectedFallback = {
       ...aac,
       'itag': 139,
       'bitrate': 48000,
-      'url': 'https://rr2.googlevideo.com/videoplayback?expire=9999999999',
+      'url': 'https://rr3.googlevideo.com/videoplayback?expire=9999999999',
     };
     final result = YouTubeMusicDirectResolver.resourceFromPlayerResponse(
-      payload([opus, low, aac]),
+      payload([opus, rejectedFallback, acceptableFallback, aac]),
     );
     expect(result?.uri.host, 'rr1.googlevideo.com');
     expect(result?.fallbackUris.length, 1);
     expect(result?.fallbackUris.single.host, 'rr2.googlevideo.com');
+
+    final noPoorQualityFallback =
+        YouTubeMusicDirectResolver.resourceFromPlayerResponse(
+      payload([rejectedFallback, aac]),
+    );
+    expect(noPoorQualityFallback?.uri.host, 'rr1.googlevideo.com');
+    expect(noPoorQualityFallback?.fallbackUris, isEmpty);
+
+    expect(
+      YouTubeMusicDirectResolver.resourceFromPlayerResponse(
+        payload([rejectedFallback]),
+      ),
+      isNull,
+    );
+  });
+
+  test('prefers 128 kbps AAC over 96 kbps and 160 kbps alternatives', () {
+    final result = YouTubeMusicDirectResolver.resourceFromPlayerResponse(
+      payload([
+        {...aac, 'bitrate': 96000},
+        {...aac, 'bitrate': 160000, 'itag': 141},
+        aac,
+      ]),
+    );
+    expect(result?.uri.toString(), aac['url']);
   });
 
   test('declines gated and unavailable videos', () {
