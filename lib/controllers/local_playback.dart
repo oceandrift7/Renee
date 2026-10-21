@@ -17,8 +17,9 @@ import 'package:mornye/widgets/app_snack_bar.dart';
 Future<bool> playLocalIfAvailable(
   BuildContext context,
   WidgetRef ref,
-  Track track,
-) async {
+  Track track, {
+  bool Function()? shouldPlay,
+}) async {
   final historyNotifier = ref.read(downloadHistoryProvider.notifier);
 
   try {
@@ -36,6 +37,7 @@ Future<bool> playLocalIfAvailable(
     if (historyItem != null) {
       final exists = await fileExists(historyItem.filePath);
       if (exists) {
+        if (shouldPlay != null && !shouldPlay()) return true;
         await ref
             .read(playbackProvider.notifier)
             .playLocalPath(
@@ -59,6 +61,7 @@ Future<bool> playLocalIfAvailable(
         );
 
     if (localItem != null && await fileExists(localItem.filePath)) {
+      if (shouldPlay != null && !shouldPlay()) return true;
       await ref
           .read(playbackProvider.notifier)
           .playLocalPath(
