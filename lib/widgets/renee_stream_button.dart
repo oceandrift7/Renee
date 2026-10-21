@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mornye/models/track.dart';
+import 'package:mornye/controllers/local_playback.dart';
 import 'package:mornye/services/streaming/renee_online_playback.dart';
 
 /// Opt-in online Play button while the experimental resolver is being
@@ -19,8 +20,12 @@ class _ReneeStreamButtonState extends ConsumerState<ReneeStreamButton> {
   Future<void> _play() async {
     if (_starting) return;
     setState(() => _starting = true);
+    ReneeOnlinePlayback.cancelPending();
     var result = ReneeOnlinePlaybackResult.unavailable;
     try {
+      // Prefer an existing local file. No internet lookup is necessary.
+      final playedLocally = await playLocalIfAvailable(context, ref, widget.track);
+      if (playedLocally || !mounted) return;
       result = await const ReneeOnlinePlayback().tryPlayWithStatus(
         ref,
         widget.track,
