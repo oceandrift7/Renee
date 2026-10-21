@@ -24,6 +24,20 @@ void main() {
   );
   final match = const StreamingMatchResolver();
 
+  test('skips search for a known YouTube Music video ID', () async {
+    const alreadyIdentified = CatalogTrack(
+      provider: 'ytmusic-spotiflac',
+      id: 'abcdefghijk',
+      title: 'A Song',
+      artist: 'An Artist',
+    );
+    final resolved = await match.find(
+      _CatalogSource('youtube_music', const []),
+      alreadyIdentified,
+    );
+    expect(resolved?.id, 'abcdefghijk');
+  });
+
   test('matches the exact recording', () async {
     final result = await match.find(
       _CatalogSource('youtube_music', const [
