@@ -69,25 +69,35 @@ class StreamingPlaybackCoordinator {
     }
 
     final resource = selected.resource;
-    // audioplayers currently cannot forward request headers to AVPlayer.
-    // Reject these until a supported native transport is implemented.
+    // audioplayers cannot currently forward custom headers to iOS AVPlayer.
     if (resource.headers.isNotEmpty) return false;
-    if (resource.uri.scheme != 'https') return false;
 
     final track = selected.track;
-    final item = PlayableMedia(
-      id: 'stream:${selected.sourceId}:${track.id}',
-      source: resource.uri.toString(),
-      networkHeaders: resource.headers,
-      title: track.title,
-      artist: track.artist,
-      album: track.album ?? '',
-      networkArtworkSource: track.artworkUrl?.toString(),
-      duration: track.duration,
-    );
-    // A later tap can supersede this request while a provider is resolving.
-    if (isCurrentRequest != null && !isCurrentRequest()) return false;
-    await player.setQueueAndPlay([item]);
-    return player.isOnlineSourcePrepared(item.id);
+    final urls = [resource.uri, ...resource.fallbackUris.take(1)];
+    for (final url in urls) {
+      if (isCurrentRequest != null && !isCurrentRequest()) return false;
+      if (url.scheme != 'https' || url.host.isEmpty || url.userInfo.isNotEmpty) {
+        continue;
+      }
+
+      final item = PlayableMedia(
+        id: 'stream:${selected.sourceId}:${track.id}',
+        source: url.toString(),
+        title: track.title,
+        artist: track.artist,
+        album: track.album ?? '',
+        networkArtworkSource: track.artworkUrl?.toString(),
+        duration: track.duration,
+      );
+      try {
+        // Native source preparation may fail even when the resolver returned
+        // a URL. Try at most one already-resolved, lower-bitrate alternative.
+        await player.setQueueAndPlay([item]);
+        if (player.isOnlineSourcePrepared(item.id)) return true;
+      } catch (_) {
+        // The playback handler may throw while preparing a remote source.
+      }
+    }
+    return false;
   }
 }
