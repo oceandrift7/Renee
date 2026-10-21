@@ -40,7 +40,7 @@ class _ManualMatchSheetState extends State<ManualMatchSheet> {
   void initState() {
     super.initState();
     catalog = CatalogTrack(
-      provider: widget.track.source,
+      provider: widget.track.source ?? 'catalog',
       id: widget.track.id,
       title: widget.track.name,
       artist: widget.track.artistName,
