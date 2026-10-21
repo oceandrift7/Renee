@@ -26,10 +26,16 @@ class ReneeOnlinePlayback {
   // lookup, preventing a slow response from replacing the new song.
   static int _requestGeneration = 0;
 
+  /// Capture the tap before any asynchronous local-library search begins.
+  static int beginRequest() => ++_requestGeneration;
+
+  static bool isCurrentRequest(int generation) =>
+      _requestGeneration == generation;
+
   /// Any other transport action can invalidate a pending online lookup so it
   /// cannot replace a local track selected while the lookup was in flight.
   static void cancelPending() {
-    _requestGeneration++;
+    beginRequest();
   }
 
   Future<bool> tryPlay(WidgetRef ref, Track track) async =>
@@ -37,10 +43,12 @@ class ReneeOnlinePlayback {
 
   Future<ReneeOnlinePlaybackResult> tryPlayWithStatus(
     WidgetRef ref,
-    Track track,
-  ) async {
-    final generation = ++_requestGeneration;
-    bool isCurrent() => _requestGeneration == generation;
+    Track track, {
+    int? requestGeneration,
+  }) async {
+    final generation = requestGeneration ?? beginRequest();
+    bool isCurrent() => isCurrentRequest(generation);
+    if (!isCurrent()) return ReneeOnlinePlaybackResult.superseded;
     final handler = await ref
         .read(musicPlayerControllerProvider)
         .ensureInitialized();
