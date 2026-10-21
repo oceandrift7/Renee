@@ -135,15 +135,14 @@ class YouTubeMusicDirectResolver {
     // This avoids another catalog lookup if the first resource cannot prepare.
     // It is not seamless adaptive bitrate switching during a playing song.
     final primary = candidates.first;
-    final alternatives = candidates
-        .where((c) => c.url != primary.url)
-        .toList();
+    final alternatives = candidates.where((c) => c.url != primary.url).toList();
     final lowerBitrate = alternatives.where(
       (c) => c.bitrate > 0 && c.bitrate < primary.bitrate,
     );
     final backup = lowerBitrate.isNotEmpty
         ? (lowerBitrate.toList()
-              ..sort((a, b) => a.bitrate.compareTo(b.bitrate))).first
+                ..sort((a, b) => a.bitrate.compareTo(b.bitrate)))
+              .first
         : (alternatives.isNotEmpty ? alternatives.first : null);
 
     // audioplayers_darwin currently ignores custom URL request headers.

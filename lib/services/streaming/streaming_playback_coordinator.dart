@@ -76,7 +76,9 @@ class StreamingPlaybackCoordinator {
     final urls = [resource.uri, ...resource.fallbackUris.take(1)];
     for (final url in urls) {
       if (isCurrentRequest != null && !isCurrentRequest()) return false;
-      if (url.scheme != 'https' || url.host.isEmpty || url.userInfo.isNotEmpty) {
+      if (url.scheme != 'https' ||
+          url.host.isEmpty ||
+          url.userInfo.isNotEmpty) {
         continue;
       }
 
