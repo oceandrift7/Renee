@@ -11,6 +11,7 @@ import 'package:mornye/widgets/track_card.dart';
 import 'package:mornye/widgets/in_library_badge.dart';
 import 'package:mornye/widgets/preview_button.dart';
 import 'package:mornye/widgets/renee_stream_button.dart';
+import 'package:mornye/services/streaming/renee_online_playback.dart';
 import 'package:mornye/widgets/track_collection_quick_actions.dart';
 
 /// Track row shared by the album and playlist screens. Tap offers another
@@ -141,6 +142,8 @@ class TrackListTile extends ConsumerWidget {
     required bool isQueued,
     required bool isInLocalLibrary,
   }) async {
+    // A local-play or download tap takes priority over an older network lookup.
+    ReneeOnlinePlayback.cancelPending();
     if (isQueued) return;
 
     final settings = ref.read(settingsProvider);
