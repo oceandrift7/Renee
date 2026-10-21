@@ -47,9 +47,15 @@ class PlayableMedia {
   bool get isNetwork =>
       const {'network', 'http', 'https'}.contains(Uri.tryParse(source)?.scheme);
 
+  /// Signed playback URLs are temporary credentials and expire. Neither the
+  /// URL nor its query tokens should end up in the persisted playback session.
+  bool get isEphemeralOnlineStream => id.startsWith('stream:') && isNetwork;
+
   Map<String, dynamic> toJson() => {
     'id': id,
-    'source': source,
+    'source': isEphemeralOnlineStream
+        ? 'renee-unresolved-stream://requires-fresh-resource'
+        : source,
     'title': title,
     'artist': artist,
     'album': album,
@@ -76,6 +82,9 @@ class PlayableMedia {
     if (id == null || id.isEmpty || source == null || source.isEmpty) {
       return null;
     }
+    // A fresh audio URL must be resolved through the provider on a new launch.
+    // Do not replay an expired URL or a missing request credential.
+    if (source.startsWith('renee-unresolved-stream://')) return null;
     final durationMs = (json['durationMs'] as num?)?.toInt();
     var artwork = json['artUri'] as String?;
     if (artwork != null && iosDocumentsPath != null) {
