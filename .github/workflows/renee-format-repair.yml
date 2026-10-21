@@ -1,0 +1,39 @@
+name: Renée one-time Dart format repair
+
+# Fires when this workflow is first added on dev. Its formatting commit does
+# not change this workflow, so it cannot create a push loop.
+on:
+  push:
+    branches: [dev]
+    paths:
+      - '.github/workflows/renee-format-repair.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+      - name: Normalize Dart formatting
+        run: dart format lib test integration_test
+      - name: Commit formatter changes to dev
+        shell: bash
+        run: |
+          if [[ -n "$(git status --porcelain -- lib test integration_test)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -- lib test integration_test
+            git commit -m "Apply Dart formatter to Renée dev sources"
+            git push origin HEAD:dev
+          fi
