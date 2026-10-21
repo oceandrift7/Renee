@@ -28,6 +28,7 @@ class StreamingPlaybackCoordinator {
     required StreamingSource youtubeMusic,
     required StreamingSource soundCloud,
     required StreamingMatchResolver matching,
+    bool Function()? isCurrentRequest,
   }) {
     return play(
       requested: StreamingTrack(
@@ -39,6 +40,7 @@ class StreamingPlaybackCoordinator {
       youtubeMusic: youtubeMusic,
       soundCloud: soundCloud,
       findExactFreelyPlayableMatch: (source, _) => matching.find(source, catalog),
+      isCurrentRequest: isCurrentRequest,
     );
   }
 
@@ -52,6 +54,7 @@ class StreamingPlaybackCoordinator {
       StreamingSource source,
       StreamingTrack requested,
     ) findExactFreelyPlayableMatch,
+    bool Function()? isCurrentRequest,
   }) async {
     final selected = await policy.select(
       requested: requested,
@@ -59,7 +62,9 @@ class StreamingPlaybackCoordinator {
       soundCloud: soundCloud,
       findExactFreelyPlayableMatch: findExactFreelyPlayableMatch,
     );
-    if (selected == null) return false;
+    if (selected == null || (isCurrentRequest != null && !isCurrentRequest())) {
+      return false;
+    }
 
     final resource = selected.resource;
     // audioplayers currently cannot forward request headers to AVPlayer.
@@ -78,7 +83,9 @@ class StreamingPlaybackCoordinator {
       networkArtworkSource: track.artworkUrl?.toString(),
       duration: track.duration,
     );
+    // A later tap can supersede this request while a provider is resolving.
+    if (isCurrentRequest != null && !isCurrentRequest()) return false;
     await player.setQueueAndPlay([item]);
-    return true;
+    return player.isOnlineSourcePrepared(item.id);
   }
 }
