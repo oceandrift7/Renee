@@ -80,8 +80,8 @@ jobs:
             echo "Expected an 11-character video ID." >&2
             exit 1
           fi
-          flutter test integration_test/renee_youtube_music_live_test.dart \\
-            -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded \\
+          flutter test integration_test/renee_youtube_music_live_test.dart \
+            -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded \
             --dart-define="RENEE_YTM_TEST_VIDEO_ID=$RENEE_TEST_ID"
       - name: Build unsigned iPhone app for physical-device testing
         if: always()
