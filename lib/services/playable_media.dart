@@ -12,6 +12,9 @@ class PlayableMedia {
   final String album;
   final String? artUri;
   final String? networkArtworkSource;
+  /// Ephemeral request headers for an authorized network stream.
+  /// Never serialized into the playback session.
+  final Map<String, String> networkHeaders;
   final Duration? duration;
   final int? bitDepth;
   final int? sampleRate;
@@ -29,6 +32,7 @@ class PlayableMedia {
     this.album = '',
     this.artUri,
     this.networkArtworkSource,
+    this.networkHeaders = const {},
     this.duration,
     this.bitDepth,
     this.sampleRate,
