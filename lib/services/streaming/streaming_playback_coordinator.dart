@@ -39,15 +39,13 @@ class StreamingPlaybackCoordinator {
     if (selected == null) return false;
 
     final resource = selected.resource;
-    // The existing player accepts URL audio but does not yet forward HTTP
-    // headers. Refuse resources requiring them rather than fail mysteriously.
-    if (resource.headers.isNotEmpty) return false;
     if (resource.uri.scheme != 'https') return false;
 
     final track = selected.track;
     final item = PlayableMedia(
       id: 'stream:${selected.sourceId}:${track.id}',
       source: resource.uri.toString(),
+      networkHeaders: resource.headers,
       title: track.title,
       artist: track.artist,
       album: track.album ?? '',
