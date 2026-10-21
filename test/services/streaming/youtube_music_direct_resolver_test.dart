@@ -29,7 +29,7 @@ void main() {
       payload([opus, aac]),
     );
     expect(result?.uri.host, 'rr1.googlevideo.com');
-    expect(result?.headers['Referer'], 'https://www.youtube.com/');
+    expect(result?.headers, isEmpty);
   });
 
   test('declines gated and unavailable videos', () {
