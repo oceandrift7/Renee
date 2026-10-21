@@ -17,7 +17,9 @@ class ManualMatchStore {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! Map) return {};
-      return decoded.map((key, value) => MapEntry(key.toString(), value.toString()));
+      return decoded.map(
+        (key, value) => MapEntry(key.toString(), value.toString()),
+      );
     } on FormatException {
       return {};
     }
@@ -28,7 +30,11 @@ class ManualMatchStore {
 
   Future<bool> setOverride(CatalogTrack track, String youtubeMusicId) async {
     if (youtubeMusicId.trim().isEmpty) {
-      throw ArgumentError.value(youtubeMusicId, 'youtubeMusicId', 'Cannot be empty');
+      throw ArgumentError.value(
+        youtubeMusicId,
+        'youtubeMusicId',
+        'Cannot be empty',
+      );
     }
     final values = _read()..[track.storageKey] = youtubeMusicId;
     return preferences.setString(_key, jsonEncode(values));

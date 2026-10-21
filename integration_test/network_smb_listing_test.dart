@@ -12,8 +12,7 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   final report = <String, dynamic>{
     'platform': Platform.operatingSystem,
-    'note':
-        'SMB result adapter/sort only, no live server or network throughput/FPS claim.',
+    'note': 'SMB result adapter/sort only, no live server or network throughput/FPS claim.',
   };
   var completed = 0;
   tearDownAll(() {

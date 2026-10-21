@@ -148,10 +148,8 @@ class AppSettings {
   final bool autoExportFailedDownloads;
   final String
   downloadNetworkMode; // 'any' = WiFi + Mobile, 'wifi_only' = WiFi only
-  final bool
-  networkCompatibilityMode; // Try HTTP + allow invalid TLS cert for API requests
-  final bool
-  allowLocalNetwork; // Allow requests to private/local network targets (local proxy / custom DNS)
+  final bool networkCompatibilityMode; // Try HTTP + allow invalid TLS cert for API requests
+  final bool allowLocalNetwork; // Allow requests to private/local network targets (local proxy / custom DNS)
   final String
   songLinkRegion; // SongLink userCountry region code used for platform lookup
   final bool nativeDownloadWorkerEnabled; // Android service-owned worker
@@ -173,12 +171,9 @@ class AppSettings {
   lyricsIncludeTranslationNetease; // Append translated lyrics (Netease)
   final bool
   lyricsIncludeRomanizationNetease; // Append romanized lyrics (Netease)
-  final bool
-  lyricsMultiPersonWordByWord; // Enable v1/v2 + [bg:] tags for Apple/QQ syllable lyrics
-  final bool
-  lyricsAppleElrcWordSync; // Preserve Apple Music inline word timestamps for eLRC-capable players
-  final String
-  musixmatchLanguage; // Optional ISO language code for Musixmatch localized lyrics
+  final bool lyricsMultiPersonWordByWord; // Enable v1/v2 + [bg:] tags for Apple/QQ syllable lyrics
+  final bool lyricsAppleElrcWordSync; // Preserve Apple Music inline word timestamps for eLRC-capable players
+  final String musixmatchLanguage; // Optional ISO language code for Musixmatch localized lyrics
 
   final String
   lastSeenVersion; // Last app version the user has acknowledged (e.g. '3.7.0')

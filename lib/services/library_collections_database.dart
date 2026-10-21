@@ -63,8 +63,9 @@ class LibraryPlaylistTracksSnapshot {
   final int? nativeRowCount;
 }
 
-typedef NativeCollectionsJobRunner =
-    Future<Map<String, dynamic>> Function(Map<String, dynamic> request);
+typedef NativeCollectionsJobRunner = Future<Map<String, dynamic>> Function(
+  Map<String, dynamic> request,
+);
 
 class LibraryCollectionsDatabase {
   static int _restoreAttachmentSequence = 0;
@@ -979,9 +980,8 @@ class LibraryCollectionsDatabase {
   }) async {
     final restoreTime = nowIso ?? DateTime.now().toIso8601String();
     if (PlatformBridge.supportsCoreBackend) {
-      final temporary = await Directory(
-        (await getTemporaryDirectory()).path,
-      ).createTemp('collection-restore-');
+      final temporary = await Directory((await getTemporaryDirectory()).path)
+          .createTemp('collection-restore-');
       var detached = true;
       try {
         final path = '${temporary.path}/commands.ndjson';

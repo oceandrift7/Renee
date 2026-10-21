@@ -15,7 +15,9 @@ void main() {
       resolveAudio: (id) async {
         calls++;
         expect(id, 'abcdefghijk');
-        return StreamResource(uri: Uri.parse('https://cdn.example.com/audio.m4a'));
+        return StreamResource(
+          uri: Uri.parse('https://cdn.example.com/audio.m4a'),
+        );
       },
     );
     final result = await source.resolve(track);
@@ -42,9 +44,8 @@ void main() {
 
   test('rejects insecure audio resources', () async {
     final source = YouTubeMusicStreamingSource(
-      resolveAudio: (_) async => StreamResource(
-        uri: Uri.parse('http://cdn.example.com/audio.m4a'),
-      ),
+      resolveAudio: (_) async =>
+          StreamResource(uri: Uri.parse('http://cdn.example.com/audio.m4a')),
     );
     expect(await source.resolve(track), isNull);
     source.close();

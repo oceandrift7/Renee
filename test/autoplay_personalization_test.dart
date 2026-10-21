@@ -25,29 +25,26 @@ const _jazz = AutoplayLearningTrack(
 );
 
 void main() {
-  test(
-    'disposal persists completed feedback even while initial loading is pending',
-    () async {
-      var elapsed = Duration.zero;
-      final gate = Completer<String?>();
-      String? saved;
-      final service = AutoplayPersonalization(
-        load: () => gate.future,
-        save: (value) async => saved = value,
-        elapsed: () => elapsed,
-        now: () => _at,
-      );
-      service.setEnabled(true);
-      service.begin(_rock);
-      service.updatePlayback(source: _rock.source, playing: true);
-      elapsed += const Duration(seconds: 10);
-      service.finish(skipped: true);
-      final disposed = service.dispose();
-      gate.complete(null);
-      await disposed;
-      expect(AutoplayPreferenceModel.decode(saved).observations, 1);
-    },
-  );
+  test('disposal persists completed feedback even while initial loading is pending', () async {
+    var elapsed = Duration.zero;
+    final gate = Completer<String?>();
+    String? saved;
+    final service = AutoplayPersonalization(
+      load: () => gate.future,
+      save: (value) async => saved = value,
+      elapsed: () => elapsed,
+      now: () => _at,
+    );
+    service.setEnabled(true);
+    service.begin(_rock);
+    service.updatePlayback(source: _rock.source, playing: true);
+    elapsed += const Duration(seconds: 10);
+    service.finish(skipped: true);
+    final disposed = service.dispose();
+    gate.complete(null);
+    await disposed;
+    expect(AutoplayPreferenceModel.decode(saved).observations, 1);
+  });
   test('bounded 384-candidate ranking stress and snapshot isolation', () {
     final model = AutoplayPreferenceModel();
     for (var i = 0; i < 60; i++) {

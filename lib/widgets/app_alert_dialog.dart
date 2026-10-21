@@ -116,9 +116,8 @@ class _MornyeDialogRoute<T> extends RawDialogRoute<T> {
            kCupertinoModalBarrierColor,
            context,
          ),
-         barrierLabel: CupertinoLocalizations.of(
-           context,
-         ).modalBarrierDismissLabel,
+         barrierLabel: CupertinoLocalizations.of(context)
+             .modalBarrierDismissLabel,
          transitionDuration: MediaQuery.disableAnimationsOf(context)
              ? Duration.zero
              : const Duration(milliseconds: 220),

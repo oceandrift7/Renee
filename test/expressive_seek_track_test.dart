@@ -77,9 +77,10 @@ void main() {
       Future<List<int>> pixels() async => (await tester.runAsync(() async {
         final image = await boundary.toImage();
         try {
-          return (await image.toByteData(
-            format: ui.ImageByteFormat.rawRgba,
-          ))!.buffer.asUint8List().toList(growable: false);
+          return (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!
+              .buffer
+              .asUint8List()
+              .toList(growable: false);
         } finally {
           image.dispose();
         }

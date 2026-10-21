@@ -13,8 +13,7 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   final report = <String, dynamic>{
     'platform': Platform.operatingSystem,
-    'note':
-        'Five alternating pairs of actual notifier calls on private platform SQLite with FK cascades. Playlists retain lazy track membership. Timings include deletion and state publication, not seeding or assertions; heartbeat is not FPS.',
+    'note': 'Five alternating pairs of actual notifier calls on private platform SQLite with FK cascades. Playlists retain lazy track membership. Timings include deletion and state publication, not seeding or assertions; heartbeat is not FPS.',
   };
   var completed = 0;
   late Directory root;

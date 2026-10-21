@@ -24,7 +24,11 @@ class _ReneeStreamButtonState extends ConsumerState<ReneeStreamButton> {
     var result = ReneeOnlinePlaybackResult.unavailable;
     try {
       // Prefer an existing local file. No internet lookup is necessary.
-      final playedLocally = await playLocalIfAvailable(context, ref, widget.track);
+      final playedLocally = await playLocalIfAvailable(
+        context,
+        ref,
+        widget.track,
+      );
       if (playedLocally || !mounted) return;
       result = await const ReneeOnlinePlayback().tryPlayWithStatus(
         ref,

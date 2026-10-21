@@ -847,7 +847,7 @@ class _ConcertDetailScreenState extends State<ConcertDetailScreen> {
     }
   }
 
-  void _error(String message) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(message)));
+  void _error(String message) =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
 }

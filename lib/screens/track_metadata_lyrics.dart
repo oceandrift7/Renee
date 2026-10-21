@@ -41,9 +41,8 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(
                   context.l10n.trackLyricsSource(_lyricsSource!),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ),
             const SizedBox(height: 12),
@@ -208,9 +207,8 @@ extension _TrackMetadataLyricsAndSaving on _TrackMetadataScreenState {
     } catch (e) {
       _log.d('Local lyrics reader failed; trying playback metadata: $e');
     }
-    final metadata = await readPlaybackFileMetadataWithRetry(
-      sourcePath,
-    ).timeout(const Duration(seconds: 5));
+    final metadata = await readPlaybackFileMetadataWithRetry(sourcePath)
+        .timeout(const Duration(seconds: 5));
     return {'lyrics': metadata['lyrics']?.toString() ?? '', 'source': ''};
   }
 

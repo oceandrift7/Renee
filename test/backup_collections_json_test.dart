@@ -118,9 +118,9 @@ void main() {
         final archive = ZipDecoder().decodeBytes(
           await archiveFile.readAsBytes(),
         );
-        final metadata =
-            jsonDecode(utf8.decode(archive.find('metadata.json')!.content))
-                as Map<String, dynamic>;
+        final metadata = jsonDecode(
+          utf8.decode(archive.find('metadata.json')!.content),
+        ) as Map<String, dynamic>;
         final data = metadata['data'] as Map<String, dynamic>;
         expect(data.keys, ['settings', 'collections']);
         expect(data['collections'], collections);

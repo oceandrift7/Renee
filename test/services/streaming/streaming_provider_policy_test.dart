@@ -26,7 +26,9 @@ void main() {
     title: 'Test Track',
     artist: 'Test Artist',
   );
-  final playable = StreamResource(uri: Uri.parse('https://example.org/test.m4a'));
+  final playable = StreamResource(
+    uri: Uri.parse('https://example.org/test.m4a'),
+  );
 
   test('prefers promptly playable SoundCloud track', () async {
     final result = await const StreamingProviderPolicy().select(
@@ -39,28 +41,33 @@ void main() {
   });
 
   test('does not wait indefinitely for unavailable SoundCloud', () async {
-    final result = await const StreamingProviderPolicy(
-      soundCloudProbeBudget: Duration(milliseconds: 10),
-    ).select(
-      requested: requested,
-      youtubeMusic: _FakeSource('youtube', playable),
-      soundCloud: _FakeSource(
-        'soundcloud', playable,
-        delay: const Duration(milliseconds: 200),
-      ),
-      findExactFreelyPlayableMatch: (source, track) async => track,
-    );
+    final result =
+        await const StreamingProviderPolicy(
+          soundCloudProbeBudget: Duration(milliseconds: 10),
+        ).select(
+          requested: requested,
+          youtubeMusic: _FakeSource('youtube', playable),
+          soundCloud: _FakeSource(
+            'soundcloud',
+            playable,
+            delay: const Duration(milliseconds: 200),
+          ),
+          findExactFreelyPlayableMatch: (source, track) async => track,
+        );
     expect(result?.sourceId, 'youtube');
   });
 
-  test('does not accept a SoundCloud recording without verified match', () async {
-    final result = await const StreamingProviderPolicy().select(
-      requested: requested,
-      youtubeMusic: _FakeSource('youtube', playable),
-      soundCloud: _FakeSource('soundcloud', playable),
-      findExactFreelyPlayableMatch: (source, track) async =>
-          source.id == 'soundcloud' ? null : track,
-    );
-    expect(result?.sourceId, 'youtube');
-  });
+  test(
+    'does not accept a SoundCloud recording without verified match',
+    () async {
+      final result = await const StreamingProviderPolicy().select(
+        requested: requested,
+        youtubeMusic: _FakeSource('youtube', playable),
+        soundCloud: _FakeSource('soundcloud', playable),
+        findExactFreelyPlayableMatch: (source, track) async =>
+            source.id == 'soundcloud' ? null : track,
+      );
+      expect(result?.sourceId, 'youtube');
+    },
+  );
 }

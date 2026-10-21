@@ -41,7 +41,8 @@ class ReneeOnlinePlayback {
   ) async {
     final generation = ++_requestGeneration;
     bool isCurrent() => _requestGeneration == generation;
-    final handler = await ref.read(musicPlayerControllerProvider)
+    final handler = await ref
+        .read(musicPlayerControllerProvider)
         .ensureInitialized();
     if (!isCurrent()) return ReneeOnlinePlaybackResult.superseded;
     if (handler == null) return ReneeOnlinePlaybackResult.unavailable;

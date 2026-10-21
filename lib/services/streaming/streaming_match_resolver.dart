@@ -33,7 +33,10 @@ class StreamingMatchResolver {
 
     // Skip search when the catalog already holds a real YouTube Music video ID.
     if (source.id == 'youtube_music' &&
-        const {'ytmusic-spotiflac', 'youtube_music'}.contains(catalog.provider) &&
+        const {
+          'ytmusic-spotiflac',
+          'youtube_music',
+        }.contains(catalog.provider) &&
         RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(catalog.id)) {
       return StreamingTrack(
         id: catalog.id,
@@ -78,9 +81,8 @@ class StreamingMatchResolver {
         'slowed',
         'nightcore',
       ])
-        if (RegExp(
-          r'(^|[^a-z])' + RegExp.escape(word) + r'([^a-z]|$)',
-        ).hasMatch(normalized))
+        if (RegExp(r'(^|[^a-z])' + RegExp.escape(word) + r'([^a-z]|$)')
+            .hasMatch(normalized))
           word,
     };
   }

@@ -45,10 +45,8 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   final report = <String, dynamic>{
     'platform': Platform.operatingSystem,
-    'note':
-        'Five alternating pairs of synchronous enqueue on the real notifier, paused during startup. Restore and persistence use private platform SQLite and are verified outside timing. Not download speed or FPS.',
-    'playlist_baseline_note':
-        'Per-playlist loop uses the current single-batch API, which already publishes once. The separate pre-change baseline captures its original two publications. This paired comparison isolates the additional benefit of grouping playlists.',
+    'note': 'Five alternating pairs of synchronous enqueue on the real notifier, paused during startup. Restore and persistence use private platform SQLite and are verified outside timing. Not download speed or FPS.',
+    'playlist_baseline_note': 'Per-playlist loop uses the current single-batch API, which already publishes once. The separate pre-change baseline captures its original two publications. This paired comparison isolates the additional benefit of grouping playlists.',
   };
   var completed = 0;
   late Directory root;

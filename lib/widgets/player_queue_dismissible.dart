@@ -61,9 +61,8 @@ class _PlayerQueueDismissibleState extends State<PlayerQueueDismissible> {
             child: AppIcon(
               Icons.delete_outline,
               color: Theme.of(context).colorScheme.onError,
-              semanticLabel: MaterialLocalizations.of(
-                context,
-              ).deleteButtonTooltip,
+              semanticLabel: MaterialLocalizations.of(context)
+                  .deleteButtonTooltip,
             ),
           ),
     child: widget.child,

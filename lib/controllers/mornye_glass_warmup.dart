@@ -119,9 +119,8 @@ Future<void> _rasterize(ui.FlutterView view) async {
     image.dispose();
   } finally {
     if (root != null) {
-      RenderObjectToWidgetAdapter<RenderBox>(
-        container: boundary,
-      ).attachToRenderTree(owner, root);
+      RenderObjectToWidgetAdapter<RenderBox>(container: boundary)
+          .attachToRenderTree(owner, root);
       owner.buildScope(root);
       owner.finalizeTree();
     }

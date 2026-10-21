@@ -8,13 +8,9 @@ import 'package:mornye/services/network_storage_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  final fixtures =
-      jsonDecode(
-            File(
-              'test/fixtures/native_metadata_parsers.json',
-            ).readAsStringSync(),
-          )
-          as Map<String, dynamic>;
+  final fixtures = jsonDecode(
+    File('test/fixtures/native_metadata_parsers.json').readAsStringSync(),
+  ) as Map<String, dynamic>;
   const channel = MethodChannel('com.zarz.mornye/backend');
   final messenger =
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;

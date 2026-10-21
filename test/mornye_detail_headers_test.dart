@@ -26,9 +26,8 @@ void main() {
         child: MaterialApp(
           theme: MornyeTheme.build(Brightness.dark),
           builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(
-              context,
-            ).copyWith(textScaler: const TextScaler.linear(2)),
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: const TextScaler.linear(2)),
             child: child!,
           ),
           home: const Scaffold(
@@ -119,9 +118,8 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        final scheme = Theme.of(
-          tester.element(find.text('Artist action')),
-        ).colorScheme;
+        final scheme = Theme.of(tester.element(find.text('Artist action')))
+            .colorScheme;
         expect(scheme.primary.toARGB32(), expected.toARGB32());
         final foreground = scheme.onPrimary.computeLuminance();
         final background = scheme.primary.computeLuminance();
@@ -429,9 +427,8 @@ void main() {
                   ),
                 ),
                 builder: (context, child) => MediaQuery(
-                  data: MediaQuery.of(
-                    context,
-                  ).copyWith(disableAnimations: reduceMotion),
+                  data: MediaQuery.of(context)
+                      .copyWith(disableAnimations: reduceMotion),
                   child: child!,
                 ),
                 home: CollectionScaffold(
@@ -525,9 +522,8 @@ void main() {
               child: MaterialApp(
                 theme: MornyeTheme.build(brightness),
                 builder: (context, child) => MediaQuery(
-                  data: MediaQuery.of(
-                    context,
-                  ).copyWith(textScaler: TextScaler.linear(scale)),
+                  data: MediaQuery.of(context)
+                      .copyWith(textScaler: TextScaler.linear(scale)),
                   child: child!,
                 ),
                 home: CollectionScaffold(
@@ -537,8 +533,7 @@ void main() {
                   bottomInset: 0,
                   appBar: AlbumDetailHeader(
                     immersive: true,
-                    title:
-                        'A long album title that must wrap without hiding any of its controls',
+                    title: 'A long album title that must wrap without hiding any of its controls',
                     expandedHeight: 400,
                     showTitleInAppBar: false,
                     background: const ColoredBox(
@@ -676,9 +671,8 @@ void main() {
           child: MaterialApp(
             theme: MornyeTheme.build(Brightness.dark),
             builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: const TextScaler.linear(2)),
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: const TextScaler.linear(2)),
               child: child!,
             ),
             home: Builder(

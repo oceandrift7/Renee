@@ -137,9 +137,8 @@ extension _QueueTabItemWidgets on _QueueTabState {
                   extensionId: item.track.source,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
                 if (item.status == DownloadStatus.downloading) ...[
                   const SizedBox(height: 5),
@@ -179,9 +178,8 @@ extension _QueueTabItemWidgets on _QueueTabState {
                     '${context.l10n.networkUploading}${item.bytesTotal > 0 ? ' • ${(100 * item.bytesReceived / item.bytesTotal).round()}%' : ''}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: colorScheme.primary,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: colorScheme.primary),
                   ),
                 ],
                 if (item.status == DownloadStatus.failed) ...[
@@ -243,9 +241,8 @@ extension _QueueTabItemWidgets on _QueueTabState {
         _localizedDownloadError(context, _downloadErrorForDisplay(item)),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: Theme.of(
-          context,
-        ).textTheme.labelSmall?.copyWith(color: colorScheme.error),
+        style: Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: colorScheme.error),
       );
     }
 
@@ -866,9 +863,8 @@ extension _QueueTabItemWidgets on _QueueTabState {
               extensionId: item.historyItem?.service,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
             ),
             const SizedBox(height: 2),
             Row(
@@ -894,9 +890,8 @@ extension _QueueTabItemWidgets on _QueueTabState {
                     dateStr,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: colorScheme.onSurfaceVariant),
                   ),
                 ),
                 if (quality != null && quality.isNotEmpty) ...[
@@ -1087,9 +1082,8 @@ extension _QueueTabItemWidgets on _QueueTabState {
         extensionId: item.historyItem?.service,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: Theme.of(
-          context,
-        ).textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+        style: Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: colorScheme.onSurfaceVariant),
       ),
     );
   }

@@ -182,17 +182,15 @@ bool shouldHighlightAudioQualityBadge(String quality) {
     return true;
   }
 
-  final kbpsMatch = RegExp(
-    r'\b(\d+(?:\.\d+)?)\s*k(?:bps)?\b',
-  ).firstMatch(normalized);
+  final kbpsMatch = RegExp(r'\b(\d+(?:\.\d+)?)\s*k(?:bps)?\b')
+      .firstMatch(normalized);
   final kbps = double.tryParse(kbpsMatch?.group(1) ?? '');
   if (kbps != null) {
     return kbps > highQualityBadgeBitrateThresholdKbps;
   }
 
-  final mbpsMatch = RegExp(
-    r'\b(\d+(?:\.\d+)?)\s*mbps\b',
-  ).firstMatch(normalized);
+  final mbpsMatch = RegExp(r'\b(\d+(?:\.\d+)?)\s*mbps\b')
+      .firstMatch(normalized);
   final mbps = double.tryParse(mbpsMatch?.group(1) ?? '');
   return mbps != null && mbps * 1000 > highQualityBadgeBitrateThresholdKbps;
 }

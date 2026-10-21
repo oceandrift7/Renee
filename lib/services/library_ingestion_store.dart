@@ -294,9 +294,9 @@ class LibraryIngestionStore {
         'SELECT COUNT(*) AS count FROM $_incrementalStageTable',
       );
       final staged = Sqflite.firstIntValue(stagedRows) ?? 0;
-      final columns = (await db.rawQuery(
-        'PRAGMA table_info(library)',
-      )).map((row) => row['name'] as String).toList(growable: false);
+      final columns = (await db.rawQuery('PRAGMA table_info(library)'))
+          .map((row) => row['name'] as String)
+          .toList(growable: false);
       final columnList = columns.join(', ');
       final selectedColumns = columns.map((column) => 's.$column').join(', ');
 
@@ -447,9 +447,9 @@ class LibraryIngestionStore {
         'SELECT COUNT(*) AS count FROM $_scanStageTable',
       );
       final staged = Sqflite.firstIntValue(stagedRows) ?? 0;
-      final columns = (await db.rawQuery(
-        'PRAGMA table_info(library)',
-      )).map((row) => row['name'] as String).toList(growable: false);
+      final columns = (await db.rawQuery('PRAGMA table_info(library)'))
+          .map((row) => row['name'] as String)
+          .toList(growable: false);
       final columnList = columns.join(', ');
       final selectedColumns = columns.map((column) => 's.$column').join(', ');
 

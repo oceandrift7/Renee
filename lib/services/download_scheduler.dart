@@ -44,17 +44,17 @@ class DownloadScheduler<T> {
     void launch(T item, String id) {
       active.add(id);
       unawaited(
-        Future.sync(
-          () => start(item),
-        ).then<void>((_) {}, onError: failed).whenComplete(() {
-          active.remove(id);
-          try {
-            onFinished?.call(id);
-          } catch (error, stack) {
-            failed(error, stack);
-          }
-          wake();
-        }),
+        Future.sync(() => start(item))
+            .then<void>((_) {}, onError: failed)
+            .whenComplete(() {
+              active.remove(id);
+              try {
+                onFinished?.call(id);
+              } catch (error, stack) {
+                failed(error, stack);
+              }
+              wake();
+            }),
       );
     }
 

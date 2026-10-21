@@ -200,8 +200,7 @@ IosPathValidationResult validateIosPath(String path, {String bookmark = ''}) {
   if (_iosContainerRootPattern.hasMatch(path)) {
     return const IosPathValidationResult(
       isValid: false,
-      errorReason:
-          'Cannot write to app container root. Please choose a subfolder like Documents.',
+      errorReason: 'Cannot write to app container root. Please choose a subfolder like Documents.',
     );
   }
 
@@ -218,8 +217,7 @@ IosPathValidationResult validateIosPath(String path, {String bookmark = ''}) {
   if (_iosNestedLegacyDocumentsPattern.hasMatch(path)) {
     return const IosPathValidationResult(
       isValid: false,
-      errorReason:
-          'Invalid iOS app folder path. Please choose App Documents or another local folder.',
+      errorReason: 'Invalid iOS app folder path. Please choose App Documents or another local folder.',
     );
   }
 
@@ -233,8 +231,7 @@ IosPathValidationResult validateIosPath(String path, {String bookmark = ''}) {
     if (remainingPath.isEmpty || remainingPath == '/') {
       return const IosPathValidationResult(
         isValid: false,
-        errorReason:
-            'Cannot write to app container root. Please use the default folder or choose a different location.',
+        errorReason: 'Cannot write to app container root. Please use the default folder or choose a different location.',
       );
     }
   }

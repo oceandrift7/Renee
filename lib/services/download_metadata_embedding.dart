@@ -159,9 +159,8 @@ class DownloadMetadataEmbedding {
       if (writeExternalLrc && shouldSaveExternalLyrics && lrcContent != null) {
         try {
           final lrcPath = filePath.replaceAll(RegExp(r'\.[^.]+$'), '.lrc');
-          await File(
-            lrcPath == filePath ? '$filePath.lrc' : lrcPath,
-          ).writeAsString(lrcContent);
+          await File(lrcPath == filePath ? '$filePath.lrc' : lrcPath)
+              .writeAsString(lrcContent);
         } catch (error) {
           _log.w('Failed to save external LRC file for $format: $error');
         }

@@ -14,7 +14,8 @@ class YouTubeMusicDirectResolver {
   YouTubeMusicDirectResolver({
     http.Client? client,
     this.requestTimeout = const Duration(seconds: 6),
-  }) : _client = client ?? http.Client(), _ownsClient = client == null;
+  }) : _client = client ?? http.Client(),
+       _ownsClient = client == null;
 
   final http.Client _client;
   final bool _ownsClient;
@@ -108,8 +109,10 @@ class YouTubeMusicDirectResolver {
       }
       // A signatureCipher/cipher value without a direct URL isn't playable
       // unless a separate sanctioned resolver handles it.
-      final bitrate = (item['averageBitrate'] as num?)?.toInt() ??
-          (item['bitrate'] as num?)?.toInt() ?? 0;
+      final bitrate =
+          (item['averageBitrate'] as num?)?.toInt() ??
+          (item['bitrate'] as num?)?.toInt() ??
+          0;
       final itag = (item['itag'] as num?)?.toInt() ?? 0;
       candidates.add((url: url, bitrate: bitrate, itag: itag));
     }
@@ -124,6 +127,7 @@ class YouTubeMusicDirectResolver {
         if (c.itag == 139) return 2;
         return 3;
       }
+
       final rank = preference(a).compareTo(preference(b));
       return rank != 0 ? rank : a.bitrate.compareTo(b.bitrate);
     });

@@ -14,9 +14,8 @@ void main() {
   late File original;
   setUp(() async {
     directory = await Directory.systemTemp.createTemp('hires-replacement-');
-    original = await File(
-      '${directory.path}/track.flac',
-    ).writeAsString('original audio');
+    original = await File('${directory.path}/track.flac')
+        .writeAsString('original audio');
   });
   tearDown(() async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -80,9 +79,8 @@ void main() {
   );
 
   test('existing backup is never overwritten', () async {
-    final oldBackup = await File(
-      '${original.path}.fake-hires.bak',
-    ).writeAsString('older original');
+    final oldBackup = await File('${original.path}.fake-hires.bak')
+        .writeAsString('older original');
     await HiResCheckService.withOriginalBackup(
       original.path,
       (_) async => false,

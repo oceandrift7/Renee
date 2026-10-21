@@ -23,9 +23,8 @@ void main() {
     'conversion preserves existing sibling and handles quoted paths',
     () async {
       final source = await input('Song "live".m4a');
-      final sibling = await File(
-        '${directory.path}/Song "live".flac',
-      ).writeAsString('existing');
+      final sibling = await File('${directory.path}/Song "live".flac')
+          .writeAsString('existing');
       final result = await FFmpegService.convertM4aToFlac(
         source.path,
         sourceCodec: 'alac',
@@ -203,9 +202,8 @@ void main() {
     'native FLAC rename preserves sibling files and adds missing suffix',
     () async {
       final source = await input('Song.m4a');
-      final sibling = await File(
-        '${directory.path}/Song.flac',
-      ).writeAsString('existing');
+      final sibling = await File('${directory.path}/Song.flac')
+          .writeAsString('existing');
       final result = await FFmpegService.ensureNativeFlacExtension(source.path);
       expect(result, '${directory.path}/Song (2).flac');
       expect(await sibling.readAsString(), 'existing');

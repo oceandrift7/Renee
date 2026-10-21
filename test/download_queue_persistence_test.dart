@@ -83,49 +83,46 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  test(
-    'verification waits survive process restart without reviving terminal failures',
-    () async {
-      final store = _Store();
-      var items = [
-        _item(
-          'waiting',
-          status: DownloadStatus.downloading,
-        ).copyWith(errorType: DownloadErrorType.verificationRequired),
-        _item(
-          'timeout',
-          status: DownloadStatus.failed,
-        ).copyWith(errorType: DownloadErrorType.verificationRequired),
-        _item(
-          'unavailable',
-          status: DownloadStatus.failed,
-        ).copyWith(errorType: DownloadErrorType.notFound),
-        _item('done', status: DownloadStatus.completed),
-        _item('cancelled', status: DownloadStatus.skipped),
-      ];
-      DownloadQueuePersistence create() => DownloadQueuePersistence(
-        currentItems: () => items,
-        onError: (error) => fail('$error'),
-        loadRows: store.load,
-        applyChanges: store.apply,
-      );
-      final first = create();
-      await first.flush(requireDurable: true);
-      first.dispose();
-      items = [];
-      final restarted = create();
-      addTearDown(restarted.dispose);
-      items = await restarted.restore();
-      expect(items.map((item) => item.id), ['waiting', 'timeout', 'cancelled']);
-      expect(items.map((item) => item.status), [
-        DownloadStatus.queued,
-        DownloadStatus.queued,
-        DownloadStatus.skipped,
-      ]);
-      expect(store.rows['timeout']!['status'], 'queued');
-      expect(items.first.qualityOverride, 'HI_RES');
-    },
-  );
+  test('verification waits survive process restart without reviving terminal failures', () async {
+    final store = _Store();
+    var items = [
+      _item(
+        'waiting',
+        status: DownloadStatus.downloading,
+      ).copyWith(errorType: DownloadErrorType.verificationRequired),
+      _item(
+        'timeout',
+        status: DownloadStatus.failed,
+      ).copyWith(errorType: DownloadErrorType.verificationRequired),
+      _item(
+        'unavailable',
+        status: DownloadStatus.failed,
+      ).copyWith(errorType: DownloadErrorType.notFound),
+      _item('done', status: DownloadStatus.completed),
+      _item('cancelled', status: DownloadStatus.skipped),
+    ];
+    DownloadQueuePersistence create() => DownloadQueuePersistence(
+      currentItems: () => items,
+      onError: (error) => fail('$error'),
+      loadRows: store.load,
+      applyChanges: store.apply,
+    );
+    final first = create();
+    await first.flush(requireDurable: true);
+    first.dispose();
+    items = [];
+    final restarted = create();
+    addTearDown(restarted.dispose);
+    items = await restarted.restore();
+    expect(items.map((item) => item.id), ['waiting', 'timeout', 'cancelled']);
+    expect(items.map((item) => item.status), [
+      DownloadStatus.queued,
+      DownloadStatus.queued,
+      DownloadStatus.skipped,
+    ]);
+    expect(store.rows['timeout']!['status'], 'queued');
+    expect(items.first.qualityOverride, 'HI_RES');
+  });
 
   test(
     'browser handoff flush reports disk failure and a later flush retries',

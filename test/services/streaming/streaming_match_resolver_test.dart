@@ -74,24 +74,27 @@ void main() {
     expect(result, isNull);
   });
 
-  test('does not silently accept competing equally strong recordings', () async {
-    final result = await match.find(
-      _CatalogSource('soundcloud', const [
-        StreamingTrack(
-          id: 'sc-one',
-          title: 'A Song',
-          artist: 'An Artist',
-          duration: Duration(seconds: 210),
-        ),
-        StreamingTrack(
-          id: 'sc-two',
-          title: 'A Song',
-          artist: 'An Artist',
-          duration: Duration(seconds: 210),
-        ),
-      ]),
-      target,
-    );
-    expect(result, isNull);
-  });
+  test(
+    'does not silently accept competing equally strong recordings',
+    () async {
+      final result = await match.find(
+        _CatalogSource('soundcloud', const [
+          StreamingTrack(
+            id: 'sc-one',
+            title: 'A Song',
+            artist: 'An Artist',
+            duration: Duration(seconds: 210),
+          ),
+          StreamingTrack(
+            id: 'sc-two',
+            title: 'A Song',
+            artist: 'An Artist',
+            duration: Duration(seconds: 210),
+          ),
+        ]),
+        target,
+      );
+      expect(result, isNull);
+    },
+  );
 }

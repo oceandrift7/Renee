@@ -71,8 +71,7 @@ void main() {
     binding.reportData!['queue_removal'] = {
       'platform': Platform.operatingSystem,
       'completed_cases': results.length,
-      'note':
-          'Five alternating pairs of 100 consecutive completed-prefix removals. Model timing excludes persistence and rendering. Separate real notifier checks retain one publication per removal and verify private SQLite. iOS debug is correctness only.',
+      'note': 'Five alternating pairs of 100 consecutive completed-prefix removals. Model timing excludes persistence and rendering. Separate real notifier checks retain one publication per removal and verify private SQLite. iOS debug is correctness only.',
       'cases': results,
     };
   });

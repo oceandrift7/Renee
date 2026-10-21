@@ -132,24 +132,18 @@ void main() {
     expect(report, contains('Android did not provide a stack trace'));
   });
 
-  test(
-    'reading alone does not consume a notice and dismissal preserves diagnostics',
-    () async {
-      var container = ProviderContainer();
-      expect((await container.read(appCrashProvider.future))?.id, '123456');
-      container.dispose();
-      container = ProviderContainer();
-      addTearDown(container.dispose);
-      expect((await container.read(appCrashProvider.future))?.id, '123456');
-      await container.read(appCrashProvider.notifier).dismiss('123456');
-      expect(container.read(appCrashProvider).value, isNull);
-      expect(stored, isNotNull);
-      expect(
-        (await container.read(latestAppCrashProvider.future))?.id,
-        '123456',
-      );
-    },
-  );
+  test('reading alone does not consume a notice and dismissal preserves diagnostics', () async {
+    var container = ProviderContainer();
+    expect((await container.read(appCrashProvider.future))?.id, '123456');
+    container.dispose();
+    container = ProviderContainer();
+    addTearDown(container.dispose);
+    expect((await container.read(appCrashProvider.future))?.id, '123456');
+    await container.read(appCrashProvider.notifier).dismiss('123456');
+    expect(container.read(appCrashProvider).value, isNull);
+    expect(stored, isNotNull);
+    expect((await container.read(latestAppCrashProvider.future))?.id, '123456');
+  });
 
   test('ANR classification uses the native reason code', () {
     expect(AppCrashReport.fromMap(_report()).isAnr, isFalse);

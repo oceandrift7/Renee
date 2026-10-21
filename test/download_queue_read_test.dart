@@ -243,44 +243,41 @@ void main() {
     },
   );
 
-  test(
-    'bulk changes bound batches but keep delete/upsert order and one transaction',
-    () async {
-      final database = await fixture(700);
-      final existing = await database.query(
-        'download_queue_items',
-        orderBy: 'rowid ASC',
-      );
-      final deleted = existing
-          .take(550)
-          .map((row) => row['id'] as String)
-          .toList();
-      final upserts = <Map<String, dynamic>>[
-        for (var index = 0; index < 700; index++)
-          {
-            'id': 'new:$index',
-            'item_json': '{"value":$index}',
-            'status': 'queued',
-            'created_at': '2026-10-07',
-            'updated_at': '2026-10-07',
-          },
-      ];
-      final reads = _Reads();
-      await AppStateDatabase.instance.applyPendingDownloadQueueChanges(
-        upserts: upserts,
-        deletedIds: deleted,
-        databaseOverride: _RecordingDatabase(database, reads),
-      );
-      expect(reads.transactions, 1);
-      expect(reads.batchSizes, [256, 256, 38]);
-      expect(reads.valueSizes, [192, 192, 192, 124]);
-      final actual = await database.query(
-        'download_queue_items',
-        orderBy: 'rowid ASC',
-      );
-      expect(actual, [...existing.skip(550), ...upserts]);
-    },
-  );
+  test('bulk changes bound batches but keep delete/upsert order and one transaction', () async {
+    final database = await fixture(700);
+    final existing = await database.query(
+      'download_queue_items',
+      orderBy: 'rowid ASC',
+    );
+    final deleted = existing
+        .take(550)
+        .map((row) => row['id'] as String)
+        .toList();
+    final upserts = <Map<String, dynamic>>[
+      for (var index = 0; index < 700; index++)
+        {
+          'id': 'new:$index',
+          'item_json': '{"value":$index}',
+          'status': 'queued',
+          'created_at': '2026-10-07',
+          'updated_at': '2026-10-07',
+        },
+    ];
+    final reads = _Reads();
+    await AppStateDatabase.instance.applyPendingDownloadQueueChanges(
+      upserts: upserts,
+      deletedIds: deleted,
+      databaseOverride: _RecordingDatabase(database, reads),
+    );
+    expect(reads.transactions, 1);
+    expect(reads.batchSizes, [256, 256, 38]);
+    expect(reads.valueSizes, [192, 192, 192, 124]);
+    final actual = await database.query(
+      'download_queue_items',
+      orderBy: 'rowid ASC',
+    );
+    expect(actual, [...existing.skip(550), ...upserts]);
+  });
 
   test(
     'older SQLite and databases without the created index retain row parity',

@@ -93,9 +93,8 @@ void main() {
   testWidgets('production backup routes every category through native ZIP', (
     tester,
   ) async {
-    final cover = await File(
-      '${root.path}/cover.jpg',
-    ).writeAsBytes([255, 216, 255, 217]);
+    final cover = await File('${root.path}/cover.jpg')
+        .writeAsBytes([255, 216, 255, 217]);
     final photo = await File('${root.path}/avatar.png').writeAsBytes([1, 2, 3]);
     for (var mask = 1; mask < 16; mask++) {
       final hasSettings = mask & 1 != 0;
@@ -165,9 +164,8 @@ void main() {
   ) async {
     final history =
         '${jsonEncode({'id': 'old-track', 'trackName': 'Old song'})}\n';
-    final historyFile = await File(
-      '${root.path}/history.ndjson',
-    ).writeAsString(history);
+    final historyFile = await File('${root.path}/history.ndjson')
+        .writeAsString(history);
     for (final version in [2, 3]) {
       final metadata = await File('${root.path}/metadata.json').writeAsString(
         jsonEncode({
@@ -200,12 +198,10 @@ void main() {
     'direct collection JSON round trips through production native ZIP',
     (tester) async {
       expect(PlatformBridge.supportsCoreBackend, isTrue);
-      final cover = await File(
-        '${root.path}/raw-cover.jpg',
-      ).writeAsBytes([255, 216, 255, 217]);
-      final photo = await File(
-        '${root.path}/raw-avatar.png',
-      ).writeAsBytes([1, 2, 3]);
+      final cover = await File('${root.path}/raw-cover.jpg')
+          .writeAsBytes([255, 216, 255, 217]);
+      final photo = await File('${root.path}/raw-avatar.png')
+          .writeAsBytes([1, 2, 3]);
       for (final collections in <Map<String, dynamic>>[
         {
           'wishlist': <dynamic>[],
@@ -241,9 +237,9 @@ void main() {
         final archive = ZipDecoder().decodeBytes(
           await archiveFile.readAsBytes(),
         );
-        final metadata =
-            jsonDecode(utf8.decode(archive.find('metadata.json')!.content))
-                as Map<String, dynamic>;
+        final metadata = jsonDecode(
+          utf8.decode(archive.find('metadata.json')!.content),
+        ) as Map<String, dynamic>;
         final data = metadata['data'] as Map<String, dynamic>;
         expect(data.keys, [
           'settings',

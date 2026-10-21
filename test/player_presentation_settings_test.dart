@@ -43,9 +43,8 @@ void main() {
     tester.view.padding = const FakeViewPadding(top: 24);
     addTearDown(tester.view.reset);
     const key = ValueKey('backdrop');
-    final colors = ColorScheme.fromSeed(
-      seedColor: Colors.blue,
-    ).copyWith(surface: Colors.white, surfaceContainerHighest: Colors.white);
+    final colors = ColorScheme.fromSeed(seedColor: Colors.blue)
+        .copyWith(surface: Colors.white, surfaceContainerHighest: Colors.white);
     await tester.pumpWidget(
       MaterialApp(
         home: RepaintBoundary(

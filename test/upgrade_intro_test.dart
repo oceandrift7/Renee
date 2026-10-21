@@ -22,13 +22,12 @@ void main() {
     await (FontLoader(
       'MaterialIcons',
     )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
-    await (FontLoader(
-          'packages/material_symbols_icons/MaterialSymbolsRounded',
-        )..addFont(
-          rootBundle.load(
-            'packages/material_symbols_icons/lib/fonts/MaterialSymbolsRounded.ttf',
-          ),
-        ))
+    await (FontLoader('packages/material_symbols_icons/MaterialSymbolsRounded')
+          ..addFont(
+            rootBundle.load(
+              'packages/material_symbols_icons/lib/fonts/MaterialSymbolsRounded.ttf',
+            ),
+          ))
         .load();
     await (FontLoader(
       'Google Sans Flex',
@@ -92,9 +91,8 @@ void main() {
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(
-                  context,
-                ).copyWith(textScaler: TextScaler.linear(textScale)),
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: TextScaler.linear(textScale)),
                 child: RepaintBoundary(key: capture, child: child),
               ),
               home: Scaffold(
@@ -125,9 +123,8 @@ void main() {
           capture.currentContext!.findRenderObject()! as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 2);
       final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-      await File(
-        '/tmp/mornye-intro-$name.png',
-      ).writeAsBytes(bytes!.buffer.asUint8List());
+      await File('/tmp/mornye-intro-$name.png')
+          .writeAsBytes(bytes!.buffer.asUint8List());
       image.dispose();
     });
   }

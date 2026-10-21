@@ -44,16 +44,14 @@ class MetadataBarcode extends StatelessWidget {
                     Expanded(
                       child: Text(
                         label,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: Theme.of(context).textTheme.labelLarge
+                            ?.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
                     Text(
                       barcode.symbology,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
                     if (onCopy != null) ...[
                       const SizedBox(width: 8),

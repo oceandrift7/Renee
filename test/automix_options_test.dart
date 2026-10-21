@@ -49,26 +49,23 @@ void main() {
     },
   );
 
-  test(
-    'crossfade ignores reliable beats; manual beat match retains selected length',
-    () {
-      const grid = AutoMixBeatGrid(
-        bpm: 120,
-        phase: 0,
-        confidence: 0.9,
-        firstSound: 0,
-      );
-      for (final effect in [AutoMixEffect.auto, AutoMixEffect.crossfade]) {
-        final plan = AutoMixPlan.create(
-          outgoingDuration: const Duration(seconds: 180),
-          incomingDuration: const Duration(seconds: 200),
-          outro: grid,
-          intro: grid,
-          options: AutoMixOptions(durationSeconds: 30, effect: effect),
-        )!;
-        expect(plan.duration, const Duration(seconds: 30));
-        expect(plan.beatMatched, effect != AutoMixEffect.crossfade);
-      }
-    },
-  );
+  test('crossfade ignores reliable beats; manual beat match retains selected length', () {
+    const grid = AutoMixBeatGrid(
+      bpm: 120,
+      phase: 0,
+      confidence: 0.9,
+      firstSound: 0,
+    );
+    for (final effect in [AutoMixEffect.auto, AutoMixEffect.crossfade]) {
+      final plan = AutoMixPlan.create(
+        outgoingDuration: const Duration(seconds: 180),
+        incomingDuration: const Duration(seconds: 200),
+        outro: grid,
+        intro: grid,
+        options: AutoMixOptions(durationSeconds: 30, effect: effect),
+      )!;
+      expect(plan.duration, const Duration(seconds: 30));
+      expect(plan.beatMatched, effect != AutoMixEffect.crossfade);
+    }
+  });
 }

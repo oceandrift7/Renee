@@ -35,15 +35,25 @@ void main() {
   test('rejects expired audio URLs and accepts fresh alternatives', () {
     final result = YouTubeMusicDirectResolver.resourceFromPlayerResponse(
       payload([
-        {...aac, 'url': 'https://rr1.googlevideo.com/videoplayback?expire=1000'},
-        {...aac, 'itag': 139, 'url': 'https://rr2.googlevideo.com/videoplayback?expire=9999999999'},
+        {
+          ...aac,
+          'url': 'https://rr1.googlevideo.com/videoplayback?expire=1000',
+        },
+        {
+          ...aac,
+          'itag': 139,
+          'url': 'https://rr2.googlevideo.com/videoplayback?expire=9999999999',
+        },
       ]),
     );
     expect(result?.uri.host, 'rr2.googlevideo.com');
     expect(
       YouTubeMusicDirectResolver.resourceFromPlayerResponse(
         payload([
-          {...aac, 'url': 'https://rr1.googlevideo.com/videoplayback?expire=1000'},
+          {
+            ...aac,
+            'url': 'https://rr1.googlevideo.com/videoplayback?expire=1000',
+          },
         ]),
       ),
       isNull,
@@ -54,7 +64,9 @@ void main() {
     expect(
       YouTubeMusicDirectResolver.resourceFromPlayerResponse({
         'playabilityStatus': {'status': 'LOGIN_REQUIRED'},
-        'streamingData': {'adaptiveFormats': [aac]},
+        'streamingData': {
+          'adaptiveFormats': [aac],
+        },
       }),
       isNull,
     );
@@ -66,40 +78,44 @@ void main() {
       isNull,
     );
     expect(
-      YouTubeMusicDirectResolver.resourceFromPlayerResponse(payload([
-        {'itag': 140, 'mimeType': 'audio/mp4', 'signatureCipher': 's=abc'},
-      ])),
+      YouTubeMusicDirectResolver.resourceFromPlayerResponse(
+        payload([
+          {'itag': 140, 'mimeType': 'audio/mp4', 'signatureCipher': 's=abc'},
+        ]),
+      ),
       isNull,
     );
   });
 
   test('rejects untrusted URL hosts', () {
     expect(
-      YouTubeMusicDirectResolver.resourceFromPlayerResponse(payload([
-        {
-          ...aac,
-          'url': 'https://not-googlevideo.example.org/song.m4a',
-        },
-      ])),
+      YouTubeMusicDirectResolver.resourceFromPlayerResponse(
+        payload([
+          {...aac, 'url': 'https://not-googlevideo.example.org/song.m4a'},
+        ]),
+      ),
       isNull,
     );
   });
 
-  test('resolver makes one player API request, not a full media download', () async {
-    var calls = 0;
-    final client = MockClient((request) async {
-      calls++;
-      expect(request.method, 'POST');
-      expect(request.url.host, 'www.youtube.com');
-      final json = jsonDecode(request.body) as Map<String, dynamic>;
-      expect(json['videoId'], 'abcdefghijk');
-      return http.Response(jsonEncode(payload([aac])), 200);
-    });
-    final source = YouTubeMusicDirectResolver(client: client);
-    final resource = await source.resolve('abcdefghijk');
-    expect(resource?.uri.scheme, 'https');
-    expect(calls, 1);
-    source.close();
-    client.close();
-  });
+  test(
+    'resolver makes one player API request, not a full media download',
+    () async {
+      var calls = 0;
+      final client = MockClient((request) async {
+        calls++;
+        expect(request.method, 'POST');
+        expect(request.url.host, 'www.youtube.com');
+        final json = jsonDecode(request.body) as Map<String, dynamic>;
+        expect(json['videoId'], 'abcdefghijk');
+        return http.Response(jsonEncode(payload([aac])), 200);
+      });
+      final source = YouTubeMusicDirectResolver(client: client);
+      final resource = await source.resolve('abcdefghijk');
+      expect(resource?.uri.scheme, 'https');
+      expect(calls, 1);
+      source.close();
+      client.close();
+    },
+  );
 }

@@ -13,8 +13,7 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   final report = <String, dynamic>{
     'platform': Platform.operatingSystem,
-    'note':
-        'Five alternating old/new pairs, queued IDs without active transfers. Measures synchronous dispatch, total native cancel/clear completion and caller heartbeat, not UI frames or download throughput. Reset setup and 50ms settle excluded. iOS debug is correctness only.',
+    'note': 'Five alternating old/new pairs, queued IDs without active transfers. Measures synchronous dispatch, total native cancel/clear completion and caller heartbeat, not UI frames or download throughput. Reset setup and 50ms settle excluded. iOS debug is correctness only.',
   };
   late Directory root;
   late Directory output;

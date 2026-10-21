@@ -63,9 +63,8 @@ class _NativeHarness {
           }
           lines.add('$timestamp\t${row['file_path']}');
         }
-        await File(
-          request['snapshot_path'] as String,
-        ).writeAsString('${lines.join('\n')}\n');
+        await File(request['snapshot_path'] as String)
+            .writeAsString('${lines.join('\n')}\n');
         count = rows.length;
       } else {
         expect(await private.query('library'), isEmpty);
@@ -233,9 +232,9 @@ void main() {
       expect(await Directory(File(path).parent.path).exists(), isFalse);
     }
     expect(
-      (await live.rawQuery(
-        'PRAGMA database_list',
-      )).map((r) => r['name']).where((name) => name != 'temp'),
+      (await live.rawQuery('PRAGMA database_list'))
+          .map((r) => r['name'])
+          .where((name) => name != 'temp'),
       ['main', 'history_db'],
     );
     expect(await live.rawQuery('PRAGMA integrity_check'), [
@@ -243,44 +242,39 @@ void main() {
     ]);
   }
 
-  test(
-    'full private staging publishes exact rows and filters current History through live triggers',
-    () async {
-      final rows = [nativeLibraryTrack('new'), nativeLibraryTrack('download')];
-      native.afterStage = () =>
-          addNativeLibraryDownload(live, '/music/download.flac');
-      final result = await adapter.importScanFile(
-        'source',
-        await scan(rows),
-        requestId: 'full',
-        isCancelled: () => false,
-      );
-      expect(result, containsPair('durable', true));
-      expect(result['inserted'], 1);
-      expect(result['skipped'], 1);
-      expect(
-        await live.query(
-          'library',
-          where: 'source_id = ?',
-          whereArgs: ['source'],
-        ),
-        [LibraryRowMapper.encode(rows.first, sourceId: 'source')],
-      );
-      expect(
-        (await live.query(
-          'library_path_keys',
-        )).map((r) => r['item_id']).toSet(),
-        {'new', 'other'},
-      );
-      final lookup = await live.rawQuery(
-        "SELECT ref_count FROM library_lookup_summary WHERE source_id='source' AND kind='match'",
-      );
-      expect(lookup, [
-        {'ref_count': 1},
-      ]);
-      await cleaned();
-    },
-  );
+  test('full private staging publishes exact rows and filters current History through live triggers', () async {
+    final rows = [nativeLibraryTrack('new'), nativeLibraryTrack('download')];
+    native.afterStage = () =>
+        addNativeLibraryDownload(live, '/music/download.flac');
+    final result = await adapter.importScanFile(
+      'source',
+      await scan(rows),
+      requestId: 'full',
+      isCancelled: () => false,
+    );
+    expect(result, containsPair('durable', true));
+    expect(result['inserted'], 1);
+    expect(result['skipped'], 1);
+    expect(
+      await live.query(
+        'library',
+        where: 'source_id = ?',
+        whereArgs: ['source'],
+      ),
+      [LibraryRowMapper.encode(rows.first, sourceId: 'source')],
+    );
+    expect(
+      (await live.query('library_path_keys')).map((r) => r['item_id']).toSet(),
+      {'new', 'other'},
+    );
+    final lookup = await live.rawQuery(
+      "SELECT ref_count FROM library_lookup_summary WHERE source_id='source' AND kind='match'",
+    );
+    expect(lookup, [
+      {'ref_count': 1},
+    ]);
+    await cleaned();
+  });
 
   test(
     'partial and empty scans preserve missing rows only for partial scans',
@@ -319,52 +313,47 @@ void main() {
     },
   );
 
-  test(
-    'incremental removes current downloads and exact source-scoped deleted paths',
-    () async {
-      await addNativeLibraryTrack(live, nativeLibraryTrack('unchanged'));
-      await addNativeLibraryTrack(live, nativeLibraryTrack('unreadable'));
-      native.incremental = [
-        nativeLibraryTrack('new'),
-        nativeLibraryTrack('download'),
-      ];
-      native.removed = [
-        '/music/old.flac',
-        '/music/old.flac',
-        '/other/other.flac',
-      ];
-      native.afterStage = () async {
-        await addNativeLibraryDownload(live, '/music/unchanged.flac');
-        await addNativeLibraryDownload(live, '/music/download.flac');
-      };
-      final result = await adapter.scanIncremental(
-        'source',
-        '/music',
-        '${root.path}/snapshot.tsv',
-        isSaf: false,
-        requestId: 'incremental',
-        isCancelled: () => false,
-      );
-      expect(result['inserted'], 1);
-      expect(result['skipped'], 2);
-      expect(result['deleted_count'], 1);
-      expect(result['skippedCount'], 3);
-      expect(result['scanned_count'], 2);
-      expect(result['totalFiles'], 5);
-      expect((await live.query('library', orderBy: 'id')).map((r) => r['id']), [
-        'new',
-        'other',
-        'unreadable',
-      ]);
-      expect(
-        (await live.query(
-          'library_path_keys',
-        )).map((r) => r['item_id']).toSet(),
-        {'new', 'other', 'unreadable'},
-      );
-      await cleaned();
-    },
-  );
+  test('incremental removes current downloads and exact source-scoped deleted paths', () async {
+    await addNativeLibraryTrack(live, nativeLibraryTrack('unchanged'));
+    await addNativeLibraryTrack(live, nativeLibraryTrack('unreadable'));
+    native.incremental = [
+      nativeLibraryTrack('new'),
+      nativeLibraryTrack('download'),
+    ];
+    native.removed = [
+      '/music/old.flac',
+      '/music/old.flac',
+      '/other/other.flac',
+    ];
+    native.afterStage = () async {
+      await addNativeLibraryDownload(live, '/music/unchanged.flac');
+      await addNativeLibraryDownload(live, '/music/download.flac');
+    };
+    final result = await adapter.scanIncremental(
+      'source',
+      '/music',
+      '${root.path}/snapshot.tsv',
+      isSaf: false,
+      requestId: 'incremental',
+      isCancelled: () => false,
+    );
+    expect(result['inserted'], 1);
+    expect(result['skipped'], 2);
+    expect(result['deleted_count'], 1);
+    expect(result['skippedCount'], 3);
+    expect(result['scanned_count'], 2);
+    expect(result['totalFiles'], 5);
+    expect((await live.query('library', orderBy: 'id')).map((r) => r['id']), [
+      'new',
+      'other',
+      'unreadable',
+    ]);
+    expect(
+      (await live.query('library_path_keys')).map((r) => r['item_id']).toSet(),
+      {'new', 'other', 'unreadable'},
+    );
+    await cleaned();
+  });
 
   test(
     'source edit and cancellation after private commit never publish',
@@ -564,126 +553,114 @@ void main() {
     },
   );
 
-  test(
-    'timestamp snapshot retains sentinels and only backfills still missing eligible live rows',
-    () async {
-      for (final id in ['zero', 'changed', 'legacy']) {
-        await addNativeLibraryTrack(
-          live,
-          nativeLibraryTrack(id, timestamp: 0, version: id == 'legacy' ? 3 : 4),
-        );
-      }
-      native.afterStage = () async {
-        await live.update(
-          'library',
-          {'file_mod_time': 777, 'sort_added': 777},
-          where: 'id=?',
-          whereArgs: ['changed'],
-        );
-        await live.update(
-          'library',
-          {'file_mod_time': 0},
-          where: 'id=?',
-          whereArgs: ['old'],
-        );
-      };
-      final path = await adapter.writeFileModTimesSnapshot(
-        'source',
-        requestId: 'snapshot',
-        isCancelled: () => false,
-      );
-      expect(await File(path).readAsLines(), [
-        '999\t/music/changed.flac',
-        '-1\t/music/legacy.flac',
-        '1770000000000\t/music/old.flac',
-        '999\t/music/zero.flac',
-      ]);
-      final rows = await live.query(
-        'library',
-        columns: ['id', 'file_mod_time'],
-        orderBy: 'id',
-      );
-      expect(rows, [
-        {'id': 'changed', 'file_mod_time': 777},
-        {'id': 'legacy', 'file_mod_time': 0},
-        {'id': 'old', 'file_mod_time': 0},
-        {'id': 'other', 'file_mod_time': 1770000000000},
-        {'id': 'zero', 'file_mod_time': 999},
-      ]);
-      await cleaned();
-    },
-  );
-
-  test(
-    'timestamp preparation DETACH failure retains projection and never invokes native',
-    () async {
-      final probed = _SqlProbe(live, live.path, (sql) {
-        if (sql.startsWith('DETACH')) {
-          throw StateError('fixture timestamp preparation detach failure');
-        }
-      });
-      final candidate = LibraryNativeAdapter(
-        probed,
-        temporaryDirectory: root,
-        nativeJobRunner: native.run,
-      );
-      await expectLater(
-        candidate.writeFileModTimesSnapshot(
-          'source',
-          requestId: 'timestamp-detach-prepare',
-          isCancelled: () => false,
-        ),
-        throwsA(isA<NativeSqliteSnapshotDetachException>()),
-      );
-      expect(native.stagedPaths, isEmpty);
-      final stage = (await live.rawQuery('PRAGMA database_list')).singleWhere(
-        (row) => (row['name'] as String).startsWith('library_private_'),
-      );
-      expect(await File(stage['file'] as String).exists(), isTrue);
-      await live.execute('DETACH DATABASE "${stage['name']}"');
-    },
-  );
-
-  test(
-    'timestamp publication DETACH failure retains projection and returns durable snapshot',
-    () async {
+  test('timestamp snapshot retains sentinels and only backfills still missing eligible live rows', () async {
+    for (final id in ['zero', 'changed', 'legacy']) {
       await addNativeLibraryTrack(
         live,
-        nativeLibraryTrack('zero', timestamp: 0),
+        nativeLibraryTrack(id, timestamp: 0, version: id == 'legacy' ? 3 : 4),
       );
-      var published = false;
-      final probed = _SqlProbe(live, live.path, (sql) {
-        if (sql.startsWith('UPDATE main.library SET file_mod_time')) {
-          published = true;
-        }
-        if (published && sql.startsWith('DETACH')) {
-          throw StateError('fixture timestamp postcommit detach failure');
-        }
-      });
-      final candidate = LibraryNativeAdapter(
-        probed,
-        temporaryDirectory: root,
-        nativeJobRunner: native.run,
+    }
+    native.afterStage = () async {
+      await live.update(
+        'library',
+        {'file_mod_time': 777, 'sort_added': 777},
+        where: 'id=?',
+        whereArgs: ['changed'],
       );
-      final output = await candidate.writeFileModTimesSnapshot(
+      await live.update(
+        'library',
+        {'file_mod_time': 0},
+        where: 'id=?',
+        whereArgs: ['old'],
+      );
+    };
+    final path = await adapter.writeFileModTimesSnapshot(
+      'source',
+      requestId: 'snapshot',
+      isCancelled: () => false,
+    );
+    expect(await File(path).readAsLines(), [
+      '999\t/music/changed.flac',
+      '-1\t/music/legacy.flac',
+      '1770000000000\t/music/old.flac',
+      '999\t/music/zero.flac',
+    ]);
+    final rows = await live.query(
+      'library',
+      columns: ['id', 'file_mod_time'],
+      orderBy: 'id',
+    );
+    expect(rows, [
+      {'id': 'changed', 'file_mod_time': 777},
+      {'id': 'legacy', 'file_mod_time': 0},
+      {'id': 'old', 'file_mod_time': 0},
+      {'id': 'other', 'file_mod_time': 1770000000000},
+      {'id': 'zero', 'file_mod_time': 999},
+    ]);
+    await cleaned();
+  });
+
+  test('timestamp preparation DETACH failure retains projection and never invokes native', () async {
+    final probed = _SqlProbe(live, live.path, (sql) {
+      if (sql.startsWith('DETACH')) {
+        throw StateError('fixture timestamp preparation detach failure');
+      }
+    });
+    final candidate = LibraryNativeAdapter(
+      probed,
+      temporaryDirectory: root,
+      nativeJobRunner: native.run,
+    );
+    await expectLater(
+      candidate.writeFileModTimesSnapshot(
         'source',
-        requestId: 'timestamp-detach-publish',
+        requestId: 'timestamp-detach-prepare',
         isCancelled: () => false,
-      );
-      expect(await File(output).exists(), isTrue);
-      expect(
-        (await live.query(
-          'library',
-          where: 'id=?',
-          whereArgs: ['zero'],
-        )).single['file_mod_time'],
-        999,
-      );
-      expect(await File(native.stagedPaths.single).exists(), isTrue);
-      final stage = (await live.rawQuery('PRAGMA database_list')).singleWhere(
-        (row) => (row['name'] as String).startsWith('library_private_'),
-      );
-      await live.execute('DETACH DATABASE "${stage['name']}"');
-    },
-  );
+      ),
+      throwsA(isA<NativeSqliteSnapshotDetachException>()),
+    );
+    expect(native.stagedPaths, isEmpty);
+    final stage = (await live.rawQuery('PRAGMA database_list')).singleWhere(
+      (row) => (row['name'] as String).startsWith('library_private_'),
+    );
+    expect(await File(stage['file'] as String).exists(), isTrue);
+    await live.execute('DETACH DATABASE "${stage['name']}"');
+  });
+
+  test('timestamp publication DETACH failure retains projection and returns durable snapshot', () async {
+    await addNativeLibraryTrack(live, nativeLibraryTrack('zero', timestamp: 0));
+    var published = false;
+    final probed = _SqlProbe(live, live.path, (sql) {
+      if (sql.startsWith('UPDATE main.library SET file_mod_time')) {
+        published = true;
+      }
+      if (published && sql.startsWith('DETACH')) {
+        throw StateError('fixture timestamp postcommit detach failure');
+      }
+    });
+    final candidate = LibraryNativeAdapter(
+      probed,
+      temporaryDirectory: root,
+      nativeJobRunner: native.run,
+    );
+    final output = await candidate.writeFileModTimesSnapshot(
+      'source',
+      requestId: 'timestamp-detach-publish',
+      isCancelled: () => false,
+    );
+    expect(await File(output).exists(), isTrue);
+    expect(
+      (await live.query(
+        'library',
+        where: 'id=?',
+        whereArgs: ['zero'],
+      )).single['file_mod_time'],
+      999,
+    );
+    expect(await File(native.stagedPaths.single).exists(), isTrue);
+    final stage = (await live.rawQuery('PRAGMA database_list')).singleWhere(
+      (row) => (row['name'] as String).startsWith('library_private_'),
+    );
+    await live.execute('DETACH DATABASE "${stage['name']}"');
+  });
 }

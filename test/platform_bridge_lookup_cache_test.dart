@@ -128,9 +128,9 @@ void main() {
       }
       await Future<void>.delayed(debounce + const Duration(milliseconds: 250));
       final prefs = await SharedPreferences.getInstance();
-      final stored =
-          jsonDecode(prefs.getString('bridge_metadata_lookup_cache_v1')!)
-              as Map;
+      final stored = jsonDecode(
+        prefs.getString('bridge_metadata_lookup_cache_v1')!,
+      ) as Map;
       expect(stored.keys, ['example:album:small']);
     },
   );

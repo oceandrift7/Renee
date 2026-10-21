@@ -165,9 +165,8 @@ extension _TrackMetadataMornye on _TrackMetadataScreenState {
         borderRadius: BorderRadius.circular(28),
         clipBehavior: Clip.antiAlias,
         child: DividerTheme(
-          data: DividerTheme.of(
-            context,
-          ).copyWith(color: MornyeTheme.metadataDividerColor(context)),
+          data: DividerTheme.of(context)
+              .copyWith(color: MornyeTheme.metadataDividerColor(context)),
           child: child,
         ),
       );

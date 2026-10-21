@@ -39,11 +39,16 @@ void main() {
   });
 
   test('catalog keys distinguish providers', () {
-    expect(catalog.storageKey, isNot(const CatalogTrack(
-      provider: 'deezer',
-      id: 'abc',
-      title: 'Example Song',
-      artist: 'Example Artist',
-    ).storageKey));
+    expect(
+      catalog.storageKey,
+      isNot(
+        const CatalogTrack(
+          provider: 'deezer',
+          id: 'abc',
+          title: 'Example Song',
+          artist: 'Example Artist',
+        ).storageKey,
+      ),
+    );
   });
 }

@@ -520,9 +520,11 @@ void main() {
         expect(_segmentBoxes(tester), isNot(same(boxes)));
         if (width == 180) {
           expect(
-            _segmentBoxes(
-              tester,
-            ).expand((boxes) => boxes).map((box) => box.top).toSet().length,
+            _segmentBoxes(tester)
+                .expand((boxes) => boxes)
+                .map((box) => box.top)
+                .toSet()
+                .length,
             greaterThan(1),
           );
         }

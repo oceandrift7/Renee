@@ -62,9 +62,8 @@ extension _QueueTabDownloadDialogs on _QueueTabState {
             children: [
               Text(
                 item.track.name,
-                style: Theme.of(
-                  ctx,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(ctx).textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 10),
               SelectableText(

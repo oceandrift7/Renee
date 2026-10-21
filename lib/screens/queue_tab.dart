@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:mornye/widgets/app_alert_dialog.dart';
@@ -255,9 +256,8 @@ class _QueueTabState extends ConsumerState<QueueTab> {
         (settings.defaultLibraryView == 'last'
             ? settings.historyFilterMode
             : settings.defaultLibraryView);
-    final initialPage = _pageIndexFor(
-      initialFilter,
-    ).clamp(0, _filterModes.length - 1);
+    final initialPage = _pageIndexFor(initialFilter)
+        .clamp(0, _filterModes.length - 1);
     _albumsShowSingles = initialFilter == 'singles';
     final initialMode = _modeForPage(initialPage);
     if (widget.librarySection == null &&
@@ -751,9 +751,8 @@ class _QueueTabState extends ConsumerState<QueueTab> {
       );
     }
 
-    final selectionItems = getFilterData(
-      historyFilterMode,
-    ).filteredUnifiedItems;
+    final selectionItems = getFilterData(historyFilterMode)
+        .filteredUnifiedItems;
     if (_isSelectionMode || _isPlaylistSelectionMode) {
       final bottomPadding = MediaQuery.paddingOf(context).bottom;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -788,9 +787,8 @@ class _QueueTabState extends ConsumerState<QueueTab> {
           // ScrollConfiguration disables stretch overscroll to fix _StretchController exception
           // This is a known Flutter issue with NestedScrollView + Material 3 stretch indicator
           ScrollConfiguration(
-            behavior: ScrollConfiguration.of(
-              context,
-            ).copyWith(overscroll: false),
+            behavior: ScrollConfiguration.of(context)
+                .copyWith(overscroll: false),
             child: NestedScrollView(
               headerSliverBuilder: (context, innerBoxIsScrolled) => [
                 if (widget.librarySection == null)

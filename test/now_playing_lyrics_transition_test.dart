@@ -650,9 +650,8 @@ void main() {
           playbackEvents: playbackEvents.stream,
           wrapPlayer: (player) => Builder(
             builder: (context) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(disableAnimations: reducedMotion),
+              data: MediaQuery.of(context)
+                  .copyWith(disableAnimations: reducedMotion),
               child: player,
             ),
           ),
@@ -895,9 +894,8 @@ void main() {
             controller: controller,
             wrapPlayer: (player) => Builder(
               builder: (context) => MediaQuery(
-                data: MediaQuery.of(
-                  context,
-                ).copyWith(disableAnimations: reducedMotion),
+                data: MediaQuery.of(context)
+                    .copyWith(disableAnimations: reducedMotion),
                 child: player,
               ),
             ),
@@ -1118,9 +1116,8 @@ void main() {
   ) async {
     await pumpNowPlaying(
       tester,
-      theme: MornyeTheme.build(
-        Brightness.dark,
-      ).copyWith(platform: TargetPlatform.android),
+      theme: MornyeTheme.build(Brightness.dark)
+          .copyWith(platform: TargetPlatform.android),
       size: const Size(900, 420),
     );
     mediaItems.add(item('first'));
@@ -1269,9 +1266,8 @@ void main() {
           playback: PlaybackState(playing: true),
           wrapPlayer: (player) => Builder(
             builder: (context) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(disableAnimations: reducedMotion),
+              data: MediaQuery.of(context)
+                  .copyWith(disableAnimations: reducedMotion),
               child: player,
             ),
           ),
@@ -1592,9 +1588,8 @@ void main() {
     };
     await pumpNowPlaying(
       tester,
-      theme: MornyeTheme.build(
-        Brightness.dark,
-      ).copyWith(platform: TargetPlatform.android),
+      theme: MornyeTheme.build(Brightness.dark)
+          .copyWith(platform: TargetPlatform.android),
       size: const Size(393, 852),
     );
     mediaItems.add(item('first'));
@@ -2383,9 +2378,8 @@ void main() {
       playbackEvents: playbackEvents.stream,
     );
     mediaItems.add(
-      item(
-        'first',
-      ).copyWith(duration: const Duration(seconds: 180, milliseconds: 600)),
+      item('first')
+          .copyWith(duration: const Duration(seconds: 180, milliseconds: 600)),
     );
 
     Future<void> positionAt(int milliseconds) async {
@@ -2621,9 +2615,9 @@ void main() {
               body: Align(
                 alignment: Alignment.bottomLeft,
                 child: TextButton(
-                  onPressed: () => Navigator.of(
-                    context,
-                  ).push(NowPlayingRoute(child: playerScreen())),
+                  onPressed: () =>
+                      Navigator.of(context)
+                          .push(NowPlayingRoute(child: playerScreen())),
                   child: const Hero(
                     tag: kNowPlayingArtworkHeroTag,
                     child: SizedBox.square(dimension: 38, child: Text('Open')),
@@ -3317,8 +3311,7 @@ void main() {
     'lyrics end with writer and provider credits and clear them on track change',
     (tester) async {
       metadataOverrides['composer'] = 'Example Composer';
-      metadataOverrides['lyrics'] =
-          '[by:SpotiFLAC-Mobile via Example Lyrics API (source: upstream)]\n[00:01]Last lyric';
+      metadataOverrides['lyrics'] = '[by:SpotiFLAC-Mobile via Example Lyrics API (source: upstream)]\n[00:01]Last lyric';
       await pumpNowPlaying(
         tester,
         theme: MornyeTheme.build(Brightness.dark),
@@ -4221,9 +4214,8 @@ void main() {
           playbackEvents: playback.stream,
           wrapPlayer: (player) => Builder(
             builder: (context) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(disableAnimations: reducedMotion),
+              data: MediaQuery.of(context)
+                  .copyWith(disableAnimations: reducedMotion),
               child: player,
             ),
           ),

@@ -52,9 +52,8 @@ class PlayerPlaybackControls extends ConsumerWidget {
     final playPauseSize = compact
         ? (isPlaying ? 44.0 : 40.0)
         : (isPlaying ? 60.0 : 54.0);
-    final timeStyle = Theme.of(
-      context,
-    ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant);
+    final timeStyle = Theme.of(context).textTheme.bodySmall
+        ?.copyWith(color: colorScheme.onSurfaceVariant);
     return Column(
       children: [
         ValueListenableBuilder<Duration?>(

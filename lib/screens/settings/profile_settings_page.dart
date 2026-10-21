@@ -77,9 +77,8 @@ class _ProfileSettingsPageState extends ConsumerState<ProfileSettingsPage> {
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.l10n.profileSaveError)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.l10n.profileSaveError)));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

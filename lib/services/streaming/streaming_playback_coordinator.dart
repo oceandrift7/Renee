@@ -39,7 +39,8 @@ class StreamingPlaybackCoordinator {
       ),
       youtubeMusic: youtubeMusic,
       soundCloud: soundCloud,
-      findExactFreelyPlayableMatch: (source, _) => matching.find(source, catalog),
+      findExactFreelyPlayableMatch: (source, _) =>
+          matching.find(source, catalog),
       isCurrentRequest: isCurrentRequest,
     );
   }
@@ -53,7 +54,8 @@ class StreamingPlaybackCoordinator {
     required Future<StreamingTrack?> Function(
       StreamingSource source,
       StreamingTrack requested,
-    ) findExactFreelyPlayableMatch,
+    )
+    findExactFreelyPlayableMatch,
     bool Function()? isCurrentRequest,
   }) async {
     final selected = await policy.select(

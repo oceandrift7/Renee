@@ -328,7 +328,6 @@ Future<Map<String, dynamic>> benchmarkCollectionJsonExport({
     'json_characters': expected.length,
     'baseline': baseline,
     'worker': worker,
-    'note':
-        'Full model-to-encoded-JSON: original UI map+encoding isolate versus bounded single worker JSON.',
+    'note': 'Full model-to-encoded-JSON: original UI map+encoding isolate versus bounded single worker JSON.',
   };
 }

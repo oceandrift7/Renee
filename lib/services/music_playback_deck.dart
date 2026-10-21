@@ -221,7 +221,9 @@ class MusicPlaybackDeck {
     _routeLost = false;
     _nativeStarted = false;
     if (headers.isNotEmpty) {
-      throw UnsupportedError('Custom stream request headers are not supported by the native player');
+      throw UnsupportedError(
+        'Custom stream request headers are not supported by the native player',
+      );
     }
     await _setOrdinarySource(UrlSource(url));
   }
@@ -257,16 +259,18 @@ class MusicPlaybackDeck {
             },
           );
       try {
-        final response = await _channel
-            .invokeMapMethod<String, dynamic>('prepare', {
-              'path': source.path,
-              'token': _token,
-              'direct': directUsb,
-              'allowDop': allowDop,
-              'allowFixedVolume': allowFixedVolume,
-              'dapExclusive': dapExclusive,
-              'requiresDsd': requiresDsd,
-            });
+        final response = await _channel.invokeMapMethod<String, dynamic>(
+          'prepare',
+          {
+            'path': source.path,
+            'token': _token,
+            'direct': directUsb,
+            'allowDop': allowDop,
+            'allowFixedVolume': allowFixedVolume,
+            'dapExclusive': dapExclusive,
+            'requiresDsd': requiresDsd,
+          },
+        );
         if (_disposed || preparingToken != _token) return;
         if (response?['ready'] == true) {
           _volumeBlocked = response?['volumeBlocked'] == true;

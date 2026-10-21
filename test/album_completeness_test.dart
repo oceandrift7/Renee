@@ -4,9 +4,10 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mornye/services/album_completeness.dart';
 
-String _tableDefinition(String path, String table) => RegExp(
-  'CREATE TABLE $table\\s*\\([\\s\\S]*?\\n\\s*\\)',
-).firstMatch(File(path).readAsStringSync())!.group(0)!;
+String _tableDefinition(String path, String table) =>
+    RegExp('CREATE TABLE $table\\s*\\([\\s\\S]*?\\n\\s*\\)')
+        .firstMatch(File(path).readAsStringSync())!
+        .group(0)!;
 
 void main() {
   test(
@@ -87,12 +88,10 @@ print('assessment passed')
     },
   );
 
-  test(
-    'inventory combines both databases, deduplicates stored paths and retains offline evidence',
-    () async {
-      final result = await Process.run('python3', [
-        '-c',
-        r'''
+  test('inventory combines both databases, deduplicates stored paths and retains offline evidence', () async {
+    final result = await Process.run('python3', [
+      '-c',
+      r'''
 import json, sqlite3, sys
 data = json.loads(sys.argv[1])
 db = sqlite3.connect(':memory:')
@@ -137,27 +136,24 @@ db.execute("DELETE FROM library WHERE id = 'local4'")
 assert rows(data['combined'])['mixed']['album_completeness'] == 'incomplete'
 print('inventory passed')
 ''',
-        jsonEncode({
-          'history': _tableDefinition(
-            'lib/services/history_schema.dart',
-            'history',
-          ),
-          'library': _tableDefinition(
-            'lib/services/library_schema.dart',
-            'library',
-          ),
-          'combined': albumCompletenessSql(
-            albumInventorySql(includeLocal: true),
-          ),
-          'downloads': albumCompletenessSql(
-            albumInventorySql(includeLocal: false),
-          ),
-        }),
-      ]);
-      expect(result.exitCode, 0, reason: '${result.stderr}');
-      expect(result.stdout, contains('inventory passed'));
-    },
-  );
+      jsonEncode({
+        'history': _tableDefinition(
+          'lib/services/history_schema.dart',
+          'history',
+        ),
+        'library': _tableDefinition(
+          'lib/services/library_schema.dart',
+          'library',
+        ),
+        'combined': albumCompletenessSql(albumInventorySql(includeLocal: true)),
+        'downloads': albumCompletenessSql(
+          albumInventorySql(includeLocal: false),
+        ),
+      }),
+    ]);
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    expect(result.stdout, contains('inventory passed'));
+  });
 
   test(
     'badge distinguishes a known count, missing disc and unknown metadata',

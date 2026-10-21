@@ -91,9 +91,9 @@ String _sanitizeText(String raw, {required String fallback}) {
         '',
       );
 
-  message = _stripLeadingWrappers(
-    message,
-  ).replaceAll(RegExp(r'\s+'), ' ').trim();
+  message = _stripLeadingWrappers(message)
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim();
   message = message.replaceFirst(RegExp(r'^[,;:\s]+'), '').trim();
 
   if (!_isMeaningful(message) ||

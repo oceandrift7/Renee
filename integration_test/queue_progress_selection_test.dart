@@ -88,8 +88,7 @@ void main() {
     binding.reportData!['queue_progress_selection'] = {
       'platform': Platform.operatingSystem,
       'completed_cases': cases.length,
-      'note':
-          'Five alternating pairs after warming both methods: 10000 sparse progress snapshots for front candidates, 500 for tail candidates. Both use the current index update; legacy selection scans items, current selection reads cached first positions. Setup excluded. CPU only, not rendered frames or download speed. iOS debug correctness only.',
+      'note': 'Five alternating pairs after warming both methods: 10000 sparse progress snapshots for front candidates, 500 for tail candidates. Both use the current index update; legacy selection scans items, current selection reads cached first positions. Setup excluded. CPU only, not rendered frames or download speed. iOS debug correctness only.',
       'cases': cases,
     };
   });

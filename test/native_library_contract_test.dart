@@ -9,13 +9,9 @@ void main() {
   test(
     'native library fixtures preserve production Dart row and path codecs',
     () {
-      final fixture =
-          jsonDecode(
-                File(
-                  'test/fixtures/native_library_contract.json',
-                ).readAsStringSync(),
-              )
-              as Map<String, dynamic>;
+      final fixture = jsonDecode(
+        File('test/fixtures/native_library_contract.json').readAsStringSync(),
+      ) as Map<String, dynamic>;
       for (final entry in fixture['rows'] as List) {
         final value = entry as Map<String, dynamic>;
         expect(

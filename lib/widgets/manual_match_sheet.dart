@@ -70,7 +70,11 @@ class _ManualMatchSheetState extends State<ManualMatchSheet> {
   }
 
   Future<void> _search() async {
-    setState(() { searching = true; searchError = null; results = const []; });
+    setState(() {
+      searching = true;
+      searchError = null;
+      results = const [];
+    });
     try {
       final found = await searchClient.search(queryController.text);
       if (!mounted) return;
@@ -102,14 +106,19 @@ class _ManualMatchSheetState extends State<ManualMatchSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
-        20, 20, 20, MediaQuery.viewInsetsOf(context).bottom + 24,
+        20,
+        20,
+        20,
+        MediaQuery.viewInsetsOf(context).bottom + 24,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Match YouTube Music Track',
-              style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Match YouTube Music Track',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           Text('${catalog.title} — ${catalog.artist}'),
           const SizedBox(height: 16),
@@ -126,8 +135,7 @@ class _ManualMatchSheetState extends State<ManualMatchSheet> {
             ),
           ),
           if (searching) const LinearProgressIndicator(),
-          if (searchError != null)
-            Text('Search unavailable: $searchError'),
+          if (searchError != null) Text('Search unavailable: $searchError'),
           if (results.isNotEmpty)
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 260),
@@ -148,8 +156,10 @@ class _ManualMatchSheetState extends State<ManualMatchSheet> {
                 },
               ),
             ),
-          const Text('Select a search result, then save. Search uses an unofficial '
-              'YouTube Music endpoint and may stop working. This does not enable playback.'),
+          const Text(
+            'Select a search result, then save. Search uses an unofficial '
+            'YouTube Music endpoint and may stop working. This does not enable playback.',
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: controller,

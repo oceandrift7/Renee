@@ -34,9 +34,8 @@ void main() {
     'Song_converted.flac',
   ]) {
     test('decryption retains the original name $name', () async {
-      final source = await File(
-        '${directory.path}/$name',
-      ).writeAsString('encrypted');
+      final source = await File('${directory.path}/$name')
+          .writeAsString('encrypted');
       final result = await FFmpegDecryption.decrypt(
         inputPath: source.path,
         descriptor: descriptor(
@@ -55,9 +54,8 @@ void main() {
   }
 
   test('failed FLAC attempt falls back to the original M4A name', () async {
-    final source = await File(
-      '${directory.path}/Song.m4a',
-    ).writeAsString('encrypted');
+    final source = await File('${directory.path}/Song.m4a')
+        .writeAsString('encrypted');
     String? failedPath;
     final result = await FFmpegDecryption.decrypt(
       inputPath: source.path,
@@ -85,9 +83,8 @@ void main() {
   test(
     'decryption failures and exceptions retain the source and clean outputs',
     () async {
-      final source = await File(
-        '${directory.path}/Song.flac',
-      ).writeAsString('encrypted');
+      final source = await File('${directory.path}/Song.flac')
+          .writeAsString('encrypted');
       for (final execute in <Future<FFmpegResult> Function(String)>[
         (command) async {
           await File(outputPath(command)).writeAsString('partial');
@@ -113,12 +110,10 @@ void main() {
   test(
     'decryption preserves an existing output and a requested original',
     () async {
-      final source = await File(
-        '${directory.path}/Song.m4a',
-      ).writeAsString('encrypted');
-      final sibling = await File(
-        '${directory.path}/Song.flac',
-      ).writeAsString('existing');
+      final source = await File('${directory.path}/Song.m4a')
+          .writeAsString('encrypted');
+      final sibling = await File('${directory.path}/Song.flac')
+          .writeAsString('existing');
       final result = await FFmpegDecryption.decrypt(
         inputPath: source.path,
         descriptor: descriptor('.flac'),
@@ -135,9 +130,8 @@ void main() {
   test(
     'container preparation completes while the original is available',
     () async {
-      final source = await File(
-        '${directory.path}/Song.mp4',
-      ).writeAsString('encrypted');
+      final source = await File('${directory.path}/Song.mp4')
+          .writeAsString('encrypted');
       final result = await FFmpegDecryption.decrypt(
         inputPath: source.path,
         descriptor: descriptor('.mp4'),

@@ -201,9 +201,8 @@ void main() {
         expect(mutations.map((call) => call.method), ['write']);
         if (legacy) {
           expect(
-            await File(
-              '${storage.dataDir}/example.provider/settings.json',
-            ).readAsString(),
+            await File('${storage.dataDir}/example.provider/settings.json')
+                .readAsString(),
             '{"region":"example"}',
           );
         }

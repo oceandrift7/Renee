@@ -713,12 +713,10 @@ void main() {
   test(
     'identical artwork shares storage until the last reference is gone',
     () async {
-      final shared = await File(
-        '${directory.path}/shared.jpg',
-      ).writeAsBytes([1, 2]);
-      final different = await File(
-        '${directory.path}/different.jpg',
-      ).writeAsBytes([3]);
+      final shared = await File('${directory.path}/shared.jpg')
+          .writeAsBytes([1, 2]);
+      final different = await File('${directory.path}/different.jpg')
+          .writeAsBytes([3]);
       final scan =
           await scanner(
             _Storage({
@@ -762,108 +760,96 @@ void main() {
     },
   );
 
-  test(
-    'subfolders keep original metadata, stable identities and persistent artwork',
-    () async {
-      final cover = await File(
-        '${directory.path}/transient.jpg',
-      ).writeAsBytes([1, 2, 3]);
-      final storage = _Storage({
-        'albums/': [const NetworkEntry('albums/One/', 'One', directory: true)],
-        'albums/One/': [
-          const NetworkEntry(
-            'albums/One/Title - Artist #1.flac',
-            'Title - Artist #1.flac',
-          ),
-          const NetworkEntry(
-            'albums/One/Title - Artist #1.flac',
-            'Title - Artist #1.flac',
-          ),
-          const NetworkEntry('albums/', 'Parent', directory: true),
-        ],
-      });
-      var reads = 0;
-      final progress = <int>[];
-      final scan =
-          await scanner(storage, (source) async {
-            reads++;
-            expect(
-              Uri.parse(source).pathSegments.last,
-              'Title - Artist #1.flac',
-            );
-            return {
-              'title': 'Original Title',
-              'artist': 'Original Artist',
-              'album': 'Original Album',
-              'audio_codec': 'flac',
-              'bit_depth': 24,
-              'sample_rate': 96000,
-              'lyrics': '[00:01.00]Words',
-              'replaygain_track_gain': '-4 dB',
-              'cover_path': cover.path,
-            };
-          }).scan(
-            NetworkStorageService.source('nas', 'albums/'),
-            checkpoint: () async {},
-            onProgress: (count, errors, name) => progress.add(count),
-          );
-      final rows = await scan.rows().toList();
-      expect(reads, 1);
-      expect(progress, [1]);
-      expect(scan.errorCount, 0);
-      expect(rows.single['albumName'], 'Original Album');
-      expect(rows.single['trackName'], 'Original Title');
-      expect(rows.single['artistName'], 'Original Artist');
-      expect(rows.single['hasLyrics'], true);
-      expect(rows.single['replaygain_track_gain'], '-4 dB');
-      expect(rows.single['sampleRate'], 96000);
-      expect(rows.toString(), isNot(contains('private-password')));
-      expect(rows.toString(), isNot(contains('127.0.0.1')));
-      await cover.delete();
-      expect(await File(rows.single['coverPath'] as String).readAsBytes(), [
-        1,
-        2,
-        3,
-      ]);
-      await scan.delete();
-      expect(await scan.file.exists(), false);
-    },
-  );
+  test('subfolders keep original metadata, stable identities and persistent artwork', () async {
+    final cover = await File('${directory.path}/transient.jpg')
+        .writeAsBytes([1, 2, 3]);
+    final storage = _Storage({
+      'albums/': [const NetworkEntry('albums/One/', 'One', directory: true)],
+      'albums/One/': [
+        const NetworkEntry(
+          'albums/One/Title - Artist #1.flac',
+          'Title - Artist #1.flac',
+        ),
+        const NetworkEntry(
+          'albums/One/Title - Artist #1.flac',
+          'Title - Artist #1.flac',
+        ),
+        const NetworkEntry('albums/', 'Parent', directory: true),
+      ],
+    });
+    var reads = 0;
+    final progress = <int>[];
+    final scan =
+        await scanner(storage, (source) async {
+          reads++;
+          expect(Uri.parse(source).pathSegments.last, 'Title - Artist #1.flac');
+          return {
+            'title': 'Original Title',
+            'artist': 'Original Artist',
+            'album': 'Original Album',
+            'audio_codec': 'flac',
+            'bit_depth': 24,
+            'sample_rate': 96000,
+            'lyrics': '[00:01.00]Words',
+            'replaygain_track_gain': '-4 dB',
+            'cover_path': cover.path,
+          };
+        }).scan(
+          NetworkStorageService.source('nas', 'albums/'),
+          checkpoint: () async {},
+          onProgress: (count, errors, name) => progress.add(count),
+        );
+    final rows = await scan.rows().toList();
+    expect(reads, 1);
+    expect(progress, [1]);
+    expect(scan.errorCount, 0);
+    expect(rows.single['albumName'], 'Original Album');
+    expect(rows.single['trackName'], 'Original Title');
+    expect(rows.single['artistName'], 'Original Artist');
+    expect(rows.single['hasLyrics'], true);
+    expect(rows.single['replaygain_track_gain'], '-4 dB');
+    expect(rows.single['sampleRate'], 96000);
+    expect(rows.toString(), isNot(contains('private-password')));
+    expect(rows.toString(), isNot(contains('127.0.0.1')));
+    await cover.delete();
+    expect(await File(rows.single['coverPath'] as String).readAsBytes(), [
+      1,
+      2,
+      3,
+    ]);
+    await scan.delete();
+    expect(await scan.file.exists(), false);
+  });
 
-  test(
-    'failed folders and tags report partial results instead of deleting old rows',
-    () async {
-      LogBuffer().clear();
-      final storage = _Storage({
-        '': [
-          const NetworkEntry('offline/', 'Offline', directory: true),
-          const NetworkEntry('ok.flac', 'ok.flac'),
-          const NetworkEntry('bad.flac', 'bad.flac'),
-        ],
-      }, failedFolder: 'offline/');
-      final scan =
-          await scanner(storage, (source) async {
-            if (source.endsWith('bad.flac')) {
-              return {'metadataFromFilename': true};
-            }
-            return {'title': 'Valid', 'album': 'Album'};
-          }).scan(
-            NetworkStorageService.source('nas', ''),
-            checkpoint: () async {},
-            onProgress: (_, _, _) {},
-          );
-      expect(scan.errorCount, 2);
-      expect(scan.expectedCount, 1);
-      expect((await scan.rows().toList()).single['trackName'], 'Valid');
-      final errors = LogBuffer().entries.where(
-        (entry) => entry.level == 'ERROR',
-      );
-      expect(errors, hasLength(2));
-      expect(errors.any((entry) => entry.message.contains('bad.flac')), isTrue);
-      expect(errors.any((entry) => entry.message.contains('offline/')), isTrue);
-      expect(errors.first.error, contains('Network tags unavailable'));
-    },
-  );
+  test('failed folders and tags report partial results instead of deleting old rows', () async {
+    LogBuffer().clear();
+    final storage = _Storage({
+      '': [
+        const NetworkEntry('offline/', 'Offline', directory: true),
+        const NetworkEntry('ok.flac', 'ok.flac'),
+        const NetworkEntry('bad.flac', 'bad.flac'),
+      ],
+    }, failedFolder: 'offline/');
+    final scan =
+        await scanner(storage, (source) async {
+          if (source.endsWith('bad.flac')) {
+            return {'metadataFromFilename': true};
+          }
+          return {'title': 'Valid', 'album': 'Album'};
+        }).scan(
+          NetworkStorageService.source('nas', ''),
+          checkpoint: () async {},
+          onProgress: (_, _, _) {},
+        );
+    expect(scan.errorCount, 2);
+    expect(scan.expectedCount, 1);
+    expect((await scan.rows().toList()).single['trackName'], 'Valid');
+    final errors = LogBuffer().entries.where((entry) => entry.level == 'ERROR');
+    expect(errors, hasLength(2));
+    expect(errors.any((entry) => entry.message.contains('bad.flac')), isTrue);
+    expect(errors.any((entry) => entry.message.contains('offline/')), isTrue);
+    expect(errors.first.error, contains('Network tags unavailable'));
+  });
 
   test(
     'root connection failure never produces an empty successful scan',

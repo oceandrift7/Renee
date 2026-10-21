@@ -6,26 +6,24 @@ import 'package:mornye/services/library_database.dart';
 
 String _tableDefinition(String path, String table) {
   final source = File(path).readAsStringSync();
-  return RegExp(
-    'CREATE TABLE $table\\s*\\([\\s\\S]*?\\n\\s*\\)',
-  ).firstMatch(source)!.group(0)!;
+  return RegExp('CREATE TABLE $table\\s*\\([\\s\\S]*?\\n\\s*\\)')
+      .firstMatch(source)!
+      .group(0)!;
 }
 
 void main() {
-  test(
-    'ReplayGain filter includes unindexed candidates and follows tag add/remove in both databases',
-    () async {
-      final historyPredicate = missingReplayGainSqlPredicate(
-        hasReplayGainExpr: 'has_replaygain',
-      );
-      final localPredicate = missingReplayGainSqlPredicate(
-        hasReplayGainExpr: 'has_replaygain',
-      );
-      // Use the production table definitions and filter predicates with real
-      // SQLite. This catches missing schema columns and NULL/default semantics.
-      final result = await Process.run('python3', [
-        '-c',
-        r'''
+  test('ReplayGain filter includes unindexed candidates and follows tag add/remove in both databases', () async {
+    final historyPredicate = missingReplayGainSqlPredicate(
+      hasReplayGainExpr: 'has_replaygain',
+    );
+    final localPredicate = missingReplayGainSqlPredicate(
+      hasReplayGainExpr: 'has_replaygain',
+    );
+    // Use the production table definitions and filter predicates with real
+    // SQLite. This catches missing schema columns and NULL/default semantics.
+    final result = await Process.run('python3', [
+      '-c',
+      r'''
 import json, sqlite3, sys
 data = json.loads(sys.argv[1])
 db = sqlite3.connect(':memory:')
@@ -54,22 +52,21 @@ for table, version, known, predicate in [
     assert len(matches()) == 5, (table, matches())
 print('both databases passed')
 ''',
-        jsonEncode({
-          'history': _tableDefinition(
-            'lib/services/history_schema.dart',
-            'history',
-          ),
-          'library': _tableDefinition(
-            'lib/services/library_schema.dart',
-            'library',
-          ),
-          'historyPredicate': historyPredicate,
-          'localPredicate': localPredicate,
-          'scanVersion': LibraryDatabase.audioMetadataScanVersion,
-        }),
-      ]);
-      expect(result.exitCode, 0, reason: '${result.stderr}');
-      expect(result.stdout, contains('both databases passed'));
-    },
-  );
+      jsonEncode({
+        'history': _tableDefinition(
+          'lib/services/history_schema.dart',
+          'history',
+        ),
+        'library': _tableDefinition(
+          'lib/services/library_schema.dart',
+          'library',
+        ),
+        'historyPredicate': historyPredicate,
+        'localPredicate': localPredicate,
+        'scanVersion': LibraryDatabase.audioMetadataScanVersion,
+      }),
+    ]);
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    expect(result.stdout, contains('both databases passed'));
+  });
 }

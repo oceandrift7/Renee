@@ -15,9 +15,8 @@ Future<File> _payload(
   String name, {
   bool recent = false,
 }) async {
-  final file = await File(
-    '${directory.path}/$name',
-  ).writeAsBytes(List.filled(100, 0));
+  final file = await File('${directory.path}/$name')
+      .writeAsBytes(List.filled(100, 0));
   if (!recent) await file.setLastModified(DateTime(2020));
   return file;
 }

@@ -148,53 +148,50 @@ void main() {
     },
   );
 
-  test(
-    'a failed large legacy import rolls back rows and leaves preferences retryable',
-    () async {
-      final database = await fixture();
-      await database.insert('download_queue_items', {
-        'id': 'existing',
-        'item_json': '{}',
-        'status': 'queued',
-        'created_at': 'before',
-        'updated_at': 'before',
-      });
-      await database.execute('''
+  test('a failed large legacy import rolls back rows and leaves preferences retryable', () async {
+    final database = await fixture();
+    await database.insert('download_queue_items', {
+      'id': 'existing',
+      'item_json': '{}',
+      'status': 'queued',
+      'created_at': 'before',
+      'updated_at': 'before',
+    });
+    await database.execute('''
       CREATE TRIGGER reject_queue BEFORE INSERT ON download_queue_items
       WHEN NEW.id = 'reject' BEGIN SELECT RAISE(ABORT, 'fixture rejection'); END
     ''');
-      final comment = List.filled(70000, 'x').join();
-      final raw = jsonEncode([
-        {'id': 'first', 'status': 'queued', 'comment': comment},
-        {'id': 'reject', 'status': 'queued'},
-      ]);
-      final prefs = await preferences(raw);
-      expect(
-        await AppStateDatabase.instance.migrateQueueFromSharedPreferences(
-          preferencesOverride: prefs,
-          databaseOverride: database,
-        ),
-        isFalse,
-      );
-      expect(
-        (await database.query('download_queue_items')).map((row) => row['id']),
-        ['existing'],
-      );
-      expect(prefs.getBool(_marker), isNull);
-      expect(prefs.getString('download_queue'), raw);
-      await database.execute('DROP TRIGGER reject_queue');
-      expect(
-        await AppStateDatabase.instance.migrateQueueFromSharedPreferences(
-          preferencesOverride: prefs,
-          databaseOverride: database,
-        ),
-        isTrue,
-      );
-      expect(
-        (await database.query('download_queue_items')).map((row) => row['id']),
-        ['existing', 'first', 'reject'],
-      );
-      expect(prefs.getBool(_marker), isTrue);
-    },
-  );
+    final comment = List.filled(70000, 'x').join();
+    final raw = jsonEncode([
+      {'id': 'first', 'status': 'queued', 'comment': comment},
+      {'id': 'reject', 'status': 'queued'},
+    ]);
+    final prefs = await preferences(raw);
+    expect(
+      await AppStateDatabase.instance.migrateQueueFromSharedPreferences(
+        preferencesOverride: prefs,
+        databaseOverride: database,
+      ),
+      isFalse,
+    );
+    expect(
+      (await database.query('download_queue_items')).map((row) => row['id']),
+      ['existing'],
+    );
+    expect(prefs.getBool(_marker), isNull);
+    expect(prefs.getString('download_queue'), raw);
+    await database.execute('DROP TRIGGER reject_queue');
+    expect(
+      await AppStateDatabase.instance.migrateQueueFromSharedPreferences(
+        preferencesOverride: prefs,
+        databaseOverride: database,
+      ),
+      isTrue,
+    );
+    expect(
+      (await database.query('download_queue_items')).map((row) => row['id']),
+      ['existing', 'first', 'reject'],
+    );
+    expect(prefs.getBool(_marker), isTrue);
+  });
 }

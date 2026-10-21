@@ -45,9 +45,9 @@ enum _PresetAction { manage, import, export }
 class _EqualizerScreenState extends ConsumerState<EqualizerScreen> {
   bool _busy = false;
 
-  void _message(String message) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(message)));
+  void _message(String message) =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
 
   Future<void> _savePreset() async {
     final name = await showAppDialog<String>(

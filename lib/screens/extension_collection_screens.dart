@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:mornye/theme/mornye_theme.dart';
 import 'package:mornye/widgets/error_card.dart';
@@ -79,9 +80,8 @@ class _LoadingOrErrorScaffold extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 12),
                   child: HeaderCircleButton(
                     icon: Icons.arrow_back,
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).backButtonTooltip,
+                    tooltip: MaterialLocalizations.of(context)
+                        .backButtonTooltip,
                     onPressed: () => Navigator.pop(context),
                   ),
                 ),
@@ -146,9 +146,8 @@ class _LoadingOrErrorScaffold extends StatelessWidget {
                   padding: const EdgeInsets.only(left: 12),
                   child: HeaderCircleButton(
                     icon: Icons.arrow_back,
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).backButtonTooltip,
+                    tooltip: MaterialLocalizations.of(context)
+                        .backButtonTooltip,
                     onPressed: () => Navigator.pop(context),
                   ),
                 )

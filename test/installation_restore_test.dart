@@ -212,12 +212,10 @@ void main() {
   });
 
   test('Android backup policy excludes every app-data domain', () {
-    final manifest = File(
-      'android/app/src/main/AndroidManifest.xml',
-    ).readAsStringSync();
-    final currentRules = File(
-      'android/app/src/main/res/xml/backup_rules.xml',
-    ).readAsStringSync();
+    final manifest = File('android/app/src/main/AndroidManifest.xml')
+        .readAsStringSync();
+    final currentRules = File('android/app/src/main/res/xml/backup_rules.xml')
+        .readAsStringSync();
     final legacyRules = File(
       'android/app/src/main/res/xml/backup_rules_legacy.xml',
     ).readAsStringSync();

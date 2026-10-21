@@ -94,15 +94,17 @@ void main() {
         ),
       );
       expect(
-        AppTheme.light(
-          fontFamily: 'ImportedFont_test',
-        ).textTheme.bodyMedium!.fontFamily,
+        AppTheme.light(fontFamily: 'ImportedFont_test')
+            .textTheme
+            .bodyMedium!
+            .fontFamily,
         'ImportedFont_test',
       );
       expect(
-        AppTheme.dark(
-          fontFamily: 'ImportedFont_test',
-        ).textTheme.bodyMedium!.fontFamily,
+        AppTheme.dark(fontFamily: 'ImportedFont_test')
+            .textTheme
+            .bodyMedium!
+            .fontFamily,
         'ImportedFont_test',
       );
       expect(

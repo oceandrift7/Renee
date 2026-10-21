@@ -20,7 +20,8 @@ class CatalogTrack {
   final Duration? duration;
   final String? isrc;
 
-  String get storageKey => '${Uri.encodeComponent(provider)}:${Uri.encodeComponent(id)}';
+  String get storageKey =>
+      '${Uri.encodeComponent(provider)}:${Uri.encodeComponent(id)}';
 }
 
 class RankedMatch {
@@ -33,7 +34,10 @@ class RankedMatch {
 class TrackMatcher {
   const TrackMatcher();
 
-  List<RankedMatch> rank(CatalogTrack catalog, Iterable<StreamingTrack> candidates) {
+  List<RankedMatch> rank(
+    CatalogTrack catalog,
+    Iterable<StreamingTrack> candidates,
+  ) {
     final ranked = candidates.map((candidate) {
       final title = _similarity(catalog.title, candidate.title);
       final artist = _similarity(catalog.artist, candidate.artist);
@@ -46,10 +50,14 @@ class TrackMatcher {
   }
 
   /// Deliberately conservative: uncertain matches should be shown to the user.
-  RankedMatch? confidentMatch(CatalogTrack catalog, Iterable<StreamingTrack> candidates) {
+  RankedMatch? confidentMatch(
+    CatalogTrack catalog,
+    Iterable<StreamingTrack> candidates,
+  ) {
     final results = rank(catalog, candidates);
     if (results.isEmpty || results.first.score < 0.88) return null;
-    if (results.length > 1 && results.first.score - results[1].score < 0.08) return null;
+    if (results.length > 1 && results.first.score - results[1].score < 0.08)
+      return null;
     return results.first;
   }
 

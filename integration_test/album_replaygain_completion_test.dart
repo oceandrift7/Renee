@@ -186,9 +186,8 @@ void main() {
       audio.add(base64Encode(await File(path).readAsBytes()));
       hashes.add(await _pcmHash(path));
     }
-    final provider = await Directory(
-      '${extensions.path}/example.audio',
-    ).create();
+    final provider = await Directory('${extensions.path}/example.audio')
+        .create();
     await File('${provider.path}/manifest.json').writeAsString(
       jsonEncode({
         'name': 'example.audio',
@@ -387,8 +386,7 @@ registerExtension({
           expect(
             candidatesMatch,
             isTrue,
-            reason:
-                'Cached notification candidates must match each real queue snapshot',
+            reason: 'Cached notification candidates must match each real queue snapshot',
           );
         } finally {
           subscription.close();

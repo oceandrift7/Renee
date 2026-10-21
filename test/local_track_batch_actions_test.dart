@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:flutter/services.dart';
 import 'package:mornye/providers/settings_provider.dart';
 import 'package:mornye/providers/local_library_provider.dart';
@@ -67,8 +68,10 @@ void main() {
                 }
               : {'method': 'native', 'lyrics_status': 'updated'};
         },
-        writeSidecar:
-            ({required audioFilePath, required reEnrichResult}) async {},
+        writeSidecar: ({
+          required audioFilePath,
+          required reEnrichResult,
+        }) async {},
       );
       final previews = await runner.preview(
         [item('1')],
@@ -100,189 +103,176 @@ void main() {
     },
   );
 
-  test(
-    'lookup/apply each capture settings once, dispatch native/ffmpeg, and retain partial success',
-    () async {
-      var phaseCount = 0;
-      var currentSettings = const AppSettings(lyricsMode: 'preview');
-      final requests = <Map<String, dynamic>>[];
-      final sidecars = <String>[];
-      final ffmpegModes = <String>[];
-      final reported = <String>[];
-      final runner = BatchReEnrichRunner(
-        beginPhase: () async {
-          phaseCount++;
-          return currentSettings;
-        },
-        reEnrich: (request) async {
-          requests.add(request);
-          if (request['preview_only'] == true) {
-            return {
-              'method': 'preview',
-              'enriched_metadata': {'isrc': 'USABC2600001'},
-            };
-          }
-          // A mid-phase change must not alter the captured apply settings.
-          currentSettings = currentSettings.copyWith(
-            artistTagMode: 'later',
-            lyricsMode: 'later',
-          );
-          return switch (request['file_path']) {
-            '/music/1.flac' => {'method': 'native'},
-            '/music/2.flac' => {'method': 'ffmpeg'},
-            '/music/3.flac' => throw StateError('write failed'),
-            _ => {'method': 'unsupported'},
-          };
-        },
-        writeSidecar:
-            ({required audioFilePath, required reEnrichResult}) async {
-              sidecars.add(audioFilePath);
-            },
-        applyFfmpeg:
-            ({required item, required result, required artistTagMode}) async {
-              ffmpegModes.add(artistTagMode);
-              return true;
-            },
-      );
-      final previews = await runner.preview(
-        [item('1'), item('2'), item('3'), item('4')],
-        const ReEnrichFieldSelection(mode: ReEnrichBatchMode.isrcOnly),
-        shouldStop: running,
-        onProgress: progress,
-      );
-      expect(previews.length, 4);
-      expect(phaseCount, 1);
-      currentSettings = const AppSettings(
-        lyricsMode: 'apply',
-        artistTagMode: 'split_vorbis',
-      );
-      final successes = await runner.apply(
-        previews,
-        shouldStop: running,
-        onProgress: progress,
-        onResult: (result) => reported.add(result['method'] as String),
-      );
-      expect(successes, 2);
-      expect(reported, ['native', 'ffmpeg']);
-      expect(phaseCount, 2);
-      expect(sidecars, ['/music/1.flac']);
-      expect(ffmpegModes, ['split_vorbis']);
-      expect(
-        requests.take(4).map((request) => request['lyrics_mode']),
-        everyElement('preview'),
-      );
-      expect(
-        requests.skip(4).map((request) => request['lyrics_mode']),
-        everyElement('apply'),
-      );
-      expect(
-        requests.skip(4).map((request) => request['search_online']),
-        everyElement(false),
-      );
-    },
-  );
-
-  test(
-    'manual previews avoid lookups; cancellation before apply performs no writes or phase sync',
-    () async {
-      var phases = 0;
-      var calls = 0;
-      final runner = BatchReEnrichRunner(
-        beginPhase: () async {
-          phases++;
-          return const AppSettings();
-        },
-        reEnrich: (_) async {
-          calls++;
-          return {};
-        },
-      );
-      final previews = await runner.preview(
-        [item('1'), item('2')],
-        const ReEnrichFieldSelection(
-          mode: ReEnrichBatchMode.manualValues,
-          manualValues: {'genre': 'Jazz'},
-        ),
-        shouldStop: running,
-        onProgress: progress,
-      );
-      expect(previews.length, 2);
-      expect(calls, 0);
-      expect(
-        await runner.apply(
-          previews,
-          shouldStop: () => true,
-          onProgress: progress,
-        ),
-        0,
-      );
-      expect(calls, 0);
-      expect(phases, 1);
-    },
-  );
-
-  test(
-    'lookup failures do not discard useful previews and cancellation stops subsequent tracks',
-    () async {
-      var cancelled = false;
-      var lookups = 0;
-      final runner = BatchReEnrichRunner(
-        beginPhase: () async => const AppSettings(),
-        reEnrich: (_) async {
-          lookups++;
-          if (lookups == 1) throw StateError('lookup failed');
-          cancelled = true;
+  test('lookup/apply each capture settings once, dispatch native/ffmpeg, and retain partial success', () async {
+    var phaseCount = 0;
+    var currentSettings = const AppSettings(lyricsMode: 'preview');
+    final requests = <Map<String, dynamic>>[];
+    final sidecars = <String>[];
+    final ffmpegModes = <String>[];
+    final reported = <String>[];
+    final runner = BatchReEnrichRunner(
+      beginPhase: () async {
+        phaseCount++;
+        return currentSettings;
+      },
+      reEnrich: (request) async {
+        requests.add(request);
+        if (request['preview_only'] == true) {
           return {
             'method': 'preview',
             'enriched_metadata': {'isrc': 'USABC2600001'},
           };
-        },
-      );
-      final previews = await runner.preview(
-        [item('1'), item('2'), item('3')],
-        const ReEnrichFieldSelection(mode: ReEnrichBatchMode.isrcOnly),
-        shouldStop: () => cancelled,
-        onProgress: progress,
-      );
-      expect(lookups, 2);
-      expect(previews.single.item.id, '2');
-    },
-  );
+        }
+        // A mid-phase change must not alter the captured apply settings.
+        currentSettings = currentSettings.copyWith(
+          artistTagMode: 'later',
+          lyricsMode: 'later',
+        );
+        return switch (request['file_path']) {
+          '/music/1.flac' => {'method': 'native'},
+          '/music/2.flac' => {'method': 'ffmpeg'},
+          '/music/3.flac' => throw StateError('write failed'),
+          _ => {'method': 'unsupported'},
+        };
+      },
+      writeSidecar: ({required audioFilePath, required reEnrichResult}) async {
+        sidecars.add(audioFilePath);
+      },
+      applyFfmpeg:
+          ({required item, required result, required artistTagMode}) async {
+            ffmpegModes.add(artistTagMode);
+            return true;
+          },
+    );
+    final previews = await runner.preview(
+      [item('1'), item('2'), item('3'), item('4')],
+      const ReEnrichFieldSelection(mode: ReEnrichBatchMode.isrcOnly),
+      shouldStop: running,
+      onProgress: progress,
+    );
+    expect(previews.length, 4);
+    expect(phaseCount, 1);
+    currentSettings = const AppSettings(
+      lyricsMode: 'apply',
+      artistTagMode: 'split_vorbis',
+    );
+    final successes = await runner.apply(
+      previews,
+      shouldStop: running,
+      onProgress: progress,
+      onResult: (result) => reported.add(result['method'] as String),
+    );
+    expect(successes, 2);
+    expect(reported, ['native', 'ffmpeg']);
+    expect(phaseCount, 2);
+    expect(sidecars, ['/music/1.flac']);
+    expect(ffmpegModes, ['split_vorbis']);
+    expect(
+      requests.take(4).map((request) => request['lyrics_mode']),
+      everyElement('preview'),
+    );
+    expect(
+      requests.skip(4).map((request) => request['lyrics_mode']),
+      everyElement('apply'),
+    );
+    expect(
+      requests.skip(4).map((request) => request['search_online']),
+      everyElement(false),
+    );
+  });
 
-  test(
-    'FLAC matching retains reliable partial results and counts failures when cancelled',
-    () async {
-      var cancelled = false;
-      var calls = 0;
-      final result = await matchLocalTracksForFlac(
-        [item('1'), item('2'), item('3'), item('4'), item('5')],
-        shouldStop: () => cancelled,
+  test('manual previews avoid lookups; cancellation before apply performs no writes or phase sync', () async {
+    var phases = 0;
+    var calls = 0;
+    final runner = BatchReEnrichRunner(
+      beginPhase: () async {
+        phases++;
+        return const AppSettings();
+      },
+      reEnrich: (_) async {
+        calls++;
+        return {};
+      },
+    );
+    final previews = await runner.preview(
+      [item('1'), item('2')],
+      const ReEnrichFieldSelection(
+        mode: ReEnrichBatchMode.manualValues,
+        manualValues: {'genre': 'Jazz'},
+      ),
+      shouldStop: running,
+      onProgress: progress,
+    );
+    expect(previews.length, 2);
+    expect(calls, 0);
+    expect(
+      await runner.apply(
+        previews,
+        shouldStop: () => true,
         onProgress: progress,
-        resolve: (local) async {
-          calls++;
-          if (local.id == '2') throw StateError('lookup failed');
-          if (local.id == '4') cancelled = true;
-          return LocalTrackRedownloadResolution(
-            localItem: local,
-            match: local.id == '3'
-                ? null
-                : Track(
-                    id: local.id,
-                    name: local.trackName,
-                    artistName: 'Artist',
-                    albumName: 'Album',
-                    duration: 1,
-                  ),
-            score: 100,
-            reason: 'fixture',
-          );
-        },
-      );
-      expect(calls, 4);
-      expect(result.tracks.map((track) => track.id), ['1', '4']);
-      expect(result.skipped, 2);
-    },
-  );
+      ),
+      0,
+    );
+    expect(calls, 0);
+    expect(phases, 1);
+  });
+
+  test('lookup failures do not discard useful previews and cancellation stops subsequent tracks', () async {
+    var cancelled = false;
+    var lookups = 0;
+    final runner = BatchReEnrichRunner(
+      beginPhase: () async => const AppSettings(),
+      reEnrich: (_) async {
+        lookups++;
+        if (lookups == 1) throw StateError('lookup failed');
+        cancelled = true;
+        return {
+          'method': 'preview',
+          'enriched_metadata': {'isrc': 'USABC2600001'},
+        };
+      },
+    );
+    final previews = await runner.preview(
+      [item('1'), item('2'), item('3')],
+      const ReEnrichFieldSelection(mode: ReEnrichBatchMode.isrcOnly),
+      shouldStop: () => cancelled,
+      onProgress: progress,
+    );
+    expect(lookups, 2);
+    expect(previews.single.item.id, '2');
+  });
+
+  test('FLAC matching retains reliable partial results and counts failures when cancelled', () async {
+    var cancelled = false;
+    var calls = 0;
+    final result = await matchLocalTracksForFlac(
+      [item('1'), item('2'), item('3'), item('4'), item('5')],
+      shouldStop: () => cancelled,
+      onProgress: progress,
+      resolve: (local) async {
+        calls++;
+        if (local.id == '2') throw StateError('lookup failed');
+        if (local.id == '4') cancelled = true;
+        return LocalTrackRedownloadResolution(
+          localItem: local,
+          match: local.id == '3'
+              ? null
+              : Track(
+                  id: local.id,
+                  name: local.trackName,
+                  artistName: 'Artist',
+                  albumName: 'Album',
+                  duration: 1,
+                ),
+          score: 100,
+          reason: 'fixture',
+        );
+      },
+    );
+    expect(calls, 4);
+    expect(result.tracks.map((track) => track.id), ['1', '4']);
+    expect(result.skipped, 2);
+  });
 
   for (final leaveDuringRefresh in [false, true]) {
     testWidgets(
@@ -300,9 +290,9 @@ void main() {
             if (call.method != 'reEnrichFile') {
               throw StateError('unexpected call');
             }
-            final request =
-                jsonDecode((call.arguments as Map)['request_json'] as String)
-                    as Map;
+            final request = jsonDecode(
+              (call.arguments as Map)['request_json'] as String,
+            ) as Map;
             return request['preview_only'] == true
                 ? {
                     'method': 'preview',

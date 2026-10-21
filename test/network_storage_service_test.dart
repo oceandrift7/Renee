@@ -165,57 +165,54 @@ void main() {
     }
   });
 
-  test(
-    'concurrent saves persist both connections and retain credentials privately',
-    () async {
-      String? stored;
-      final service = NetworkStorageService(
-        read: () async => stored,
-        write: (s) async {
-          stored = s;
-        },
-      );
-      final empty = await service.connections();
-      await Future.wait([
-        service.save(
-          connection(
-            'https://example.test/',
-            id: 'one',
-            user: 'user',
-            password: 'secret',
-          ),
+  test('concurrent saves persist both connections and retain credentials privately', () async {
+    String? stored;
+    final service = NetworkStorageService(
+      read: () async => stored,
+      write: (s) async {
+        stored = s;
+      },
+    );
+    final empty = await service.connections();
+    await Future.wait([
+      service.save(
+        connection(
+          'https://example.test/',
+          id: 'one',
+          user: 'user',
+          password: 'secret',
         ),
-        service.save(
-          connection(
-            'smb://server/music/',
-            id: 'two',
-            protocol: NetworkProtocol.smb,
-          ),
+      ),
+      service.save(
+        connection(
+          'smb://server/music/',
+          id: 'two',
+          protocol: NetworkProtocol.smb,
         ),
-      ]);
-      final saved = await service.connections();
-      expect(empty, isEmpty);
-      expect(saved.length, 2);
-      expect(await service.connections(), same(saved));
-      expect(() => saved.clear(), throwsUnsupportedError);
-      final restored = NetworkStorageService(
-        read: () async => stored,
-        write: (_) async {},
-      );
-      final loaded = await restored.connections();
-      expect(await restored.connections(), same(loaded));
-      expect(() => loaded.clear(), throwsUnsupportedError);
-      expect((await restored.connection('one')).password, 'secret');
-      final source = NetworkStorageService.source('one', 'test.flac');
-      expect(source, 'network://one/test.flac');
-      await service.remove('one');
-      final removed = await service.connections();
-      expect(removed.single.id, 'two');
-      expect(await service.connections(), same(removed));
-      expect(saved.length, 2);
-      expect(() => removed.clear(), throwsUnsupportedError);
-    },
-  );
+      ),
+    ]);
+    final saved = await service.connections();
+    expect(empty, isEmpty);
+    expect(saved.length, 2);
+    expect(await service.connections(), same(saved));
+    expect(() => saved.clear(), throwsUnsupportedError);
+    final restored = NetworkStorageService(
+      read: () async => stored,
+      write: (_) async {},
+    );
+    final loaded = await restored.connections();
+    expect(await restored.connections(), same(loaded));
+    expect(() => loaded.clear(), throwsUnsupportedError);
+    expect((await restored.connection('one')).password, 'secret');
+    final source = NetworkStorageService.source('one', 'test.flac');
+    expect(source, 'network://one/test.flac');
+    await service.remove('one');
+    final removed = await service.connections();
+    expect(removed.single.id, 'two');
+    expect(await service.connections(), same(removed));
+    expect(saved.length, 2);
+    expect(() => removed.clear(), throwsUnsupportedError);
+  });
 
   group('real HTTP transport', () {
     late HttpServer server;
@@ -393,23 +390,20 @@ void main() {
       );
     });
 
-    test(
-      'same origin redirects work; cross origin redirects cannot leak credentials',
-      () async {
-        expect(
-          (await service.list(
-            connection('$origin/music', user: 'test', password: 'secret'),
-          )).single.audio,
-          true,
-        );
-        await expectLater(
-          service.list(
-            connection('$origin/external', user: 'test', password: 'secret'),
-          ),
-          throwsA(isA<HttpException>()),
-        );
-      },
-    );
+    test('same origin redirects work; cross origin redirects cannot leak credentials', () async {
+      expect(
+        (await service.list(
+          connection('$origin/music', user: 'test', password: 'secret'),
+        )).single.audio,
+        true,
+      );
+      await expectLater(
+        service.list(
+          connection('$origin/external', user: 'test', password: 'secret'),
+        ),
+        throwsA(isA<HttpException>()),
+      );
+    });
   });
 
   test('SMB server browsing and byte-range streaming', () async {

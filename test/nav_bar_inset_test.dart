@@ -26,9 +26,8 @@ void main() {
             home: ValueListenableBuilder<double>(
               valueListenable: inset,
               builder: (context, value, child) => MediaQuery(
-                data: MediaQuery.of(
-                  context,
-                ).copyWith(padding: EdgeInsets.only(top: 24, bottom: value)),
+                data: MediaQuery.of(context)
+                    .copyWith(padding: EdgeInsets.only(top: 24, bottom: value)),
                 child: child!,
               ),
               child: RepaintBoundary(

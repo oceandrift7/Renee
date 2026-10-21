@@ -110,17 +110,15 @@ class _BatchConvertSheetState extends State<BatchConvertSheet> {
                 const SizedBox(height: 18),
                 Text(
                   widget.title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 if (widget.subtitle != null) ...[
                   const SizedBox(height: 4),
                   Text(
                     widget.subtitle!,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: cs.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: cs.onSurfaceVariant),
                   ),
                 ],
                 const SizedBox(height: 20),
@@ -366,9 +364,8 @@ class _BatchConvertSheetState extends State<BatchConvertSheet> {
                                               labels.originalQuality,
                                         ),
                                       ),
-                            style: Theme.of(
-                              context,
-                            ).textTheme.bodySmall?.copyWith(color: cs.primary),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: cs.primary),
                           ),
                         ),
                       ],

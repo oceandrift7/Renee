@@ -91,9 +91,8 @@ class _TutorialScreenState extends ConsumerState<TutorialScreen> {
                     opacity: _currentPage > 0 ? 1.0 : 0.0,
                     child: AppIconButton.filledTonal(
                       onPressed: _currentPage > 0 ? _prevPage : null,
-                      tooltip: MaterialLocalizations.of(
-                        context,
-                      ).backButtonTooltip,
+                      tooltip: MaterialLocalizations.of(context)
+                          .backButtonTooltip,
                       icon: const Icon(Icons.arrow_back),
                       style: IconButton.styleFrom(
                         backgroundColor: colorScheme.surfaceContainerHighest,
@@ -679,9 +678,9 @@ class _TutorialPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-    final textScale = MediaQuery.textScalerOf(
-      context,
-    ).scale(1.0).clamp(1.0, 1.4);
+    final textScale = MediaQuery.textScalerOf(context)
+        .scale(1.0)
+        .clamp(1.0, 1.4);
     final scale = (shortestSide / 390).clamp(0.86, 1.05);
 
     final isActive = currentIndex == index;

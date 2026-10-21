@@ -106,8 +106,7 @@ void main() {
     binding.reportData!['queue_persistence_snapshot'] = {
       'platform': Platform.operatingSystem,
       'completed_cases': cases.length,
-      'note':
-          '20 flushes from a warm saved cache, five alternating legacy/current pairs after warming both. Original snapshot/diff pipeline and actual current persistence service use the same codec and in-memory applyChanges sink, with canonical durable rows checked. Setup/initial serialization and state mutations excluded; measures snapshot/diff/encoding CPU, not SQLite I/O or rendered frames.',
+      'note': '20 flushes from a warm saved cache, five alternating legacy/current pairs after warming both. Original snapshot/diff pipeline and actual current persistence service use the same codec and in-memory applyChanges sink, with canonical durable rows checked. Setup/initial serialization and state mutations excluded; measures snapshot/diff/encoding CPU, not SQLite I/O or rendered frames.',
       'cases': cases,
     };
   });
@@ -139,107 +138,110 @@ void main() {
     }
   }
 
-  testWidgets('private SQLite rolls back, retries and reloads saved snapshots', (
-    tester,
-  ) async {
-    final root = await Directory.systemTemp.createTemp('queue-snapshot-');
-    final originalPaths = PathProviderPlatform.instance;
-    PathProviderPlatform.instance = _Paths(root.path);
-    SharedPreferences.setMockInitialValues({
-      'app_state_migrated_queue_to_sqlite_v1': true,
-    });
-    Database? db;
-    DownloadQueuePersistence? persistence;
-    try {
-      final database = AppStateDatabase.instance;
-      final connection = await database.database;
-      db = connection;
-      expect(connection.path, '${root.path}/app_state.db');
-      var items = (await queueRemovalFixture(2100)).items;
-      final errors = <Object>[];
-      var rejectWrite = false;
-      var attempts = 0;
-      persistence = DownloadQueuePersistence(
-        currentItems: () => items,
-        onError: errors.add,
-        applyChanges: ({required upserts, required deletedIds}) async {
-          attempts++;
-          if (rejectWrite) {
-            await connection.transaction((txn) async {
-              for (final id in deletedIds) {
-                await txn.delete(
-                  'download_queue_items',
-                  where: 'id = ?',
-                  whereArgs: [id],
-                );
-              }
-              await txn.insert(
-                'download_queue_items',
-                upserts.first,
-                conflictAlgorithm: ConflictAlgorithm.replace,
-              );
-              throw StateError('injected transaction failure');
-            });
-          }
-          await database.applyPendingDownloadQueueChanges(
-            upserts: upserts,
-            deletedIds: deletedIds,
-          );
-        },
-      );
-      await persistence.flush();
-      final before = await database.getPendingDownloadQueueRows();
-      expect(before, hasLength(2000));
-      final changed = List<DownloadItem>.of(items);
-      changed[100] = changed[100].copyWith(status: DownloadStatus.completed);
-      changed[102] = changed[102].copyWith(playlistName: 'Updated');
-      changed.add(changed[103].copyWith(id: 'new-item'));
-      changed.removeAt(101);
-      items = ChunkedList.from(changed);
-      rejectWrite = true;
-      await persistence.flush();
-      expect(errors, hasLength(1));
-      expect(await database.getPendingDownloadQueueRows(), before);
-      rejectWrite = false;
-      await persistence.flush();
-      final expected = {
-        for (final item in items)
-          if (item.status != DownloadStatus.completed)
-            item.id: encodeDownloadQueueItemForPersistence(item),
-      };
-      final after = await database.getPendingDownloadQueueRows();
-      expect({for (final row in after) row['id']: row['item_json']}, expected);
-      expect(after, hasLength(1999));
-      await persistence.flush();
-      expect(attempts, 3);
-
-      // A storage reload must invalidate the previously committed list identity.
-      await connection.delete(
-        'download_queue_items',
-        where: 'id = ?',
-        whereArgs: ['new-item'],
-      );
-      expect(await persistence.restore(), hasLength(1998));
-      await persistence.flush();
-      expect(attempts, 4);
-      expect(await database.getPendingDownloadQueueRows(), hasLength(1999));
-      final restored = await persistence.restore();
-      expect({
-        for (final item in restored)
-          item.id: encodeDownloadQueueItemForPersistence(item),
-      }, expected);
-      cases.add({
-        'change': 'private_sqlite_rollback_retry_restore',
-        'initial_rows': before.length,
-        'final_rows': restored.length,
-        'write_attempts': attempts,
-        'expected_errors': errors.length,
+  testWidgets(
+    'private SQLite rolls back, retries and reloads saved snapshots',
+    (tester) async {
+      final root = await Directory.systemTemp.createTemp('queue-snapshot-');
+      final originalPaths = PathProviderPlatform.instance;
+      PathProviderPlatform.instance = _Paths(root.path);
+      SharedPreferences.setMockInitialValues({
+        'app_state_migrated_queue_to_sqlite_v1': true,
       });
-    } finally {
-      persistence?.dispose();
-      await db?.close();
-      PathProviderPlatform.instance = originalPaths;
-      await root.delete(recursive: true);
-    }
-  });
+      Database? db;
+      DownloadQueuePersistence? persistence;
+      try {
+        final database = AppStateDatabase.instance;
+        final connection = await database.database;
+        db = connection;
+        expect(connection.path, '${root.path}/app_state.db');
+        var items = (await queueRemovalFixture(2100)).items;
+        final errors = <Object>[];
+        var rejectWrite = false;
+        var attempts = 0;
+        persistence = DownloadQueuePersistence(
+          currentItems: () => items,
+          onError: errors.add,
+          applyChanges: ({required upserts, required deletedIds}) async {
+            attempts++;
+            if (rejectWrite) {
+              await connection.transaction((txn) async {
+                for (final id in deletedIds) {
+                  await txn.delete(
+                    'download_queue_items',
+                    where: 'id = ?',
+                    whereArgs: [id],
+                  );
+                }
+                await txn.insert(
+                  'download_queue_items',
+                  upserts.first,
+                  conflictAlgorithm: ConflictAlgorithm.replace,
+                );
+                throw StateError('injected transaction failure');
+              });
+            }
+            await database.applyPendingDownloadQueueChanges(
+              upserts: upserts,
+              deletedIds: deletedIds,
+            );
+          },
+        );
+        await persistence.flush();
+        final before = await database.getPendingDownloadQueueRows();
+        expect(before, hasLength(2000));
+        final changed = List<DownloadItem>.of(items);
+        changed[100] = changed[100].copyWith(status: DownloadStatus.completed);
+        changed[102] = changed[102].copyWith(playlistName: 'Updated');
+        changed.add(changed[103].copyWith(id: 'new-item'));
+        changed.removeAt(101);
+        items = ChunkedList.from(changed);
+        rejectWrite = true;
+        await persistence.flush();
+        expect(errors, hasLength(1));
+        expect(await database.getPendingDownloadQueueRows(), before);
+        rejectWrite = false;
+        await persistence.flush();
+        final expected = {
+          for (final item in items)
+            if (item.status != DownloadStatus.completed)
+              item.id: encodeDownloadQueueItemForPersistence(item),
+        };
+        final after = await database.getPendingDownloadQueueRows();
+        expect({
+          for (final row in after) row['id']: row['item_json'],
+        }, expected);
+        expect(after, hasLength(1999));
+        await persistence.flush();
+        expect(attempts, 3);
+
+        // A storage reload must invalidate the previously committed list identity.
+        await connection.delete(
+          'download_queue_items',
+          where: 'id = ?',
+          whereArgs: ['new-item'],
+        );
+        expect(await persistence.restore(), hasLength(1998));
+        await persistence.flush();
+        expect(attempts, 4);
+        expect(await database.getPendingDownloadQueueRows(), hasLength(1999));
+        final restored = await persistence.restore();
+        expect({
+          for (final item in restored)
+            item.id: encodeDownloadQueueItemForPersistence(item),
+        }, expected);
+        cases.add({
+          'change': 'private_sqlite_rollback_retry_restore',
+          'initial_rows': before.length,
+          'final_rows': restored.length,
+          'write_attempts': attempts,
+          'expected_errors': errors.length,
+        });
+      } finally {
+        persistence?.dispose();
+        await db?.close();
+        PathProviderPlatform.instance = originalPaths;
+        await root.delete(recursive: true);
+      }
+    },
+  );
 }

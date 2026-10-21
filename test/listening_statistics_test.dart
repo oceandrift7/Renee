@@ -219,9 +219,8 @@ void main() {
         'Other Artist': 'https://example.com/other.jpg',
       });
       expect(
-        ListeningSummary(
-          tracks: [ListeningTotal(_one, 60000, 1)],
-        ).artistArtwork,
+        ListeningSummary(tracks: [ListeningTotal(_one, 60000, 1)])
+            .artistArtwork,
         isEmpty,
       );
     },

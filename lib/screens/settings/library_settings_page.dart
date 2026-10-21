@@ -1,4 +1,5 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:mornye/widgets/app_alert_dialog.dart';
 import 'package:mornye/widgets/app_switch.dart';
@@ -248,9 +249,8 @@ class _LibrarySettingsPageState extends ConsumerState<LibrarySettingsPage> {
     if (confirmed == true) {
       await ref.read(localLibraryProvider.notifier).clearLibrary();
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(context.l10n.libraryCleared)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(context.l10n.libraryCleared)));
       }
     }
   }

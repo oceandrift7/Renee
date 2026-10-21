@@ -98,8 +98,7 @@ void main() {
     binding.reportData!['queue_index_read'] = {
       'platform': Platform.operatingSystem,
       'completed_cases': cases.length,
-      'note':
-          'Five alternating pairs of 500 real notifier sparse progress updates with 40 queue item and 100 track-membership Riverpod selectors, matching production row selectors. Compare 63 distributed removals with an equivalent fully rebuilt index. CPU/provider propagation only, no rendering or FPS. iOS debug correctness only.',
+      'note': 'Five alternating pairs of 500 real notifier sparse progress updates with 40 queue item and 100 track-membership Riverpod selectors, matching production row selectors. Compare 63 distributed removals with an equivalent fully rebuilt index. CPU/provider propagation only, no rendering or FPS. iOS debug correctness only.',
       'cases': cases,
     };
   });

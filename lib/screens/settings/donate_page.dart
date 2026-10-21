@@ -294,9 +294,8 @@ class _DonateLinksCard extends StatelessWidget {
               padding: const EdgeInsets.all(20),
               child: Text(
                 'Donation links are currently unavailable.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
               ),
             )
           else
@@ -582,9 +581,8 @@ class _NoticeLine extends StatelessWidget {
         Expanded(
           child: Text(
             text,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurface),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colorScheme.onSurface),
           ),
         ),
       ],

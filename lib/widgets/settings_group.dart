@@ -532,12 +532,12 @@ class SettingsItem extends StatelessWidget {
                               subtitle!,
                               style:
                                   (context.isMornye
-                                          ? Theme.of(
-                                              context,
-                                            ).textTheme.bodySmall
-                                          : Theme.of(
-                                              context,
-                                            ).textTheme.bodyMedium)
+                                          ? Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                          : Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium)
                                       ?.copyWith(
                                         color: colorScheme.onSurfaceVariant,
                                       ),

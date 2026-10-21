@@ -12,7 +12,9 @@ void main() {
               {
                 'musicResponsiveListItemFlexColumnRenderer': {
                   'text': {
-                    'runs': [{'text': 'A Song'}],
+                    'runs': [
+                      {'text': 'A Song'},
+                    ],
                   },
                 },
               },

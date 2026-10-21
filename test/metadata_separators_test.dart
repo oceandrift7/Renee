@@ -57,35 +57,29 @@ void main() {
     },
   );
 
-  test(
-    'separator preferences survive native download fallback without renaming tracks',
-    () {
-      const payload = DownloadRequestPayload(
+  test('separator preferences survive native download fallback without renaming tracks', () {
+    const payload = DownloadRequestPayload(
+      trackName: 'Track',
+      artistName: 'A, B',
+      albumName: 'Album',
+      outputDir: '/music',
+      filenameFormat: '{artist}',
+      metadataSeparators: MetadataSeparators(artist: ' / ', genre: '; '),
+    );
+    final request = payload.withStrategy(useFallback: true).toJson();
+    expect(request['artist_name'], 'A, B');
+    expect(request['metadata_separators'], payload.metadataSeparators.toJson());
+    expect(
+      const DownloadRequestPayload(
         trackName: 'Track',
-        artistName: 'A, B',
+        artistName: 'Artist',
         albumName: 'Album',
         outputDir: '/music',
-        filenameFormat: '{artist}',
-        metadataSeparators: MetadataSeparators(artist: ' / ', genre: '; '),
-      );
-      final request = payload.withStrategy(useFallback: true).toJson();
-      expect(request['artist_name'], 'A, B');
-      expect(
-        request['metadata_separators'],
-        payload.metadataSeparators.toJson(),
-      );
-      expect(
-        const DownloadRequestPayload(
-          trackName: 'Track',
-          artistName: 'Artist',
-          albumName: 'Album',
-          outputDir: '/music',
-          filenameFormat: '{title}',
-        ).toJson(),
-        isNot(contains('metadata_separators')),
-      );
-    },
-  );
+        filenameFormat: '{title}',
+      ).toJson(),
+      isNot(contains('metadata_separators')),
+    );
+  });
 
   test(
     'custom joined artist tags override Vorbis splitting per field only',

@@ -37,9 +37,9 @@ extension _TrackMetadataConvertAndCueSplit on _TrackMetadataScreenState {
       }
     }
     if (_isLocalItem && _localLibraryItem != null) {
-      final format = normalizeOptionalString(
-        _localLibraryItem!.format,
-      )?.toLowerCase().replaceAll('-', '_');
+      final format = normalizeOptionalString(_localLibraryItem!.format)
+          ?.toLowerCase()
+          .replaceAll('-', '_');
       switch (format) {
         case 'flac':
           return 'FLAC';

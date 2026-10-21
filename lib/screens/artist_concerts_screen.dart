@@ -183,9 +183,8 @@ class _ArtistConcertsScreenState extends State<ArtistConcertsScreen> {
                                   FittedBox(
                                     fit: BoxFit.scaleDown,
                                     child: Text(
-                                      DateFormat.MMM(
-                                        locale,
-                                      ).format(concert.date),
+                                      DateFormat.MMM(locale)
+                                          .format(concert.date),
                                       maxLines: 1,
                                       style: TextStyle(
                                         color: scheme.primary,
@@ -221,16 +220,14 @@ class _ArtistConcertsScreenState extends State<ArtistConcertsScreen> {
                                 Text(
                                   details,
                                   maxLines:
-                                      MediaQuery.textScalerOf(
-                                            context,
-                                          ).scale(1) >
+                                      MediaQuery.textScalerOf(context)
+                                              .scale(1) >
                                           1.3
                                       ? null
                                       : 1,
                                   overflow:
-                                      MediaQuery.textScalerOf(
-                                            context,
-                                          ).scale(1) >
+                                      MediaQuery.textScalerOf(context)
+                                              .scale(1) >
                                           1.3
                                       ? null
                                       : TextOverflow.ellipsis,

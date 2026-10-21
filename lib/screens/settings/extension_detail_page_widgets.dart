@@ -11,9 +11,8 @@ class _ExtensionOverviewSurface extends StatelessWidget {
     if (context.isMornye) return MornyeGlassPanel(child: content);
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest
+            .withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: content,
@@ -35,9 +34,8 @@ class _ExtensionDivider extends StatelessWidget {
           endIndent: 16,
           color: context.isMornye
               ? MornyeTheme.metadataDividerColor(context)
-              : Theme.of(
-                  context,
-                ).colorScheme.outlineVariant.withValues(alpha: 0.3),
+              : Theme.of(context).colorScheme.outlineVariant
+                    .withValues(alpha: 0.3),
         );
 }
 
@@ -99,9 +97,8 @@ class _InfoRow extends StatelessWidget {
             width: 60,
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
             ),
           ),
           Expanded(
@@ -159,9 +156,8 @@ class _CapabilityItem extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         subtitle!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ],
@@ -233,22 +229,18 @@ class _HealthSummaryItem extends StatelessWidget {
                   children: [
                     Text(
                       _healthStatusLabel(context, statusValue),
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge
+                          ?.copyWith(color: color, fontWeight: FontWeight.w600),
                     ),
                     if (status?.checkedAt != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         context.l10n.extensionLastChecked(
-                          TimeOfDay.fromDateTime(
-                            status!.checkedAt!.toLocal(),
-                          ).format(context),
+                          TimeOfDay.fromDateTime(status!.checkedAt!.toLocal())
+                              .format(context),
                         ),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ],
@@ -323,9 +315,8 @@ class _HealthCheckItem extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       detailParts.join(' · '),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
                     if (message != null && message.isNotEmpty) ...[
                       const SizedBox(height: 2),
@@ -452,9 +443,8 @@ class _SettingItemState extends State<_SettingItem> {
           widget.countryOptions
               ? extensionCountryName(context, widget.value?.toString() ?? '')
               : widget.value?.toString() ?? context.l10n.extensionSettingNotSet,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: colorScheme.primary),
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: colorScheme.primary),
         );
         break;
       case 'button':
@@ -483,9 +473,8 @@ class _SettingItemState extends State<_SettingItem> {
                       )
                     : widget.value?.toString() ??
                           context.l10n.extensionSettingNotSet,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: colorScheme.primary),
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: colorScheme.primary),
               );
         break;
     }
@@ -721,17 +710,15 @@ class _PostProcessingHookItem extends StatelessWidget {
                   children: [
                     Text(
                       hook.name,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w500),
                     ),
                     if (hook.description != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         hook.description!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                     if (hook.supportedFormats.isNotEmpty) ...[
@@ -774,9 +761,8 @@ class _PostProcessingHookItem extends StatelessWidget {
                   ),
                   child: Text(
                     context.l10n.extensionsHomeFeedAuto,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onPrimaryContainer,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: colorScheme.onPrimaryContainer),
                   ),
                 ),
             ],
@@ -828,16 +814,14 @@ class _URLHandlerInfo extends StatelessWidget {
                   children: [
                     Text(
                       context.l10n.extensionCustomUrlHandling,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       context.l10n.extensionCustomUrlHandlingSubtitle,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -897,9 +881,8 @@ class _URLHandlerInfo extends StatelessWidget {
                 Expanded(
                   child: Text(
                     context.l10n.extensionCustomUrlHandlingShareHint,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: colorScheme.onSurfaceVariant),
                   ),
                 ),
               ],
@@ -954,18 +937,16 @@ class _QualityOptionItem extends StatelessWidget {
                   children: [
                     Text(
                       quality.label,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w500),
                     ),
                     if (quality.description != null &&
                         quality.description!.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
                         quality.description!,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                     if (!context.isMornye) ...[
@@ -995,9 +976,8 @@ class _QualityOptionItem extends StatelessWidget {
                     context.l10n.extensionSettingsCount(
                       quality.settings.length,
                     ),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.labelSmall
+                        ?.copyWith(color: colorScheme.onSurfaceVariant),
                   ),
                 ),
             ],

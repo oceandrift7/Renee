@@ -22,9 +22,10 @@ import 'package:mornye/theme/app_theme.dart';
 import 'package:mornye/widgets/app_bottom_sheet.dart';
 import 'package:mornye/widgets/app_choice_chip.dart';
 
-String _definition(String file, String table) => RegExp(
-  'CREATE TABLE $table\\s*\\([\\s\\S]*?\\n\\s*\\)',
-).firstMatch(File(file).readAsStringSync())!.group(0)!;
+String _definition(String file, String table) =>
+    RegExp('CREATE TABLE $table\\s*\\([\\s\\S]*?\\n\\s*\\)')
+        .firstMatch(File(file).readAsStringSync())!
+        .group(0)!;
 
 // Execute the actual page/count queries with their bound parameters in SQLite.
 // Schema/bootstrap calls are isolated from this fixed inventory fixture.
@@ -196,99 +197,96 @@ void main() {
     });
     addTearDown(() => messenger.setMockMethodCallHandler(sqliteChannel, null));
   });
-  test(
-    'production album/track/count queries filter full inventory and paginate consistently',
-    () async {
-      final db = LibraryDatabase.instance;
-      const query = QueueLibraryDbQuery(
+  test('production album/track/count queries filter full inventory and paginate consistently', () async {
+    final db = LibraryDatabase.instance;
+    const query = QueueLibraryDbQuery(
+      filterMode: 'albums',
+      metadata: incompleteAlbumFilter,
+      sortMode: 'album-asc',
+    );
+    final albums = await db.getQueueAlbumPage(query);
+    expect(albums.map((row) => row['album_name']), [
+      'local-only',
+      'missing',
+      'one-track',
+    ]);
+    expect(albums.map((row) => row['album_present_tracks']), [2, 2, 1]);
+    expect(albums.map((row) => row['album_expected_tracks']), [3, 4, 12]);
+    final counts = await db.getQueueCounts(query);
+    expect(counts.albumCount, 3);
+    expect(counts.allTrackCount, 5);
+    final tracks = await db.getQueueTrackPage(
+      const QueueLibraryDbQuery(metadata: incompleteAlbumFilter),
+    );
+    expect(tracks, hasLength(5));
+    expect(tracks.any((row) => row['albumName'] == 'mixed'), isFalse);
+    final first = await db.getQueueAlbumPageResult(
+      const QueueLibraryDbQuery(
         filterMode: 'albums',
         metadata: incompleteAlbumFilter,
         sortMode: 'album-asc',
-      );
-      final albums = await db.getQueueAlbumPage(query);
-      expect(albums.map((row) => row['album_name']), [
-        'local-only',
-        'missing',
-        'one-track',
-      ]);
-      expect(albums.map((row) => row['album_present_tracks']), [2, 2, 1]);
-      expect(albums.map((row) => row['album_expected_tracks']), [3, 4, 12]);
-      final counts = await db.getQueueCounts(query);
-      expect(counts.albumCount, 3);
-      expect(counts.allTrackCount, 5);
-      final tracks = await db.getQueueTrackPage(
-        const QueueLibraryDbQuery(metadata: incompleteAlbumFilter),
-      );
-      expect(tracks, hasLength(5));
-      expect(tracks.any((row) => row['albumName'] == 'mixed'), isFalse);
-      final first = await db.getQueueAlbumPageResult(
-        const QueueLibraryDbQuery(
-          filterMode: 'albums',
-          metadata: incompleteAlbumFilter,
-          sortMode: 'album-asc',
-          limit: 1,
-        ),
-      );
-      final second = await db.getQueueAlbumPageResult(
-        QueueLibraryDbQuery(
-          filterMode: 'albums',
-          metadata: incompleteAlbumFilter,
-          sortMode: 'album-asc',
-          limit: 1,
-          cursor: first.nextCursor,
-        ),
-      );
-      expect(first.rows.single['album_name'], 'local-only');
-      expect(second.rows.single['album_name'], 'missing');
-      final unknown = await db.getQueueAlbumPage(
-        const QueueLibraryDbQuery(
-          filterMode: 'albums',
-          metadata: unknownAlbumCompletenessFilter,
-        ),
-      );
-      expect(unknown.single['album_name'], 'unknown');
-      expect(AlbumCompleteness.fromRow(unknown.single)!.badge, '?');
-      final hiRes = await db.getQueueAlbumPage(
-        const QueueLibraryDbQuery(
-          filterMode: 'albums',
-          metadata: incompleteAlbumFilter,
-          quality: 'hires',
-        ),
-      );
-      expect(hiRes.single['album_name'], 'missing');
-      expect(hiRes.single['album_present_tracks'], 2);
-      final searched = await db.getQueueAlbumPage(
-        const QueueLibraryDbQuery(
-          filterMode: 'albums',
-          metadata: incompleteAlbumFilter,
-          searchQuery: 'one-track',
-        ),
-      );
-      expect(searched.single['album_name'], 'one-track');
-      final local = await db.getQueueAlbumPage(
-        const QueueLibraryDbQuery(
-          filterMode: 'albums',
-          metadata: incompleteAlbumFilter,
-          source: 'local',
-        ),
-      );
-      expect(local.single['album_name'], 'local-only');
-      final noLocal = await db.getQueueAlbumPage(
-        const QueueLibraryDbQuery(
-          filterMode: 'albums',
-          metadata: incompleteAlbumFilter,
-          source: 'local',
-          includeLocal: false,
-        ),
-      );
-      expect(noLocal, isEmpty);
-      final normal = await db.getQueueAlbumPage(
-        const QueueLibraryDbQuery(filterMode: 'albums'),
-      );
-      expect(normal.every((row) => row['album_completeness'] == null), isTrue);
-      expect(normal.any((row) => row['album_name'] == 'one-track'), isFalse);
-    },
-  );
+        limit: 1,
+      ),
+    );
+    final second = await db.getQueueAlbumPageResult(
+      QueueLibraryDbQuery(
+        filterMode: 'albums',
+        metadata: incompleteAlbumFilter,
+        sortMode: 'album-asc',
+        limit: 1,
+        cursor: first.nextCursor,
+      ),
+    );
+    expect(first.rows.single['album_name'], 'local-only');
+    expect(second.rows.single['album_name'], 'missing');
+    final unknown = await db.getQueueAlbumPage(
+      const QueueLibraryDbQuery(
+        filterMode: 'albums',
+        metadata: unknownAlbumCompletenessFilter,
+      ),
+    );
+    expect(unknown.single['album_name'], 'unknown');
+    expect(AlbumCompleteness.fromRow(unknown.single)!.badge, '?');
+    final hiRes = await db.getQueueAlbumPage(
+      const QueueLibraryDbQuery(
+        filterMode: 'albums',
+        metadata: incompleteAlbumFilter,
+        quality: 'hires',
+      ),
+    );
+    expect(hiRes.single['album_name'], 'missing');
+    expect(hiRes.single['album_present_tracks'], 2);
+    final searched = await db.getQueueAlbumPage(
+      const QueueLibraryDbQuery(
+        filterMode: 'albums',
+        metadata: incompleteAlbumFilter,
+        searchQuery: 'one-track',
+      ),
+    );
+    expect(searched.single['album_name'], 'one-track');
+    final local = await db.getQueueAlbumPage(
+      const QueueLibraryDbQuery(
+        filterMode: 'albums',
+        metadata: incompleteAlbumFilter,
+        source: 'local',
+      ),
+    );
+    expect(local.single['album_name'], 'local-only');
+    final noLocal = await db.getQueueAlbumPage(
+      const QueueLibraryDbQuery(
+        filterMode: 'albums',
+        metadata: incompleteAlbumFilter,
+        source: 'local',
+        includeLocal: false,
+      ),
+    );
+    expect(noLocal, isEmpty);
+    final normal = await db.getQueueAlbumPage(
+      const QueueLibraryDbQuery(filterMode: 'albums'),
+    );
+    expect(normal.every((row) => row['album_completeness'] == null), isTrue);
+    expect(normal.any((row) => row['album_name'] == 'one-track'), isFalse);
+  });
 
   testWidgets(
     'Material sort and filter sheets stay usable above shell navigation',

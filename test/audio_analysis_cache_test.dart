@@ -8,9 +8,8 @@ void main() {
     final directory = await Directory.systemTemp.createTemp('analysis-budget-');
     addTearDown(() => directory.delete(recursive: true));
     Future<File> write(String name, int size, int age) async {
-      final file = await File(
-        '${directory.path}/$name',
-      ).writeAsBytes(List.filled(size, 0));
+      final file = await File('${directory.path}/$name')
+          .writeAsBytes(List.filled(size, 0));
       await file.setLastModified(DateTime(2026, 1, age));
       return file;
     }

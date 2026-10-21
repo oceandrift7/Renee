@@ -4,31 +4,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mornye/services/music_player_service.dart';
 
 void main() {
-  test(
-    'network session retains opaque source and artwork rather than temporary URLs',
-    () {
-      const remote = PlayableMedia(
-        id: 'network://nas/song.flac',
-        source: 'network://nas/song.flac',
-        title: 'Song',
-        artist: 'NAS',
-        artUri: 'http://127.0.0.1:1234/temporary',
-        networkArtworkSource: 'network://nas/cover.jpg',
-      );
-      final json = remote.toJson();
-      expect(json.containsKey('artUri'), false);
-      final restored = PlayableMedia.fromJson(json)!;
-      expect(restored.isNetwork, true);
-      expect(restored.networkArtworkSource, 'network://nas/cover.jpg');
-      expect(restored.artUri, isNull);
-      expect(
-        restored
-            .toMediaItem(resolvedArtwork: 'http://127.0.0.1:4321/new')
-            .artUri,
-        Uri.parse('http://127.0.0.1:4321/new'),
-      );
-    },
-  );
+  test('network session retains opaque source and artwork rather than temporary URLs', () {
+    const remote = PlayableMedia(
+      id: 'network://nas/song.flac',
+      source: 'network://nas/song.flac',
+      title: 'Song',
+      artist: 'NAS',
+      artUri: 'http://127.0.0.1:1234/temporary',
+      networkArtworkSource: 'network://nas/cover.jpg',
+    );
+    final json = remote.toJson();
+    expect(json.containsKey('artUri'), false);
+    final restored = PlayableMedia.fromJson(json)!;
+    expect(restored.isNetwork, true);
+    expect(restored.networkArtworkSource, 'network://nas/cover.jpg');
+    expect(restored.artUri, isNull);
+    expect(
+      restored.toMediaItem(resolvedArtwork: 'http://127.0.0.1:4321/new').artUri,
+      Uri.parse('http://127.0.0.1:4321/new'),
+    );
+  });
   const media = PlayableMedia(
     id: 'track-1',
     source: '/music/track.flac',
@@ -64,45 +59,41 @@ void main() {
     expect(restored.explicit, isTrue);
   });
 
-  test(
-    'restored iOS artwork follows the container without changing external audio',
-    () {
-      const previous =
-          '/var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111';
-      const current =
-          '/var/mobile/Containers/Data/Application/22222222-2222-4222-8222-222222222222';
-      const externalAudio =
-          '/var/mobile/Containers/Data/Application/33333333-3333-4333-8333-333333333333/Documents/track.flac';
-      final saved = {
-        ...media.toJson(),
-        'source': externalAudio,
-        'artUri': Uri.file(
-          '$previous/Library/Caches/covers/曲 #cover.jpg',
-        ).toString(),
-      };
-      final restored = PlayableMedia.fromJson(
-        saved,
+  test('restored iOS artwork follows the container without changing external audio', () {
+    const previous =
+        '/var/mobile/Containers/Data/Application/11111111-1111-4111-8111-111111111111';
+    const current =
+        '/var/mobile/Containers/Data/Application/22222222-2222-4222-8222-222222222222';
+    const externalAudio =
+        '/var/mobile/Containers/Data/Application/33333333-3333-4333-8333-333333333333/Documents/track.flac';
+    final saved = {
+      ...media.toJson(),
+      'source': externalAudio,
+      'artUri': Uri.file('$previous/Library/Caches/covers/曲 #cover.jpg')
+          .toString(),
+    };
+    final restored = PlayableMedia.fromJson(
+      saved,
+      iosDocumentsPath: '$current/Documents',
+    )!;
+    expect(restored.source, externalAudio);
+    expect(restored.id, media.id);
+    expect(
+      restored.artUri,
+      Uri.file('$current/Library/Caches/covers/曲 #cover.jpg').toString(),
+    );
+    expect(
+      restored.toMediaItem().artUri?.toFilePath(),
+      '$current/Library/Caches/covers/曲 #cover.jpg',
+    );
+    expect(
+      PlayableMedia.fromJson(
+        restored.toJson(),
         iosDocumentsPath: '$current/Documents',
-      )!;
-      expect(restored.source, externalAudio);
-      expect(restored.id, media.id);
-      expect(
-        restored.artUri,
-        Uri.file('$current/Library/Caches/covers/曲 #cover.jpg').toString(),
-      );
-      expect(
-        restored.toMediaItem().artUri?.toFilePath(),
-        '$current/Library/Caches/covers/曲 #cover.jpg',
-      );
-      expect(
-        PlayableMedia.fromJson(
-          restored.toJson(),
-          iosDocumentsPath: '$current/Documents',
-        )!.artUri,
-        restored.artUri,
-      );
-    },
-  );
+      )!.artUri,
+      restored.artUri,
+    );
+  });
 
   test('artwork restore preserves network, Android and external artwork', () {
     const documents =

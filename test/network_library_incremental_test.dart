@@ -336,9 +336,9 @@ void main() {
           storage.tree[''] = [track('song.flac')];
           await scan();
           final original = await database.query('library');
-          final outputs = await Directory(
-            '${directory.path}/network_scans',
-          ).list().length;
+          final outputs = await Directory('${directory.path}/network_scans')
+              .list()
+              .length;
           reads.clear();
           afterLookup = () => cancelled = true;
           await expectLater(scan(), throwsStateError);
@@ -351,27 +351,24 @@ void main() {
         },
       );
 
-      test(
-        'missing artwork is recovered and changed server identity invalidates rows',
-        () async {
-          storage.tree[''] = [track('song.flac')];
-          coverPath = (await File(
-            '${directory.path}/embedded.image',
-          ).writeAsBytes([1, 2, 3])).path;
-          final first = await scan();
-          final row = (await first.rows().toList()).single;
-          reads.clear();
-          await scan();
-          expect(reads, isEmpty);
-          await File(row['coverPath'] as String).delete();
-          await scan();
-          expect(reads, ['song.flac']);
-          reads.clear();
-          storage.server = 'replacement.test';
-          await scan();
-          expect(reads, ['song.flac']);
-        },
-      );
+      test('missing artwork is recovered and changed server identity invalidates rows', () async {
+        storage.tree[''] = [track('song.flac')];
+        coverPath = (await File(
+          '${directory.path}/embedded.image',
+        ).writeAsBytes([1, 2, 3])).path;
+        final first = await scan();
+        final row = (await first.rows().toList()).single;
+        reads.clear();
+        await scan();
+        expect(reads, isEmpty);
+        await File(row['coverPath'] as String).delete();
+        await scan();
+        expect(reads, ['song.flac']);
+        reads.clear();
+        storage.server = 'replacement.test';
+        await scan();
+        expect(reads, ['song.flac']);
+      });
 
       test(
         'cache lookup failure aborts without publishing an empty source',

@@ -373,8 +373,7 @@ void main() {
         await savePose('queue');
         await probe.finish(
           metadata: {
-            'scope':
-                'production download picker and queue feedback with fixture providers; no downloads',
+            'scope': 'production download picker and queue feedback with fixture providers; no downloads',
             'brightness': brightness.name,
             'shaders_loaded_before_open': shadersLoadedBeforeOpen,
             'preload_glass': preloadGlass,

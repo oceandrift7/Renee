@@ -97,9 +97,8 @@ void main() {
           home: ValueListenableBuilder<double>(
             valueListenable: scale,
             builder: (context, value, child) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: TextScaler.linear(value)),
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(value)),
               child: child!,
             ),
             child: const Scaffold(

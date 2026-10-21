@@ -37,8 +37,7 @@ void main() {
         shouldValidateIosOutputDir(
           isIOS: true,
           isSafMode: false,
-          outputDir:
-              '/private/var/mobile/Containers/Data/Application/ABC/Documents/Mornye',
+          outputDir: '/private/var/mobile/Containers/Data/Application/ABC/Documents/Mornye',
           downloadDirectoryBookmark: '',
         ),
         isTrue,
@@ -57,8 +56,7 @@ void main() {
           shouldValidateIosOutputDir(
             isIOS: true,
             isSafMode: false,
-            outputDir:
-                '/private/var/mobile/Library/Mobile Documents/com~apple~CloudDocs/Music',
+            outputDir: '/private/var/mobile/Library/Mobile Documents/com~apple~CloudDocs/Music',
             downloadDirectoryBookmark: 'bookmark-bytes',
           ),
           isFalse,

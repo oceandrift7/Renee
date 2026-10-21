@@ -642,17 +642,15 @@ extension _TrackMetadataCards on _TrackMetadataScreenState {
                   width: 100,
                   child: Text(
                     metadata.label,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: colorScheme.onSurfaceVariant),
                   ),
                 ),
                 Expanded(
                   child: Text(
                     metadata.value,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface,
-                    ),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: colorScheme.onSurface),
                   ),
                 ),
                 if (isCopyable)

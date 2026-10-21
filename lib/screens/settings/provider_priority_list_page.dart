@@ -116,8 +116,7 @@ class _ProviderPriorityListPageState
     setState(() {
       _hasChanges = false;
     });
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(widget.savedSnackbar(context))));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(widget.savedSnackbar(context))));
   }
 }

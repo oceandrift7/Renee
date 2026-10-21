@@ -15,8 +15,10 @@ import 'package:mornye/services/user_profile_store.dart';
 import 'package:mornye/utils/file_access.dart';
 import 'package:mornye/utils/logger.dart';
 
-typedef BackupHistoryPageLoader =
-    Future<List<Map<String, dynamic>>> Function(int limit, int offset);
+typedef BackupHistoryPageLoader = Future<List<Map<String, dynamic>>> Function(
+  int limit,
+  int offset,
+);
 
 Future<void> _writeBackupMetadataInBackground(
   String path,
@@ -593,11 +595,9 @@ class BackupService {
       // ZIP decompression and large payloads remain native/on disk; only the
       // bounded metadata is hydrated into Flutter models on a Dart worker.
       return await Isolate.run(() {
-        final root =
-            jsonDecode(
-                  File(result['metadata_path'] as String).readAsStringSync(),
-                )
-                as Map;
+        final root = jsonDecode(
+          File(result['metadata_path'] as String).readAsStringSync(),
+        ) as Map;
         final data = root['data'] as Map;
         final rawProfile = data['profile'] as Map?;
         final historyPath = result['history_path'] as String?;

@@ -12,6 +12,7 @@ class PlayableMedia {
   final String album;
   final String? artUri;
   final String? networkArtworkSource;
+
   /// Ephemeral request headers for an authorized network stream.
   /// Never serialized into the playback session.
   final Map<String, String> networkHeaders;

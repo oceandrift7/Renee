@@ -18,9 +18,8 @@ Widget _host(Widget child, {ThemeData? theme, bool reduceMotion = false}) =>
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(disableAnimations: reduceMotion),
+          data: MediaQuery.of(context)
+              .copyWith(disableAnimations: reduceMotion),
           child: child!,
         ),
         home: Scaffold(

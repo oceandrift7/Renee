@@ -24,9 +24,8 @@ void main() {
     });
 
     test('found and CUE backing files retain actual stat metadata', () async {
-      final file = await File(
-        '${temporary.path}/album.cue',
-      ).writeAsString('CUE fixture');
+      final file = await File('${temporary.path}/album.cue')
+          .writeAsString('CUE fixture');
       final expected = await file.stat();
       final result = await fileStat('${file.path}#track01');
       expect(result?.size, expected.size);
@@ -34,9 +33,8 @@ void main() {
     });
 
     test('ENOENT and ENOTDIR are confirmed missing', () async {
-      final file = await File(
-        '${temporary.path}/track.flac',
-      ).writeAsString('audio');
+      final file = await File('${temporary.path}/track.flac')
+          .writeAsString('audio');
       for (final path in [
         '${temporary.path}/removed.flac',
         '${file.path}/child.flac',
@@ -58,12 +56,10 @@ void main() {
     }, skip: Platform.isWindows);
 
     test('permission denied is unavailable instead of deleted', () async {
-      final directory = await Directory(
-        '${temporary.path}/restricted',
-      ).create();
-      final file = await File(
-        '${directory.path}/track.flac',
-      ).writeAsString('audio');
+      final directory = await Directory('${temporary.path}/restricted')
+          .create();
+      final file = await File('${directory.path}/track.flac')
+          .writeAsString('audio');
       final chmod = await Process.run('chmod', ['000', directory.path]);
       expect(chmod.exitCode, 0);
       try {

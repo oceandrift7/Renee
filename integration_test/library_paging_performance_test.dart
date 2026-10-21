@@ -333,15 +333,12 @@ void main() {
         'fixture':
             'Isolated actual SQLite schema17, 1000 two-source albums/2000 tracks, '
             '50 mirrored tracks and one unavailable source; shared decoded 384px PNG, no network.',
-        'baseline':
-            'Previous growing-prefix reads through production SQL; same MornyeLibraryScreen.',
-        'paging':
-            'Production AsyncNotifier and bounded page adapter; same SQL/store and UI.',
+        'baseline': 'Previous growing-prefix reads through production SQL; same MornyeLibraryScreen.',
+        'paging': 'Production AsyncNotifier and bounded page adapter; same SQL/store and UI.',
         'runs': runCounters,
         'pixel_checks': pixelChecks,
         'paired_order': 'AB/BA/AB/BA',
-        'known_total_fixture':
-            '25 pages, stops at 1000 entries without an additional end-of-list probe',
+        'known_total_fixture': '25 pages, stops at 1000 entries without an additional end-of-list probe',
       },
     );
   });

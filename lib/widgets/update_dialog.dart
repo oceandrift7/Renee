@@ -317,9 +317,8 @@ class _UpdateDialogState extends State<UpdateDialog> {
                 ] else ...[
                   Text(
                     context.l10n.updateWhatsNew,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Container(
@@ -339,9 +338,8 @@ class _UpdateDialogState extends State<UpdateDialog> {
                           widget.updateInfo.changelog,
                           context.l10n.updateSeeReleaseNotes,
                         ),
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(height: 1.5),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(height: 1.5),
                       ),
                     ),
                   ),
@@ -525,9 +523,8 @@ class _VersionChip extends StatelessWidget {
       children: [
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 4),
         Container(

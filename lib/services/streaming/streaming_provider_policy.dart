@@ -26,14 +26,19 @@ class StreamingProviderPolicy {
     required Future<StreamingTrack?> Function(
       StreamingSource source,
       StreamingTrack requested,
-    ) findExactFreelyPlayableMatch,
+    )
+    findExactFreelyPlayableMatch,
   }) async {
     // Start both lookups immediately; do not block YouTube Music on SoundCloud.
     final ytTask = _candidate(
-      youtubeMusic, requested, findExactFreelyPlayableMatch,
+      youtubeMusic,
+      requested,
+      findExactFreelyPlayableMatch,
     );
     final scTask = _candidate(
-      soundCloud, requested, findExactFreelyPlayableMatch,
+      soundCloud,
+      requested,
+      findExactFreelyPlayableMatch,
     );
 
     // SoundCloud gets a short opportunity to win, never an unlimited wait.
@@ -60,7 +65,11 @@ class StreamingProviderPolicy {
       if (resource.uri.scheme != 'https' && resource.uri.scheme != 'http') {
         return null;
       }
-      return SelectedStream(sourceId: source.id, track: track, resource: resource);
+      return SelectedStream(
+        sourceId: source.id,
+        track: track,
+        resource: resource,
+      );
     } catch (_) {
       // A provider failure must not crash the entire playback request.
       return null;

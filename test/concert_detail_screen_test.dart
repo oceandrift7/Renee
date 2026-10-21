@@ -63,9 +63,8 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(
-          Theme.of(
-            tester.element(find.text('All Upcoming Concerts')),
-          ).brightness,
+          Theme.of(tester.element(find.text('All Upcoming Concerts')))
+              .brightness,
           brightness,
         );
         await tester.tap(find.text('Example City'));

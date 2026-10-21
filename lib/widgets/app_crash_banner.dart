@@ -87,9 +87,8 @@ class _AppCrashBannerState extends ConsumerState<AppCrashBanner> {
                     SizedBox(height: tokens.gapXs),
                     Text(
                       crash.isAnr ? l10n.appAnrMessage : l10n.appCrashMessage,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onErrorContainer,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(color: colorScheme.onErrorContainer),
                     ),
                     SizedBox(height: tokens.gapSm),
                     Text(
@@ -98,9 +97,8 @@ class _AppCrashBannerState extends ConsumerState<AppCrashBanner> {
                           : crash.description,
                       maxLines: 4,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onErrorContainer,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: colorScheme.onErrorContainer),
                     ),
                     SizedBox(height: tokens.gapMd),
                     Wrap(
@@ -185,15 +183,13 @@ class _AppCrashBannerState extends ConsumerState<AppCrashBanner> {
     try {
       await Clipboard.setData(ClipboardData(text: crash.report));
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.logCopied)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.logCopied)));
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.appCrashCopyFailed)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.appCrashCopyFailed)));
       }
     }
   }

@@ -45,9 +45,8 @@ void main() {
       expect(restored.usbDsdOverPcm, isTrue);
       expect(restored.usbAllowFixedVolume, isTrue);
       expect(
-        AppSettings.fromJson(
-          defaults.copyWith(dapExclusive: true).toJson(),
-        ).dapExclusive,
+        AppSettings.fromJson(defaults.copyWith(dapExclusive: true).toJson())
+            .dapExclusive,
         isTrue,
       );
       expect(restored.autoMix, isTrue);
@@ -411,54 +410,47 @@ void main() {
     );
   });
 
-  test(
-    'Material notification shuffle toggles queue order without restarting audio',
-    () async {
-      configurePlaybackNotification(
-        presentation: const PlaybackNotification(),
-        toggleFavorite: (_) async => false,
-      );
-      await handler.setQueueAndPlay(_tracks, initialIndex: 1);
-      final resumed = List.of(native.resumedSources);
+  test('Material notification shuffle toggles queue order without restarting audio', () async {
+    configurePlaybackNotification(
+      presentation: const PlaybackNotification(),
+      toggleFavorite: (_) async => false,
+    );
+    await handler.setQueueAndPlay(_tracks, initialIndex: 1);
+    final resumed = List.of(native.resumedSources);
 
-      await handler.customAction(PlaybackNotification.shuffleAction);
-      expect(
-        handler.playbackState.value.shuffleMode,
-        AudioServiceShuffleMode.all,
-      );
-      expect(handler.queue.value.first.id, 'two');
-      expect(handler.queue.value.map((item) => item.id).toSet(), {
-        'one',
-        'two',
-        'three',
-      });
-      expect(handler.mediaItem.value?.id, 'two');
-      expect(
-        handler.playbackState.value.controls.last.androidIcon,
-        endsWith('shuffle_on'),
-      );
-      expect(handler.playbackState.value.controls.last.label, 'Shuffle on');
+    await handler.customAction(PlaybackNotification.shuffleAction);
+    expect(
+      handler.playbackState.value.shuffleMode,
+      AudioServiceShuffleMode.all,
+    );
+    expect(handler.queue.value.first.id, 'two');
+    expect(handler.queue.value.map((item) => item.id).toSet(), {
+      'one',
+      'two',
+      'three',
+    });
+    expect(handler.mediaItem.value?.id, 'two');
+    expect(
+      handler.playbackState.value.controls.last.androidIcon,
+      endsWith('shuffle_on'),
+    );
+    expect(handler.playbackState.value.controls.last.label, 'Shuffle on');
 
-      await handler.customAction(PlaybackNotification.shuffleAction);
-      expect(
-        handler.playbackState.value.shuffleMode,
-        AudioServiceShuffleMode.none,
-      );
-      expect(handler.queue.value.map((item) => item.id), [
-        'one',
-        'two',
-        'three',
-      ]);
-      expect(handler.mediaItem.value?.id, 'two');
-      expect(
-        handler.playbackState.value.controls.last.androidIcon,
-        endsWith('shuffle'),
-      );
-      expect(handler.playbackState.value.controls.last.label, 'Shuffle off');
-      expect(handler.playbackState.value.playing, isTrue);
-      expect(native.resumedSources, resumed);
-    },
-  );
+    await handler.customAction(PlaybackNotification.shuffleAction);
+    expect(
+      handler.playbackState.value.shuffleMode,
+      AudioServiceShuffleMode.none,
+    );
+    expect(handler.queue.value.map((item) => item.id), ['one', 'two', 'three']);
+    expect(handler.mediaItem.value?.id, 'two');
+    expect(
+      handler.playbackState.value.controls.last.androidIcon,
+      endsWith('shuffle'),
+    );
+    expect(handler.playbackState.value.controls.last.label, 'Shuffle off');
+    expect(handler.playbackState.value.playing, isTrue);
+    expect(native.resumedSources, resumed);
+  });
 
   test(
     'shuffle plays the published queue and off restores the original order',
@@ -633,40 +625,37 @@ void main() {
     expect(native.resumedSources, isEmpty);
   });
 
-  test(
-    'notification favorite retains clicked track and ignores double taps',
-    () async {
-      final save = Completer<void>();
-      final selected = <String>[];
-      configurePlaybackNotification(
-        presentation: const PlaybackNotification(mornye: true),
-        toggleFavorite: (item) async {
-          selected.add(item.id);
-          await save.future;
-          return true;
-        },
-      );
-      handler.mediaItem.add(_tracks.first.toMediaItem());
-      final first = handler.customAction(PlaybackNotification.favoriteAction);
-      handler.mediaItem.add(_tracks.last.toMediaItem());
-      await handler.customAction(PlaybackNotification.favoriteAction);
-      expect(selected, ['one']);
-      save.complete();
-      await first;
-      expect(
-        handler.playbackState.value.controls.first.androidIcon,
-        endsWith('ic_notification_star'),
-        reason:
-            'Completing a favorite for the old track must not star the next one',
-      );
-      await handler.customAction(PlaybackNotification.favoriteAction);
-      expect(selected, ['one', 'three']);
-      expect(
-        handler.playbackState.value.controls.first.androidIcon,
-        endsWith('ic_notification_star_filled'),
-      );
-    },
-  );
+  test('notification favorite retains clicked track and ignores double taps', () async {
+    final save = Completer<void>();
+    final selected = <String>[];
+    configurePlaybackNotification(
+      presentation: const PlaybackNotification(mornye: true),
+      toggleFavorite: (item) async {
+        selected.add(item.id);
+        await save.future;
+        return true;
+      },
+    );
+    handler.mediaItem.add(_tracks.first.toMediaItem());
+    final first = handler.customAction(PlaybackNotification.favoriteAction);
+    handler.mediaItem.add(_tracks.last.toMediaItem());
+    await handler.customAction(PlaybackNotification.favoriteAction);
+    expect(selected, ['one']);
+    save.complete();
+    await first;
+    expect(
+      handler.playbackState.value.controls.first.androidIcon,
+      endsWith('ic_notification_star'),
+      reason:
+          'Completing a favorite for the old track must not star the next one',
+    );
+    await handler.customAction(PlaybackNotification.favoriteAction);
+    expect(selected, ['one', 'three']);
+    expect(
+      handler.playbackState.value.controls.first.androidIcon,
+      endsWith('ic_notification_star_filled'),
+    );
+  });
 
   test('Material favorites refresh without a UI rebuild', () async {
     var loved = false;
@@ -841,30 +830,27 @@ void main() {
     },
   );
 
-  fakeTimeTest(
-    'Auto waits for advancing audio before fading the current song',
-    () async {
-      analyzer.matchBeats = true;
-      await prepare();
-      final incoming = native.prepared;
-      native.stalled.add(incoming);
-      native.positions['music-player'] = 55670;
-      await _until(() => native.playing.contains(incoming));
-      await Future<void>.delayed(const Duration(milliseconds: 240));
-      expect(native.lastVolume('music-player'), 1);
-      expect(native.lastVolume(incoming), 0);
-      expect(handler.mediaItem.value?.id, 'one');
+  fakeTimeTest('Auto waits for advancing audio before fading the current song', () async {
+    analyzer.matchBeats = true;
+    await prepare();
+    final incoming = native.prepared;
+    native.stalled.add(incoming);
+    native.positions['music-player'] = 55670;
+    await _until(() => native.playing.contains(incoming));
+    await Future<void>.delayed(const Duration(milliseconds: 240));
+    expect(native.lastVolume('music-player'), 1);
+    expect(native.lastVolume(incoming), 0);
+    expect(handler.mediaItem.value?.id, 'one');
 
-      native.positions['music-player'] = 58500;
-      native.stalled.remove(incoming);
-      native.clocks[incoming]!.reset();
-      await _until(() => handler.mediaItem.value?.id == 'two');
-      // Startup consumed most of the outro. Finish the fade within the remaining
-      // 1.5 seconds instead of fading against a song that has already ended.
-      await _until(() => !native.live.contains('music-player'));
-      expect(native.lastVolume(incoming), closeTo(1, 0.0001));
-    },
-  );
+    native.positions['music-player'] = 58500;
+    native.stalled.remove(incoming);
+    native.clocks[incoming]!.reset();
+    await _until(() => handler.mediaItem.value?.id == 'two');
+    // Startup consumed most of the outro. Finish the fade within the remaining
+    // 1.5 seconds instead of fading against a song that has already ended.
+    await _until(() => !native.live.contains('music-player'));
+    expect(native.lastVolume(incoming), closeTo(1, 0.0001));
+  });
 
   fakeTimeTest(
     'a stalled Auto standby leaves the current song playing',
@@ -923,28 +909,25 @@ void main() {
     },
   );
 
-  test(
-    'rendered effect replaces outgoing deck and pause removes its temporary tail',
-    () async {
-      setAutoMixOptions(const AutoMixOptions(effect: AutoMixEffect.echo));
-      await prepare();
-      await _until(() => native.live.length == 3);
-      final incoming = native.sources.entries
-          .singleWhere((entry) => entry.value == '/two.flac')
-          .key;
-      final effect = native.sources.entries
-          .singleWhere((entry) => entry.value.endsWith('/tail.wav'))
-          .key;
-      native.positions['music-player'] = 55000;
-      await _until(() => handler.mediaItem.value?.id == 'two');
-      await _until(() => !native.live.contains('music-player'));
-      expect(native.playing, {incoming, effect});
-      expect(autoMixStatus.value, AutoMixStatus.crossfading);
-      await handler.pause();
-      expect(native.live, {incoming});
-      expect(await effectRenderer.tails.single.directory.exists(), isFalse);
-    },
-  );
+  test('rendered effect replaces outgoing deck and pause removes its temporary tail', () async {
+    setAutoMixOptions(const AutoMixOptions(effect: AutoMixEffect.echo));
+    await prepare();
+    await _until(() => native.live.length == 3);
+    final incoming = native.sources.entries
+        .singleWhere((entry) => entry.value == '/two.flac')
+        .key;
+    final effect = native.sources.entries
+        .singleWhere((entry) => entry.value.endsWith('/tail.wav'))
+        .key;
+    native.positions['music-player'] = 55000;
+    await _until(() => handler.mediaItem.value?.id == 'two');
+    await _until(() => !native.live.contains('music-player'));
+    expect(native.playing, {incoming, effect});
+    expect(autoMixStatus.value, AutoMixStatus.crossfading);
+    await handler.pause();
+    expect(native.live, {incoming});
+    expect(await effectRenderer.tails.single.directory.exists(), isFalse);
+  });
 
   test('an effect deck that never sounds falls back without a drop', () async {
     setAutoMixOptions(const AutoMixOptions(effect: AutoMixEffect.echo));

@@ -22,6 +22,10 @@ void main() {
     expect(json.toString(), isNot(contains('cdn.example.org')));
 
     final restored = PlayableMedia.fromJson(json);
-    expect(restored, isNull, reason: 'Expired signed stream URLs must be re-resolved');
+    expect(
+      restored,
+      isNull,
+      reason: 'Expired signed stream URLs must be re-resolved',
+    );
   });
 }

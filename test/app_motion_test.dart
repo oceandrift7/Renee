@@ -23,9 +23,9 @@ void main() {
   });
 
   test('spatial springs overshoot while effects springs do not', () {
-    double peak(SpringCurve curve) => [
-      for (var t = 0.0; t <= 1; t += 0.01) curve.transform(t),
-    ].reduce((a, b) => a > b ? a : b);
+    double peak(SpringCurve curve) =>
+        [for (var t = 0.0; t <= 1; t += 0.01) curve.transform(t)]
+            .reduce((a, b) => a > b ? a : b);
 
     expect(
       peak(SpringCurve(M3EMotion.expressiveSpatialDefault)),

@@ -10,8 +10,7 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   final report = <String, dynamic>{
     'platform': Platform.operatingSystem,
-    'note':
-        'Five alternating old/new pairs of the queue-readiness decision used by album ReplayGain retriggering. Fixtures have ten tracks per album and mixed blocked/ready/absent albums. Excludes audio scanning and tag I/O; not whole-download speed or FPS. iOS debug is correctness only.',
+    'note': 'Five alternating old/new pairs of the queue-readiness decision used by album ReplayGain retriggering. Fixtures have ten tracks per album and mixed blocked/ready/absent albums. Excludes audio scanning and tag I/O; not whole-download speed or FPS. iOS debug is correctness only.',
   };
   var completed = 0;
   tearDownAll(() {

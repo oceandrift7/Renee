@@ -249,9 +249,8 @@ void main() {
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 builder: (context, child) => MediaQuery(
-                  data: MediaQuery.of(
-                    context,
-                  ).copyWith(disableAnimations: mode == 'reduced motion'),
+                  data: MediaQuery.of(context)
+                      .copyWith(disableAnimations: mode == 'reduced motion'),
                   child: child!,
                 ),
                 home: downloaded

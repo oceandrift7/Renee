@@ -9,8 +9,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:mornye/services/network_storage_service.dart';
 import 'package:mornye/services/platform_bridge.dart';
 
-typedef NetworkTagReader =
-    Future<Map<String, dynamic>> Function(String url, String name);
+typedef NetworkTagReader = Future<Map<String, dynamic>> Function(
+  String url,
+  String name,
+);
 
 /// One bounded native tag read per source, shared by playback and Lyrics.
 /// Only the selected track is inspected; browsing does not scan the NAS.
