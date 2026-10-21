@@ -181,6 +181,7 @@ jobs:
     if: needs.changes.outputs.rust == 'true' || needs.changes.outputs.ios == 'true'
     env:
       MORNYE_DISCORD_SDK: "0"
+      DISCORD_SDK_SECRET_CONFIGURED: ${{ secrets.DISCORD_MOBILE_SDK_PASSPHRASE != '' }}
 
     steps:
       - name: Checkout repository
@@ -212,7 +213,9 @@ jobs:
           cache: true
 
       - name: Prepare pinned Discord SDK
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        # Renée must remain buildable without the optional proprietary SDK.
+        # Secrets may be unavailable in forks and new repos.
+        if: env.DISCORD_SDK_SECRET_CONFIGURED == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         uses: ./.github/actions/discord-sdk
         with:
           passphrase: ${{ secrets.DISCORD_MOBILE_SDK_PASSPHRASE }}
@@ -241,6 +244,7 @@ jobs:
     if: needs.changes.outputs.android == 'true'
     env:
       MORNYE_DISCORD_SDK: "0"
+      DISCORD_SDK_SECRET_CONFIGURED: ${{ secrets.DISCORD_MOBILE_SDK_PASSPHRASE != '' }}
 
     steps:
       - name: Checkout repository
@@ -286,7 +290,9 @@ jobs:
 
       # Fork PRs cannot access repository secrets and exercise the Lite build.
       - name: Prepare pinned Discord SDK
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        # Renée must remain buildable without the optional proprietary SDK.
+        # Secrets may be unavailable in forks and new repos.
+        if: env.DISCORD_SDK_SECRET_CONFIGURED == 'true' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
         uses: ./.github/actions/discord-sdk
         with:
           passphrase: ${{ secrets.DISCORD_MOBILE_SDK_PASSPHRASE }}
