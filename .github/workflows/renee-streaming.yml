@@ -14,6 +14,10 @@ on:
       - '.github/workflows/renee-streaming.yml'
   workflow_dispatch:
 
+concurrency:
+  group: renee-streaming-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
