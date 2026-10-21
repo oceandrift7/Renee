@@ -212,12 +212,15 @@ class MusicPlaybackDeck {
     if (!_direct) await _ordinary.setPlaybackRate(rate);
   }
 
-  Future<void> setNetworkSource(String url) async {
+  Future<void> setNetworkSource(
+    String url, {
+    Map<String, String> headers = const {},
+  }) async {
     await stop();
     _source = null;
     _routeLost = false;
     _nativeStarted = false;
-    await _setOrdinarySource(UrlSource(url));
+    await _setOrdinarySource(UrlSource(url, headers: headers));
   }
 
   Future<void> setSource(
