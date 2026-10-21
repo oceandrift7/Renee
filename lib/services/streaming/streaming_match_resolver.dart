@@ -31,53 +31,10 @@ class StreamingMatchResolver {
       );
     }
 
-    // A track selected in the YouTube Music extension already carries its
-    // real video ID. Bypass another network search for faster startup.
+    // Skip search when the catalog already holds a real YouTube Music video ID.
     if (source.id == 'youtube_music' &&
         const {'ytmusic-spotiflac', 'youtube_music'}.contains(catalog.provider) &&
-        RegExp(r'^[A-Za-z0-9_-]{11}
-    if (query.isEmpty) return null;
-    final candidates = await source.search(query);
-    final filtered = candidates.where((candidate) {
-      // Never silently substitute a live performance, cover, remix or
-      // instrumental for a different recording.
-      final wanted = _editionTags(catalog.title);
-      final found = _editionTags(candidate.title);
-      if (!wanted.containsAll(found) || !found.containsAll(wanted)) {
-        return false;
-      }
-      if (catalog.duration != null && candidate.duration != null) {
-        final delta =
-            (catalog.duration!.inSeconds - candidate.duration!.inSeconds).abs();
-        if (delta > 12) return false;
-      }
-      return true;
-    });
-    return matcher.confidentMatch(catalog, filtered)?.track;
-  }
-
-  Set<String> _editionTags(String title) {
-    final normalized = title.toLowerCase();
-    return {
-      for (final word in const [
-        'live',
-        'remix',
-        'cover',
-        'instrumental',
-        'acoustic',
-        'karaoke',
-        'sped up',
-        'slowed',
-        'nightcore',
-      ])
-        if (RegExp(
-          r'(^|[^a-z])' + RegExp.escape(word) + r'([^a-z]|$)',
-        ).hasMatch(normalized))
-          word,
-    };
-  }
-}
-).hasMatch(catalog.id)) {
+        RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(catalog.id)) {
       return StreamingTrack(
         id: catalog.id,
         title: catalog.title,
