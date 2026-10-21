@@ -220,7 +220,10 @@ class MusicPlaybackDeck {
     _source = null;
     _routeLost = false;
     _nativeStarted = false;
-    await _setOrdinarySource(UrlSource(url, headers: headers));
+    if (headers.isNotEmpty) {
+      throw UnsupportedError('Custom stream request headers are not supported by the native player');
+    }
+    await _setOrdinarySource(UrlSource(url));
   }
 
   Future<void> setSource(
