@@ -43,7 +43,8 @@ class YouTubeMusicStreamingSource implements StreamingSource {
   Future<StreamResource?> resolve(StreamingTrack track) async {
     // YouTube video IDs are eleven characters. Reject catalog/album IDs,
     // arbitrary URLs, and invalid values before reaching the resolver.
-    if (!RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(track.id)) {
+    if (track.id.startsWith('MPREb_') ||
+        !RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(track.id)) {
       return null;
     }
     final resource = await _resolveAudio(track.id).timeout(lookupTimeout);
