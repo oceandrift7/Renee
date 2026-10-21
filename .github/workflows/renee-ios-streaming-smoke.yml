@@ -1,0 +1,64 @@
+name: Renée iOS native streaming smoke
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'integration_test/renee_streaming_transport_test.dart'
+      - 'third_party/audioplayers_darwin/**'
+      - '.github/workflows/renee-ios-streaming-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: renee-ios-streaming-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-streaming-smoke:
+    runs-on: macos-latest
+    timeout-minutes: 100
+    env:
+      MORNYE_DISCORD_SDK: '0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: rustup show
+      - name: Cache Rust compilation
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            rust_backend/target
+          key: renee-ios-smoke-${{ runner.os }}-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-${{ hashFiles('rust_backend/Cargo.lock') }}
+          restore-keys: renee-ios-smoke-${{ runner.os }}-
+      - name: Build native iOS backend for device and simulator
+        run: bash scripts/build_rust_backend.sh ios
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+      - name: Fetch dependencies and configure native pods
+        run: |
+          flutter pub get
+          cd ios
+          pod install
+      - name: Start iPhone simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          sim_id="$(xcrun simctl list devices available -j | python3 -c 'import json,sys; devices=json.load(sys.stdin)["devices"]; print(next(d["udid"] for variants in devices.values() for d in variants if d["name"].startswith("iPhone") and d.get("isAvailable",True)))')"
+          echo "RENEE_SIM_ID=$sim_id" >> "$GITHUB_ENV"
+          xcrun simctl boot "$sim_id" || true
+          xcrun simctl bootstatus "$sim_id" -b
+          flutter devices
+      - name: Run real native AVPlayer constrained-network smoke
+        run: |
+          flutter test integration_test/renee_streaming_transport_test.dart \
+            -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded
