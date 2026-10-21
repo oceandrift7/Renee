@@ -1,0 +1,34 @@
+name: Renée streaming checks
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'lib/services/streaming/**'
+      - 'lib/services/playable_media.dart'
+      - 'lib/services/music_playback_deck.dart'
+      - 'lib/services/music_player_service.dart'
+      - 'lib/widgets/renee_stream_button.dart'
+      - 'lib/widgets/track_list_tile.dart'
+      - 'test/services/streaming/**'
+      - '.github/workflows/renee-streaming.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  flutter-streaming:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+      - run: flutter pub get
+      - name: Analyze streaming and UI changes
+        run: flutter analyze lib/services/streaming lib/services/playable_media.dart lib/services/music_playback_deck.dart lib/services/music_player_service.dart lib/widgets/renee_stream_button.dart lib/widgets/track_list_tile.dart
+      - name: Run streaming unit tests
+        run: flutter test test/services/streaming
