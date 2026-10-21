@@ -1368,7 +1368,7 @@ class MusicPlayerHandler extends BaseAudioHandler
     // boundary. A late prepare from an old request could resume the wrong
     // source. Serialize preparation and recheck before making it audible.
     if (media.isNetwork) {
-      await _player.setNetworkSource(path);
+      await _player.setNetworkSource(path, headers: media.networkHeaders);
     } else {
       await _player.setSource(
         DeviceFileSource(path),
