@@ -4,11 +4,12 @@ import 'package:http/http.dart' as http;
 
 import 'streaming_source.dart';
 
-/// Unofficial YouTube Music search endpoint. Its response format can change.
-/// This adapter searches catalog entries only; it does not resolve audio URLs.
+/// Experimental catalog search, not an audio-playback API.
 class YouTubeMusicSearch {
-  YouTubeMusicSearch({http.Client? client}) : _client = client ?? http.Client();
+  YouTubeMusicSearch({http.Client? client}) : _client = client ?? http.Client(),
+      _ownsClient = client == null;
   final http.Client _client;
+  final bool _ownsClient;
 
   Future<List<StreamingTrack>> search(String query) async {
     if (query.trim().isEmpty) return const [];
@@ -23,60 +24,117 @@ class YouTubeMusicSearch {
         'context': {
           'client': {
             'clientName': 'WEB_REMIX',
-            'clientVersion': '1.20250101.01.00',
+            'clientVersion': '1.20240801.01.00',
             'hl': 'en',
             'gl': 'US',
           },
         },
         'query': query,
       }),
-    );
+    ).timeout(const Duration(seconds: 6));
     if (response.statusCode != 200) {
       throw StateError('YouTube Music search failed (${response.statusCode})');
     }
-    final decoded = jsonDecode(response.body);
+    final payload = jsonDecode(response.body);
+    return parseResults(payload);
+  }
+
+  /// Parses only song/video rows carrying a videoId, not album/playlist rows.
+  /// Keeps artist distinct from album/year/duration for reliable matching.
+  static List<StreamingTrack> parseResults(dynamic payload) {
     final tracks = <StreamingTrack>[];
     final seen = <String>{};
 
-    void visit(dynamic value) {
-      if (value is List) {
-        for (final item in value) { visit(item); }
+    void visit(dynamic node) {
+      if (node is List) {
+        for (final child in node) { visit(child); }
         return;
       }
-      if (value is! Map) return;
-      final renderer = value['musicResponsiveListItemRenderer'];
+      if (node is! Map) return;
+      final renderer = node['musicResponsiveListItemRenderer'];
       if (renderer is Map) {
-        final data = Map<String, dynamic>.from(renderer);
+        final data = renderer;
         final nav = data['playlistItemData'];
-        final id = nav is Map ? nav['videoId'] : null;
-        if (id is String && id.isNotEmpty && seen.add(id)) {
-          final flex = data['flexColumns'];
-          final columns = flex is List ? flex : const [];
-          String column(int index) {
-            if (index >= columns.length) return '';
-            final item = columns[index];
-            if (item is! Map) return '';
-            final r = item['musicResponsiveListItemFlexColumnRenderer'];
-            if (r is! Map) return '';
-            final text = r['text'];
-            if (text is! Map) return '';
-            final runs = text['runs'];
-            if (runs is! List) return '';
-            return runs.whereType<Map>().map((run) => run['text']?.toString() ?? '').join('');
+        final id = nav is Map ? nav['videoId']?.toString() : null;
+        if (id != null &&
+            RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(id) &&
+            seen.add(id)) {
+          List<dynamic> runsAt(int index) {
+            final columns = data['flexColumns'];
+            if (columns is! List || index >= columns.length) return const [];
+            final column = columns[index];
+            if (column is! Map) return const [];
+            final text = column['musicResponsiveListItemFlexColumnRenderer'];
+            if (text is! Map) return const [];
+            final body = text['text'];
+            return body is Map && body['runs'] is List
+                ? body['runs'] as List : const [];
           }
-          final title = column(0);
-          final detail = column(1);
-          if (title.isNotEmpty) {
-            tracks.add(StreamingTrack(id: id, title: title, artist: detail));
+          final titleRuns = runsAt(0);
+          final metaRuns = runsAt(1);
+          final title = titleRuns.isNotEmpty && titleRuns.first is Map
+              ? (titleRuns.first as Map)['text']?.toString().trim() ?? ''
+              : '';
+          final artistParts = <String>[];
+          Duration? duration;
+          for (final item in metaRuns) {
+            if (item is! Map) continue;
+            final text = item['text']?.toString().trim() ?? '';
+            if (text.isEmpty) continue;
+            final parts = text.split(':');
+            if (parts.length >= 2 && parts.length <= 3 &&
+                parts.every((part) => int.tryParse(part) != null)) {
+              var seconds = 0;
+              for (final part in parts) {
+                seconds = seconds * 60 + int.parse(part);
+              }
+              duration = Duration(seconds: seconds);
+              continue;
+            }
+            if (text.contains('•')) {
+              // The first unlabelled run is usually the artist. Later runs
+              // represent album, media type or year, not additional artists.
+              if (artistParts.isNotEmpty) break;
+              continue;
+            }
+            if (const {'Song','Album','Video','Single','EP','Playlist'}
+                .contains(text)) continue;
+            if (RegExp(r'^\\d{4}$').hasMatch(text)) continue;
+            final nav = item['navigationEndpoint'];
+            final browse = nav is Map ? nav['browseEndpoint'] : null;
+            final browseId = browse is Map ? browse['browseId']?.toString() : null;
+            if (browseId != null && browseId.startsWith('UC')) {
+              artistParts.add(text);
+            } else if (artistParts.isEmpty) {
+              artistParts.add(text);
+            }
+          }
+          final artwork = data['thumbnail'];
+          final musicThumb = artwork is Map ? artwork['musicThumbnailRenderer'] : null;
+          final thumb = musicThumb is Map ? musicThumb['thumbnail'] : null;
+          final imgs = thumb is Map ? thumb['thumbnails'] : null;
+          final coverUrl = imgs is List && imgs.isNotEmpty && imgs.last is Map
+              ? Uri.tryParse((imgs.last as Map)['url']?.toString() ?? '')
+              : null;
+          if (title.isNotEmpty && artistParts.isNotEmpty) {
+            tracks.add(StreamingTrack(
+              id: id,
+              title: title,
+              artist: artistParts.join(', '),
+              duration: duration,
+              artworkUrl: coverUrl,
+            ));
           }
         }
       }
-      for (final nested in value.values) { visit(nested); }
+      for (final child in node.values) { visit(child); }
     }
 
-    visit(decoded);
+    visit(payload);
     return tracks;
   }
 
-  void close() => _client.close();
+  void close() {
+    if (_ownsClient) _client.close();
+  }
 }
