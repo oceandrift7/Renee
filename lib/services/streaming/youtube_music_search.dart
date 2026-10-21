@@ -99,7 +99,7 @@ class YouTubeMusicSearch {
             }
             if (const {'Song','Album','Video','Single','EP','Playlist'}
                 .contains(text)) continue;
-            if (RegExp(r'^\d{4}).hasMatch(text)) continue;
+            if (RegExp(r'^\d{4}$').hasMatch(text)) continue;
             final nav = item['navigationEndpoint'];
             final browse = nav is Map ? nav['browseEndpoint'] : null;
             final browseId = browse is Map ? browse['browseId']?.toString() : null;
