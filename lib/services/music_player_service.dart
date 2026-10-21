@@ -144,6 +144,18 @@ class MusicPlayerHandler extends BaseAudioHandler
   bool _initialized = false;
   bool _sourceReady = false;
   Object? _playbackError;
+
+  /// Reports source preparation, not audible playback. The native decoder may
+  /// still fail later (for example if a remote server returns HTTP 403).
+  /// The UI must not claim a stream started when source preparation failed.
+  bool isOnlineSourcePrepared(String mediaId) =>
+      !_disposed &&
+      _index >= 0 &&
+      _index < _media.length &&
+      _media[_index].id == mediaId &&
+      _sourceReady &&
+      _playbackError == null;
+
   Future<void>? _activePlayOperation;
   Future<void> _sourceChangeTail = Future<void>.value();
   Timer? _sleepTimer;
