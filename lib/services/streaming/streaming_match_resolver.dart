@@ -67,7 +67,7 @@ class StreamingMatchResolver {
         'nightcore',
       ])
         if (RegExp(
-          '(^|[^a-z])${RegExp.escape(word)}([^a-z]|$)',
+          r'(^|[^a-z])' + RegExp.escape(word) + r'([^a-z]|$)',
         ).hasMatch(normalized))
           word,
     };
