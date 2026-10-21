@@ -125,7 +125,9 @@ class YouTubeMusicDirectResolver {
       // for well-known AAC itag 140 (typically 128 kbps).
       final effectiveBitrate =
           bitrate > 0 ? bitrate : (itag == 140 ? preferredAudioBitrate : 0);
-      if (itag == 139 || effectiveBitrate < minimumAudioBitrate) continue;
+      if (itag == 139 || effectiveBitrate < minimumAudioBitrate) {
+        continue;
+      }
       candidates.add((url: url, bitrate: effectiveBitrate, itag: itag));
     }
     if (candidates.isEmpty) return null;
