@@ -21,6 +21,11 @@ class YouTubeMusicDirectResolver {
   final bool _ownsClient;
   final Duration requestTimeout;
 
+  /// Do not use extremely compressed AAC tracks, even when buffering fails.
+  /// Spotify-like smoothness should not come at the cost of 48 kbps playback.
+  static const int minimumAudioBitrate = 96000;
+  static const int preferredAudioBitrate = 128000;
+
   // Adapted from the public client declaration in Mornye-Extension.
   // Android VR does not normally require an external GVS PO token.
   static const _clientName = 'ANDROID_VR';
@@ -114,36 +119,44 @@ class YouTubeMusicDirectResolver {
           (item['bitrate'] as num?)?.toInt() ??
           0;
       final itag = (item['itag'] as num?)?.toInt() ?? 0;
-      candidates.add((url: url, bitrate: bitrate, itag: itag));
+      // Itag 139 is typically 48 kbps AAC. Exclude it as both a primary
+      // stream and a fallback; the user prefers quality over this extreme
+      // compression. Missing bitrate metadata is treated as unknown, except
+      // for well-known AAC itag 140 (typically 128 kbps).
+      final effectiveBitrate =
+          bitrate > 0 ? bitrate : (itag == 140 ? preferredAudioBitrate : 0);
+      if (itag == 139 || effectiveBitrate < minimumAudioBitrate) continue;
+      candidates.add((url: url, bitrate: effectiveBitrate, itag: itag));
     }
     if (candidates.isEmpty) return null;
 
-    // AAC ~128 kbps is a pragmatic initial choice for unreliable networks.
-    // Prefer 48 kbps only when a normal AAC candidate is absent.
+    // Target approximately 128 kbps AAC for balanced startup and quality.
+    // A faster source with higher bitrate can be selected if 128 is absent.
     candidates.sort((a, b) {
-      int preference(({Uri url, int bitrate, int itag}) c) {
-        if (c.itag == 140) return 0;
-        if (c.bitrate >= 96000 && c.bitrate <= 160000) return 1;
-        if (c.itag == 139) return 2;
-        return 3;
-      }
-
-      final rank = preference(a).compareTo(preference(b));
-      return rank != 0 ? rank : a.bitrate.compareTo(b.bitrate);
+      final aDiff = (a.bitrate - preferredAudioBitrate).abs();
+      final bDiff = (b.bitrate - preferredAudioBitrate).abs();
+      final byPreference = aDiff.compareTo(bDiff);
+      return byPreference != 0
+          ? byPreference
+          : a.bitrate.compareTo(b.bitrate);
     });
-    // Keep one lower-bandwidth AAC fallback from the same player response.
-    // This avoids another catalog lookup if the first resource cannot prepare.
-    // It is not seamless adaptive bitrate switching during a playing song.
+
+    // If the primary URL fails to prepare, allow one alternate AAC URL,
+    // but NEVER drop below 96 kbps. Prefer the best lower bitrate; if none
+    // exists, try an equal-bitrate alternative, not a more demanding format.
+    // This is a startup fallback, not mid-song adaptive bitrate switching.
     final primary = candidates.first;
     final alternatives = candidates.where((c) => c.url != primary.url).toList();
-    final lowerBitrate = alternatives.where(
-      (c) => c.bitrate > 0 && c.bitrate < primary.bitrate,
-    );
+    final lowerBitrate = alternatives
+        .where((c) => c.bitrate < primary.bitrate)
+        .toList()
+      ..sort((a, b) => b.bitrate.compareTo(a.bitrate));
+    final sameBitrate = alternatives
+        .where((c) => c.bitrate == primary.bitrate)
+        .toList();
     final backup = lowerBitrate.isNotEmpty
-        ? (lowerBitrate.toList()
-                ..sort((a, b) => a.bitrate.compareTo(b.bitrate)))
-              .first
-        : (alternatives.isNotEmpty ? alternatives.first : null);
+        ? lowerBitrate.first
+        : (sameBitrate.isNotEmpty ? sameBitrate.first : null);
 
     // audioplayers_darwin currently ignores custom URL request headers.
     // Select only self-contained signed URLs; never rely on a header to make
