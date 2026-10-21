@@ -99,6 +99,13 @@ class YouTubeMusicDirectResolver {
           !url.host.endsWith('.googlevideo.com')) {
         continue;
       }
+      // Do not hand the player a signed URL that has already expired or
+      // will expire before the initial buffer can be established.
+      final expiresAt = int.tryParse(url.queryParameters['expire'] ?? '');
+      if (expiresAt != null &&
+          expiresAt <= DateTime.now().millisecondsSinceEpoch ~/ 1000 + 30) {
+        continue;
+      }
       // A signatureCipher/cipher value without a direct URL isn't playable
       // unless a separate sanctioned resolver handles it.
       final bitrate = (item['averageBitrate'] as num?)?.toInt() ??
