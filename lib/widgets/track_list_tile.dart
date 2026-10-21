@@ -10,6 +10,7 @@ import 'package:mornye/widgets/audio_quality_badges.dart';
 import 'package:mornye/widgets/track_card.dart';
 import 'package:mornye/widgets/in_library_badge.dart';
 import 'package:mornye/widgets/preview_button.dart';
+import 'package:mornye/widgets/renee_stream_button.dart';
 import 'package:mornye/widgets/track_collection_quick_actions.dart';
 
 /// Track row shared by the album and playlist screens. Tap offers another
@@ -106,6 +107,7 @@ class TrackListTile extends ConsumerWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (!isSelectionMode) ReneeStreamButton(track: track),
           PreviewButton(track: track),
           TrackCollectionQuickActions(
             track: track,
