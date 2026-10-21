@@ -19,6 +19,7 @@ import 'package:mornye/widgets/app_icon.dart';
 import 'package:mornye/widgets/app_icon_button.dart';
 import 'package:mornye/widgets/track_collection_action_policy.dart';
 import 'package:mornye/widgets/track_detail_actions.dart';
+import 'package:mornye/widgets/manual_match_sheet.dart';
 import 'package:mornye/utils/clickable_metadata.dart';
 
 class TrackCollectionQuickActions extends ConsumerWidget {
@@ -177,6 +178,11 @@ class _TrackOptionsSheet extends ConsumerWidget {
           ],
           [
             MornyeMenuAction(
+              icon: CupertinoIcons.link,
+              label: 'Match YouTube Music Track',
+              onPressed: () => _openManualMatch(context),
+            ),
+            MornyeMenuAction(
               icon: CupertinoIcons.text_badge_plus,
               label: l10n.collectionAddToPlaylist,
               onPressed: () {
@@ -323,6 +329,11 @@ class _TrackOptionsSheet extends ConsumerWidget {
                 ),
 
               _OptionTile(
+                icon: Icons.link,
+                title: 'Match YouTube Music Track',
+                onTap: () => _openManualMatch(context),
+              ),
+              _OptionTile(
                 icon: Icons.content_copy_rounded,
                 title: context.l10n.trackOptionCopyTrackName,
                 onTap: () => _copyText(context, track.name),
@@ -416,6 +427,14 @@ class _TrackOptionsSheet extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _openManualMatch(BuildContext context) {
+    final root = Navigator.of(context, rootNavigator: true).context;
+    Navigator.pop(context);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (root.mounted) ManualMatchSheet.show(root, track);
+    });
   }
 
   void _downloadQualityVariant(BuildContext context, WidgetRef ref) {
