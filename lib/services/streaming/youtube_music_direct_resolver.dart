@@ -120,14 +120,10 @@ class YouTubeMusicDirectResolver {
       final rank = preference(a).compareTo(preference(b));
       return rank != 0 ? rank : a.bitrate.compareTo(b.bitrate);
     });
-    return StreamResource(
-      uri: candidates.first.url,
-      headers: const {
-        'User-Agent': _userAgent,
-        'Referer': 'https://www.youtube.com/',
-        'Origin': 'https://www.youtube.com',
-      },
-    );
+    // audioplayers_darwin currently ignores custom URL request headers.
+    // Select only self-contained signed URLs; never rely on a header to make
+    // the resource playable on iOS.
+    return StreamResource(uri: candidates.first.url);
   }
 
   void close() {
