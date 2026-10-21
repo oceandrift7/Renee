@@ -1,6 +1,6 @@
 name: Renée one-time Dart format repair
 
-# Final run after request-race fixes on the Renée development branch.
+# Format the streaming bitrate-quality policy update on the dev branch.
 # Its formatting commit does
 # not change this workflow, so it cannot create a push loop.
 on:
