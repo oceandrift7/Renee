@@ -1,4 +1,3 @@
-import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -12,8 +11,8 @@ import 'package:mornye/services/streaming/youtube_music_direct_resolver.dart';
 ///
 /// Example:
 /// flutter test integration_test/renee_youtube_music_live_test.dart \\
-///   -d <ios-device-id> \\
-///   --dart-define=RENEE_YTM_TEST_VIDEO_ID=<11-character-video-id>
+///   -d `ios-device-id` \\
+///   --dart-define=RENEE_YTM_TEST_VIDEO_ID=`11-character-video-id`
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
