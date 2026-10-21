@@ -123,8 +123,9 @@ class YouTubeMusicDirectResolver {
       // stream and a fallback; the user prefers quality over this extreme
       // compression. Missing bitrate metadata is treated as unknown, except
       // for well-known AAC itag 140 (typically 128 kbps).
-      final effectiveBitrate =
-          bitrate > 0 ? bitrate : (itag == 140 ? preferredAudioBitrate : 0);
+      final effectiveBitrate = bitrate > 0
+          ? bitrate
+          : (itag == 140 ? preferredAudioBitrate : 0);
       if (itag == 139 || effectiveBitrate < minimumAudioBitrate) {
         continue;
       }
@@ -138,9 +139,7 @@ class YouTubeMusicDirectResolver {
       final aDiff = (a.bitrate - preferredAudioBitrate).abs();
       final bDiff = (b.bitrate - preferredAudioBitrate).abs();
       final byPreference = aDiff.compareTo(bDiff);
-      return byPreference != 0
-          ? byPreference
-          : a.bitrate.compareTo(b.bitrate);
+      return byPreference != 0 ? byPreference : a.bitrate.compareTo(b.bitrate);
     });
 
     // If the primary URL fails to prepare, allow one alternate AAC URL,
@@ -149,10 +148,9 @@ class YouTubeMusicDirectResolver {
     // This is a startup fallback, not mid-song adaptive bitrate switching.
     final primary = candidates.first;
     final alternatives = candidates.where((c) => c.url != primary.url).toList();
-    final lowerBitrate = alternatives
-        .where((c) => c.bitrate < primary.bitrate)
-        .toList()
-      ..sort((a, b) => b.bitrate.compareTo(a.bitrate));
+    final lowerBitrate =
+        alternatives.where((c) => c.bitrate < primary.bitrate).toList()
+          ..sort((a, b) => b.bitrate.compareTo(a.bitrate));
     final sameBitrate = alternatives
         .where((c) => c.bitrate == primary.bitrate)
         .toList();

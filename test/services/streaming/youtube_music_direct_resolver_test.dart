@@ -81,8 +81,8 @@ void main() {
 
     final noPoorQualityFallback =
         YouTubeMusicDirectResolver.resourceFromPlayerResponse(
-      payload([rejectedFallback, aac]),
-    );
+          payload([rejectedFallback, aac]),
+        );
     expect(noPoorQualityFallback?.uri.host, 'rr1.googlevideo.com');
     expect(noPoorQualityFallback?.fallbackUris, isEmpty);
 
