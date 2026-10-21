@@ -60,6 +60,21 @@ void main() {
     );
   });
 
+  test('keeps one lower-bitrate AAC alternative for network preparation', () {
+    final low = {
+      ...aac,
+      'itag': 139,
+      'bitrate': 48000,
+      'url': 'https://rr2.googlevideo.com/videoplayback?expire=9999999999',
+    };
+    final result = YouTubeMusicDirectResolver.resourceFromPlayerResponse(
+      payload([opus, low, aac]),
+    );
+    expect(result?.uri.host, 'rr1.googlevideo.com');
+    expect(result?.fallbackUris.length, 1);
+    expect(result?.fallbackUris.single.host, 'rr2.googlevideo.com');
+  });
+
   test('declines gated and unavailable videos', () {
     expect(
       YouTubeMusicDirectResolver.resourceFromPlayerResponse({
