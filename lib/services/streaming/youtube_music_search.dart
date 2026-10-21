@@ -94,7 +94,6 @@ class YouTubeMusicSearch {
             if (text.contains('•')) {
               // The first unlabelled run is usually the artist. Later runs
               // represent album, media type or year, not additional artists.
-              if (artistParts.isNotEmpty) break;
               continue;
             }
             if (const {'Song','Album','Video','Single','EP','Playlist'}
