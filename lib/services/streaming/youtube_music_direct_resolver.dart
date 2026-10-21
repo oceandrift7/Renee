@@ -131,10 +131,28 @@ class YouTubeMusicDirectResolver {
       final rank = preference(a).compareTo(preference(b));
       return rank != 0 ? rank : a.bitrate.compareTo(b.bitrate);
     });
+    // Keep one lower-bandwidth AAC fallback from the same player response.
+    // This avoids another catalog lookup if the first resource cannot prepare.
+    // It is not seamless adaptive bitrate switching during a playing song.
+    final primary = candidates.first;
+    final alternatives = candidates
+        .where((c) => c.url != primary.url)
+        .toList();
+    final lowerBitrate = alternatives.where(
+      (c) => c.bitrate > 0 && c.bitrate < primary.bitrate,
+    );
+    final backup = lowerBitrate.isNotEmpty
+        ? (lowerBitrate.toList()
+              ..sort((a, b) => a.bitrate.compareTo(b.bitrate))).first
+        : (alternatives.isNotEmpty ? alternatives.first : null);
+
     // audioplayers_darwin currently ignores custom URL request headers.
     // Select only self-contained signed URLs; never rely on a header to make
     // the resource playable on iOS.
-    return StreamResource(uri: candidates.first.url);
+    return StreamResource(
+      uri: primary.url,
+      fallbackUris: backup == null ? const [] : [backup.url],
+    );
   }
 
   void close() {
