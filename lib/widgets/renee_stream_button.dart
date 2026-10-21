@@ -20,7 +20,7 @@ class _ReneeStreamButtonState extends ConsumerState<ReneeStreamButton> {
   Future<void> _play() async {
     if (_starting) return;
     setState(() => _starting = true);
-    ReneeOnlinePlayback.cancelPending();
+    final generation = ReneeOnlinePlayback.beginRequest();
     var result = ReneeOnlinePlaybackResult.unavailable;
     try {
       // Prefer an existing local file. No internet lookup is necessary.
@@ -28,18 +28,28 @@ class _ReneeStreamButtonState extends ConsumerState<ReneeStreamButton> {
         context,
         ref,
         widget.track,
+        shouldPlay: () => ReneeOnlinePlayback.isCurrentRequest(generation),
       );
-      if (playedLocally || !mounted) return;
+      if (playedLocally ||
+          !mounted ||
+          !ReneeOnlinePlayback.isCurrentRequest(generation)) {
+        return;
+      }
       result = await const ReneeOnlinePlayback().tryPlayWithStatus(
         ref,
         widget.track,
+        requestGeneration: generation,
       );
     } catch (_) {
       result = ReneeOnlinePlaybackResult.unavailable;
     } finally {
       if (mounted) setState(() => _starting = false);
     }
-    if (!mounted || result != ReneeOnlinePlaybackResult.unavailable) return;
+    if (!mounted ||
+        !ReneeOnlinePlayback.isCurrentRequest(generation) ||
+        result != ReneeOnlinePlaybackResult.unavailable) {
+      return;
+    }
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       const SnackBar(
         content: Text(
