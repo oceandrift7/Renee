@@ -26,6 +26,12 @@ class ReneeOnlinePlayback {
   // lookup, preventing a slow response from replacing the new song.
   static int _requestGeneration = 0;
 
+  /// Any other transport action can invalidate a pending online lookup so it
+  /// cannot replace a local track selected while the lookup was in flight.
+  static void cancelPending() {
+    _requestGeneration++;
+  }
+
   Future<bool> tryPlay(WidgetRef ref, Track track) async =>
       await tryPlayWithStatus(ref, track) == ReneeOnlinePlaybackResult.prepared;
 
