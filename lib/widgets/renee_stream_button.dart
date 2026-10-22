@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mornye/models/track.dart';
 import 'package:mornye/controllers/local_playback.dart';
 import 'package:mornye/services/streaming/renee_online_playback.dart';
+import 'package:mornye/services/streaming/streaming_playback_issue.dart';
 
 /// Opt-in online Play button while the experimental resolver is being
 /// validated. Existing local and download actions remain untouched.
@@ -22,6 +23,7 @@ class _ReneeStreamButtonState extends ConsumerState<ReneeStreamButton> {
     setState(() => _starting = true);
     final generation = ReneeOnlinePlayback.beginRequest();
     var result = ReneeOnlinePlaybackResult.unavailable;
+    StreamingPlaybackIssue? issue;
     try {
       // Prefer an existing local file. No internet lookup is necessary.
       final playedLocally = await playLocalIfAvailable(
@@ -35,11 +37,13 @@ class _ReneeStreamButtonState extends ConsumerState<ReneeStreamButton> {
           !ReneeOnlinePlayback.isCurrentRequest(generation)) {
         return;
       }
-      result = await const ReneeOnlinePlayback().tryPlayWithStatus(
+      final attempt = await const ReneeOnlinePlayback().tryPlayDiagnosed(
         ref,
         widget.track,
         requestGeneration: generation,
       );
+      result = attempt.result;
+      issue = attempt.issue;
     } catch (_) {
       result = ReneeOnlinePlaybackResult.unavailable;
     } finally {
@@ -51,11 +55,12 @@ class _ReneeStreamButtonState extends ConsumerState<ReneeStreamButton> {
       return;
     }
     ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'Online playback is unavailable for this recording. '
-          'Try Match YouTube Music from the track menu or download it.',
+          issue?.userMessage ??
+              'Online playback failed unexpectedly [STREAM-ERROR].',
         ),
+        duration: const Duration(seconds: 6),
       ),
     );
   }

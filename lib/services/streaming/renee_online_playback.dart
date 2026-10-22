@@ -5,6 +5,7 @@ import 'package:mornye/models/track.dart';
 import 'package:mornye/providers/music_player_provider.dart';
 
 import 'manual_match_store.dart';
+import 'streaming_playback_issue.dart';
 import 'streaming_match_resolver.dart';
 import 'streaming_playback_coordinator.dart';
 import 'streaming_source.dart';
@@ -18,6 +19,12 @@ import 'youtube_music_streaming_source.dart';
 /// Experimental: YouTube's private resource endpoint may deny or change its
 /// responses; a successful URL lookup is not proof the media plays on-device.
 enum ReneeOnlinePlaybackResult { prepared, unavailable, superseded }
+
+class ReneeOnlinePlaybackAttempt {
+  const ReneeOnlinePlaybackAttempt(this.result, {this.issue});
+  final ReneeOnlinePlaybackResult result;
+  final StreamingPlaybackIssue? issue;
+}
 
 class ReneeOnlinePlayback {
   const ReneeOnlinePlayback();
@@ -45,52 +52,100 @@ class ReneeOnlinePlayback {
     WidgetRef ref,
     Track track, {
     int? requestGeneration,
+  }) async =>
+      (await tryPlayDiagnosed(
+        ref,
+        track,
+        requestGeneration: requestGeneration,
+      )).result;
+
+  Future<ReneeOnlinePlaybackAttempt> tryPlayDiagnosed(
+    WidgetRef ref,
+    Track track, {
+    int? requestGeneration,
   }) async {
     final generation = requestGeneration ?? beginRequest();
     bool isCurrent() => isCurrentRequest(generation);
-    if (!isCurrent()) return ReneeOnlinePlaybackResult.superseded;
-    final handler = await ref
-        .read(musicPlayerControllerProvider)
-        .ensureInitialized();
-    if (!isCurrent()) return ReneeOnlinePlaybackResult.superseded;
-    if (handler == null) return ReneeOnlinePlaybackResult.unavailable;
-
-    final prefs = await SharedPreferences.getInstance();
-    if (!isCurrent()) return ReneeOnlinePlaybackResult.superseded;
-    final provider = track.source ?? 'catalog';
-    final requested = CatalogTrack(
-      provider: provider,
-      id: track.id,
-      title: track.name,
-      artist: track.artistName,
-      duration: track.duration > 0 ? Duration(seconds: track.duration) : null,
-      isrc: track.isrc,
+    const superseded = ReneeOnlinePlaybackAttempt(
+      ReneeOnlinePlaybackResult.superseded,
     );
+    if (!isCurrent()) return superseded;
 
-    final directResolver = YouTubeMusicDirectResolver();
-    final youtube = YouTubeMusicStreamingSource(
-      resolveAudio: directResolver.resolve,
-    );
     try {
-      final coordinator = StreamingPlaybackCoordinator(player: handler);
-      final prepared = await coordinator.playCatalog(
-        catalog: requested,
-        youtubeMusic: youtube,
-        // SoundCloud is not wired up yet. Never claim a full/free match
-        // without checking playback rights and actual resource availability.
-        soundCloud: const _UnconfiguredSoundCloud(),
-        matching: StreamingMatchResolver(
-          manualMatches: ManualMatchStore(prefs),
-        ),
-        isCurrentRequest: isCurrent,
+      final handler = await ref
+          .read(musicPlayerControllerProvider)
+          .ensureInitialized();
+      if (!isCurrent()) return superseded;
+      if (handler == null) {
+        return const ReneeOnlinePlaybackAttempt(
+          ReneeOnlinePlaybackResult.unavailable,
+          issue: StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.playerUnavailable,
+          ),
+        );
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      if (!isCurrent()) return superseded;
+      final requested = CatalogTrack(
+        provider: track.source ?? 'catalog',
+        id: track.id,
+        title: track.name,
+        artist: track.artistName,
+        duration: track.duration > 0
+            ? Duration(seconds: track.duration)
+            : null,
+        isrc: track.isrc,
       );
-      if (!isCurrent()) return ReneeOnlinePlaybackResult.superseded;
-      return prepared
-          ? ReneeOnlinePlaybackResult.prepared
-          : ReneeOnlinePlaybackResult.unavailable;
-    } finally {
-      youtube.close();
-      directResolver.close();
+
+      StreamingPlaybackIssue? providerIssue;
+      StreamingPlaybackIssue? pipelineIssue;
+      final directResolver = YouTubeMusicDirectResolver();
+      final youtube = YouTubeMusicStreamingSource(
+        resolveAudio: (id) => directResolver.resolve(
+          id,
+          onIssue: (issue) => providerIssue = issue,
+        ),
+      );
+      try {
+        final coordinator = StreamingPlaybackCoordinator(player: handler);
+        final prepared = await coordinator.playCatalog(
+          catalog: requested,
+          youtubeMusic: youtube,
+          // SoundCloud is not wired up yet. Never claim a full/free match
+          // without checking playback rights and actual resource availability.
+          soundCloud: const _UnconfiguredSoundCloud(),
+          matching: StreamingMatchResolver(
+            manualMatches: ManualMatchStore(prefs),
+          ),
+          isCurrentRequest: isCurrent,
+          onIssue: (issue) => pipelineIssue = issue,
+        );
+        if (!isCurrent()) return superseded;
+        return ReneeOnlinePlaybackAttempt(
+          prepared
+              ? ReneeOnlinePlaybackResult.prepared
+              : ReneeOnlinePlaybackResult.unavailable,
+          issue: prepared
+              ? null
+              : (providerIssue ??
+                    pipelineIssue ??
+                    const StreamingPlaybackIssue(
+                      StreamingPlaybackIssueCode.unexpectedFailure,
+                    )),
+        );
+      } finally {
+        youtube.close();
+        directResolver.close();
+      }
+    } catch (_) {
+      if (!isCurrent()) return superseded;
+      return const ReneeOnlinePlaybackAttempt(
+        ReneeOnlinePlaybackResult.unavailable,
+        issue: StreamingPlaybackIssue(
+          StreamingPlaybackIssueCode.unexpectedFailure,
+        ),
+      );
     }
   }
 }

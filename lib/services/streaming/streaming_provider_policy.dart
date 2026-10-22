@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'streaming_playback_issue.dart';
 import 'streaming_source.dart';
 
 /// The default online provider is YouTube Music. SoundCloud may win only when
@@ -28,17 +29,20 @@ class StreamingProviderPolicy {
       StreamingTrack requested,
     )
     findExactFreelyPlayableMatch,
+    void Function(StreamingPlaybackIssue)? onIssue,
   }) async {
     // Start both lookups immediately; do not block YouTube Music on SoundCloud.
     final ytTask = _candidate(
       youtubeMusic,
       requested,
       findExactFreelyPlayableMatch,
+      onIssue,
     );
     final scTask = _candidate(
       soundCloud,
       requested,
       findExactFreelyPlayableMatch,
+      onIssue,
     );
 
     // SoundCloud gets a short opportunity to win, never an unlimited wait.
@@ -56,13 +60,41 @@ class StreamingProviderPolicy {
     StreamingSource source,
     StreamingTrack requested,
     Future<StreamingTrack?> Function(StreamingSource, StreamingTrack) match,
+    void Function(StreamingPlaybackIssue)? onIssue,
   ) async {
+    // SoundCloud is optional and currently unconfigured in Renée. Never let
+    // its failed probe hide a real YouTube Music playback diagnosis.
+    void report(StreamingPlaybackIssueCode code) {
+      if (source.id == 'youtube_music') {
+        onIssue?.call(StreamingPlaybackIssue(code));
+      }
+    }
+
     try {
-      final track = await match(source, requested);
-      if (track == null) return null;
-      final resource = await source.resolve(track);
-      if (resource == null || !resource.uri.hasScheme) return null;
+      final StreamingTrack? track;
+      try {
+        track = await match(source, requested);
+      } catch (_) {
+        report(StreamingPlaybackIssueCode.matchSearchFailed);
+        return null;
+      }
+      if (track == null) {
+        report(StreamingPlaybackIssueCode.noConfidentMatch);
+        return null;
+      }
+      final StreamResource? resource;
+      try {
+        resource = await source.resolve(track);
+      } catch (_) {
+        report(StreamingPlaybackIssueCode.noAudioResource);
+        return null;
+      }
+      if (resource == null || !resource.uri.hasScheme) {
+        report(StreamingPlaybackIssueCode.noAudioResource);
+        return null;
+      }
       if (resource.uri.scheme != 'https' && resource.uri.scheme != 'http') {
+        report(StreamingPlaybackIssueCode.invalidResource);
         return null;
       }
       return SelectedStream(
@@ -71,7 +103,7 @@ class StreamingProviderPolicy {
         resource: resource,
       );
     } catch (_) {
-      // A provider failure must not crash the entire playback request.
+      report(StreamingPlaybackIssueCode.unexpectedFailure);
       return null;
     }
   }

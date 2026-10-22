@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 import 'package:mornye/services/streaming/youtube_music_direct_resolver.dart';
+import 'package:mornye/services/streaming/streaming_playback_issue.dart';
 
 void main() {
   final aac = {
@@ -163,4 +164,91 @@ void main() {
       client.close();
     },
   );
+
+  test('reports access denial without exposing API response bodies', () async {
+    final client = MockClient((_) async =>
+        http.Response('a sensitive URL must never be displayed', 403));
+    final resolver = YouTubeMusicDirectResolver(client: client);
+    StreamingPlaybackIssue? issue;
+    final result = await resolver.resolve(
+      'Z85lxckrtzg',
+      onIssue: (value) => issue = value,
+    );
+    expect(result, isNull);
+    expect(issue?.code, StreamingPlaybackIssueCode.youtubeHttpFailure);
+    expect(issue?.httpStatus, 403);
+    expect(issue?.userMessage, contains('HTTP 403'));
+    expect(issue?.userMessage, isNot(contains('sensitive URL')));
+    client.close();
+  });
+
+  test('identifies rejected video playability status', () async {
+    final client = MockClient((_) async => http.Response(
+      jsonEncode({
+        'playabilityStatus': {
+          'status': 'LOGIN_REQUIRED',
+          'reason': 'private provider message',
+        },
+      }),
+      200,
+    ));
+    final resolver = YouTubeMusicDirectResolver(client: client);
+    StreamingPlaybackIssue? issue;
+    expect(
+      await resolver.resolve(
+        'Z85lxckrtzg',
+        onIssue: (value) => issue = value,
+      ),
+      isNull,
+    );
+    expect(issue?.code, StreamingPlaybackIssueCode.youtubeRestricted);
+    expect(issue?.youtubeStatus, 'LOGIN_REQUIRED');
+    expect(issue?.userMessage, isNot(contains('private provider message')));
+    client.close();
+  });
+
+  test('distinguishes unsupported audio from missing streaming data', () async {
+    final responses = [
+      payload([opus]),
+      {'playabilityStatus': {'status': 'OK'}},
+    ];
+    var index = 0;
+    final client = MockClient((_) async => http.Response(
+      jsonEncode(responses[index++]),
+      200,
+    ));
+    final resolver = YouTubeMusicDirectResolver(client: client);
+    final issues = <StreamingPlaybackIssue>[];
+    for (var i = 0; i < 2; i++) {
+      expect(
+        await resolver.resolve(
+          'Z85lxckrtzg',
+          onIssue: issues.add,
+        ),
+        isNull,
+      );
+    }
+    expect(
+      issues.map((issue) => issue.code),
+      [
+        StreamingPlaybackIssueCode.youtubeUnsupportedAudio,
+        StreamingPlaybackIssueCode.noAudioResource,
+      ],
+    );
+    client.close();
+  });
+
+  test('reports invalid YouTube ID before any network request', () async {
+    final client = MockClient((_) async {
+      fail('network must not be reached for an invalid ID');
+    });
+    final resolver = YouTubeMusicDirectResolver(client: client);
+    StreamingPlaybackIssue? issue;
+    expect(
+      await resolver.resolve('not-an-id', onIssue: (value) => issue = value),
+      isNull,
+    );
+    expect(issue?.code, StreamingPlaybackIssueCode.invalidVideoId);
+    client.close();
+  });
 }

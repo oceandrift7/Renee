@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mornye/services/streaming/streaming_provider_policy.dart';
 import 'package:mornye/services/streaming/streaming_source.dart';
+import 'package:mornye/services/streaming/streaming_playback_issue.dart';
 
 class _FakeSource implements StreamingSource {
   _FakeSource(this.id, this.resource, {this.delay = Duration.zero});
@@ -70,4 +71,37 @@ void main() {
       expect(result?.sourceId, 'youtube');
     },
   );
+
+  test('reports matching failure for YouTube without SoundCloud noise', () async {
+    final issues = <StreamingPlaybackIssue>[];
+    final selected = await const StreamingProviderPolicy().select(
+      requested: requested,
+      youtubeMusic: _FakeSource('youtube_music', playable),
+      soundCloud: _FakeSource('soundcloud', null),
+      findExactFreelyPlayableMatch: (source, track) async => null,
+      onIssue: issues.add,
+    );
+    expect(selected, isNull);
+    expect(
+      issues.map((issue) => issue.code),
+      [StreamingPlaybackIssueCode.noConfidentMatch],
+    );
+  });
+
+  test('reports missing audio after a successful match', () async {
+    final issues = <StreamingPlaybackIssue>[];
+    final selected = await const StreamingProviderPolicy().select(
+      requested: requested,
+      youtubeMusic: _FakeSource('youtube_music', null),
+      soundCloud: _FakeSource('soundcloud', null),
+      findExactFreelyPlayableMatch: (source, track) async =>
+          source.id == 'youtube_music' ? track : null,
+      onIssue: issues.add,
+    );
+    expect(selected, isNull);
+    expect(
+      issues.single.code,
+      StreamingPlaybackIssueCode.noAudioResource,
+    );
+  });
 }

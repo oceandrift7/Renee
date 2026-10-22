@@ -1,5 +1,6 @@
 import 'package:mornye/services/music_player_service.dart';
 
+import 'streaming_playback_issue.dart';
 import 'streaming_provider_policy.dart';
 import 'streaming_match_resolver.dart';
 import 'track_matcher.dart';
@@ -29,6 +30,7 @@ class StreamingPlaybackCoordinator {
     required StreamingSource soundCloud,
     required StreamingMatchResolver matching,
     bool Function()? isCurrentRequest,
+    void Function(StreamingPlaybackIssue)? onIssue,
   }) {
     return play(
       requested: StreamingTrack(
@@ -42,6 +44,7 @@ class StreamingPlaybackCoordinator {
       findExactFreelyPlayableMatch: (source, _) =>
           matching.find(source, catalog),
       isCurrentRequest: isCurrentRequest,
+      onIssue: onIssue,
     );
   }
 
@@ -57,12 +60,14 @@ class StreamingPlaybackCoordinator {
     )
     findExactFreelyPlayableMatch,
     bool Function()? isCurrentRequest,
+    void Function(StreamingPlaybackIssue)? onIssue,
   }) async {
     final selected = await policy.select(
       requested: requested,
       youtubeMusic: youtubeMusic,
       soundCloud: soundCloud,
       findExactFreelyPlayableMatch: findExactFreelyPlayableMatch,
+      onIssue: onIssue,
     );
     if (selected == null || (isCurrentRequest != null && !isCurrentRequest())) {
       return false;
@@ -70,7 +75,12 @@ class StreamingPlaybackCoordinator {
 
     final resource = selected.resource;
     // audioplayers cannot currently forward custom headers to iOS AVPlayer.
-    if (resource.headers.isNotEmpty) return false;
+    if (resource.headers.isNotEmpty) {
+      onIssue?.call(
+        const StreamingPlaybackIssue(StreamingPlaybackIssueCode.invalidResource),
+      );
+      return false;
+    }
 
     final track = selected.track;
     final urls = [resource.uri, ...resource.fallbackUris.take(1)];
@@ -79,6 +89,11 @@ class StreamingPlaybackCoordinator {
       if (url.scheme != 'https' ||
           url.host.isEmpty ||
           url.userInfo.isNotEmpty) {
+        onIssue?.call(
+          const StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.invalidResource,
+          ),
+        );
         continue;
       }
 
@@ -97,8 +112,12 @@ class StreamingPlaybackCoordinator {
         await player.setQueueAndPlay([item]);
         if (player.isOnlineSourcePrepared(item.id)) return true;
       } catch (_) {
-        // The playback handler may throw while preparing a remote source.
+        // The player can throw while preparing a remote source. Do not show
+        // exception text: native HTTP errors may include signed audio URLs.
       }
+      onIssue?.call(
+        const StreamingPlaybackIssue(StreamingPlaybackIssueCode.playerRejected),
+      );
     }
     return false;
   }

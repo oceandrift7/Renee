@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import 'streaming_playback_issue.dart';
 import 'streaming_source.dart';
 
 /// Experimental direct-resource resolver for publicly playable YouTube videos.
@@ -36,45 +39,145 @@ class YouTubeMusicDirectResolver {
       '(Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip';
   static const _key = 'AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w';
 
-  Future<StreamResource?> resolve(String videoId) async {
-    if (!RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId)) return null;
+  Future<StreamResource?> resolve(
+    String videoId, {
+    void Function(StreamingPlaybackIssue)? onIssue,
+  }) async {
+    if (!RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId)) {
+      onIssue?.call(
+        const StreamingPlaybackIssue(
+          StreamingPlaybackIssueCode.invalidVideoId,
+        ),
+      );
+      return null;
+    }
     final endpoint = Uri.https('www.youtube.com', '/youtubei/v1/player', {
       'key': _key,
       'prettyPrint': 'false',
     });
-    final response = await _client
-        .post(
-          endpoint,
-          headers: const {
-            'Content-Type': 'application/json',
-            'User-Agent': _userAgent,
-            'Origin': 'https://www.youtube.com',
-            'X-YouTube-Client-Name': _clientHeaderName,
-            'X-YouTube-Client-Version': _clientVersion,
-          },
-          body: jsonEncode({
-            'context': {
-              'client': {
-                'clientName': _clientName,
-                'clientVersion': _clientVersion,
-                'androidSdkVersion': 32,
-                'hl': 'en',
-                'gl': 'US',
-                'osName': 'Android',
-                'osVersion': '12L',
-                'platform': 'MOBILE',
-                'deviceMake': 'Oculus',
-                'deviceModel': 'Quest 3',
-              },
+    try {
+      final response = await _client
+          .post(
+            endpoint,
+            headers: const {
+              'Content-Type': 'application/json',
+              'User-Agent': _userAgent,
+              'Origin': 'https://www.youtube.com',
+              'X-YouTube-Client-Name': _clientHeaderName,
+              'X-YouTube-Client-Version': _clientVersion,
             },
-            'videoId': videoId,
-          }),
-        )
-        .timeout(requestTimeout);
-    if (response.statusCode != 200) return null;
-    final payload = jsonDecode(response.body);
-    if (payload is! Map<String, dynamic>) return null;
-    return resourceFromPlayerResponse(payload);
+            body: jsonEncode({
+              'context': {
+                'client': {
+                  'clientName': _clientName,
+                  'clientVersion': _clientVersion,
+                  'androidSdkVersion': 32,
+                  'hl': 'en',
+                  'gl': 'US',
+                  'osName': 'Android',
+                  'osVersion': '12L',
+                  'platform': 'MOBILE',
+                  'deviceMake': 'Oculus',
+                  'deviceModel': 'Quest 3',
+                },
+              },
+              'videoId': videoId,
+            }),
+          )
+          .timeout(requestTimeout);
+      if (response.statusCode != 200) {
+        onIssue?.call(
+          StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.youtubeHttpFailure,
+            httpStatus: response.statusCode,
+          ),
+        );
+        return null;
+      }
+
+      final dynamic payload;
+      try {
+        payload = jsonDecode(response.body);
+      } on FormatException {
+        onIssue?.call(
+          const StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.youtubeInvalidResponse,
+          ),
+        );
+        return null;
+      }
+      if (payload is! Map<String, dynamic>) {
+        onIssue?.call(
+          const StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.youtubeInvalidResponse,
+          ),
+        );
+        return null;
+      }
+
+      final status = payload['playabilityStatus'];
+      if (status is! Map || status['status'] != 'OK') {
+        final rawStatus = status is Map ? status['status'] : null;
+        final value = rawStatus is String &&
+                RegExp(r'^[A-Z_]{1,40}$').hasMatch(rawStatus)
+            ? rawStatus
+            : null;
+        onIssue?.call(
+          StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.youtubeRestricted,
+            youtubeStatus: value,
+          ),
+        );
+        return null;
+      }
+
+      final resource = resourceFromPlayerResponse(payload);
+      if (resource == null) {
+        final data = payload['streamingData'];
+        final hasFormats = data is Map &&
+            ((data['adaptiveFormats'] is List &&
+                    (data['adaptiveFormats'] as List).isNotEmpty) ||
+                (data['formats'] is List &&
+                    (data['formats'] as List).isNotEmpty));
+        onIssue?.call(
+          StreamingPlaybackIssue(
+            hasFormats
+                ? StreamingPlaybackIssueCode.youtubeUnsupportedAudio
+                : StreamingPlaybackIssueCode.noAudioResource,
+          ),
+        );
+      }
+      return resource;
+    } on TimeoutException {
+      onIssue?.call(
+        const StreamingPlaybackIssue(
+          StreamingPlaybackIssueCode.youtubeTimeout,
+        ),
+      );
+      return null;
+    } on SocketException {
+      onIssue?.call(
+        const StreamingPlaybackIssue(
+          StreamingPlaybackIssueCode.youtubeNetworkFailure,
+        ),
+      );
+      return null;
+    } on http.ClientException {
+      onIssue?.call(
+        const StreamingPlaybackIssue(
+          StreamingPlaybackIssueCode.youtubeNetworkFailure,
+        ),
+      );
+      return null;
+    } catch (_) {
+      // Do not expose exception text; it may include a signed provider URL.
+      onIssue?.call(
+        const StreamingPlaybackIssue(
+          StreamingPlaybackIssueCode.youtubeInvalidResponse,
+        ),
+      );
+      return null;
+    }
   }
 
   /// Pure parser: keeps media selection testable without live YouTube traffic.
