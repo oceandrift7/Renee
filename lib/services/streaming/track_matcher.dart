@@ -11,6 +11,8 @@ class CatalogTrack {
     required this.artist,
     this.duration,
     this.isrc,
+    this.album,
+    this.artworkUrl,
   });
 
   final String provider;
@@ -19,6 +21,8 @@ class CatalogTrack {
   final String artist;
   final Duration? duration;
   final String? isrc;
+  final String? album;
+  final Uri? artworkUrl;
 
   String get storageKey =>
       '${Uri.encodeComponent(provider)}:${Uri.encodeComponent(id)}';

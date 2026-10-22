@@ -87,6 +87,7 @@ class ReneeOnlinePlayback {
 
       final prefs = await SharedPreferences.getInstance();
       if (!isCurrent()) return superseded;
+      final catalogArtwork = Uri.tryParse(track.coverUrl ?? '');
       final requested = CatalogTrack(
         provider: track.source ?? 'catalog',
         id: track.id,
@@ -96,6 +97,12 @@ class ReneeOnlinePlayback {
             ? Duration(seconds: track.duration)
             : null,
         isrc: track.isrc,
+        album: track.albumName,
+        artworkUrl: catalogArtwork != null &&
+                catalogArtwork.scheme == 'https' &&
+                catalogArtwork.host.isNotEmpty
+            ? catalogArtwork
+            : null,
       );
 
       StreamingPlaybackIssue? providerIssue;

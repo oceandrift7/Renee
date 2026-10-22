@@ -24,6 +24,20 @@ void main() {
   );
   final match = const StreamingMatchResolver();
 
+  test('catalog metadata remains available independently of audio matches', () {
+    final entry = CatalogTrack(
+      provider: 'catalog',
+      id: 'catalog-song',
+      title: 'Thriller',
+      artist: 'Michael Jackson',
+      album: 'Thriller',
+      artworkUrl: Uri.parse('https://example.org/cover.jpg'),
+      duration: const Duration(seconds: 358),
+    );
+    expect(entry.album, 'Thriller');
+    expect(entry.artworkUrl?.host, 'example.org');
+  });
+
   test('skips search for a known YouTube Music video ID', () async {
     const alreadyIdentified = CatalogTrack(
       provider: 'ytmusic-spotiflac',

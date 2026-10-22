@@ -38,6 +38,8 @@ class StreamingPlaybackCoordinator {
         title: catalog.title,
         artist: catalog.artist,
         duration: catalog.duration,
+        album: catalog.album,
+        artworkUrl: catalog.artworkUrl,
       ),
       youtubeMusic: youtubeMusic,
       soundCloud: soundCloud,
