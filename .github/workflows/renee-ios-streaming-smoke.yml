@@ -69,11 +69,11 @@ jobs:
         run: |
           flutter test integration_test/renee_streaming_transport_test.dart \
             -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded
-      - name: Optional real YouTube Music resource playback
-        if: ${{ inputs.youtube_video_id != '' }}
+      - name: Test requested public YouTube Music video on iOS simulator
+        if: ${{ github.event_name == 'push' || inputs.youtube_video_id != '' }}
         shell: bash
         env:
-          RENEE_TEST_ID: ${{ inputs.youtube_video_id }}
+          RENEE_TEST_ID: ${{ github.event_name == 'push' && 'O4A6kWeUyA0' || inputs.youtube_video_id }}
         run: |
           set -euo pipefail
           if [[ ! "$RENEE_TEST_ID" =~ ^[A-Za-z0-9_-]{11}$ ]]; then
