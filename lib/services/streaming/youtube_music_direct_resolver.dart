@@ -31,14 +31,17 @@ class YouTubePlayerProfile {
   final Map<String, Object> contextExtras;
   final String host;
 
-  Map<String, Object> context({String? visitorData}) => {
-    'clientName': name,
-    'clientVersion': version,
-    'hl': 'en',
-    'gl': 'US',
-    ...contextExtras,
-    if (visitorData != null) 'visitorData': visitorData,
-  };
+  Map<String, Object> context({String? visitorData}) {
+    final value = <String, Object>{
+      'clientName': name,
+      'clientVersion': version,
+      'hl': 'en',
+      'gl': 'US',
+      ...contextExtras,
+    };
+    if (visitorData != null) value['visitorData'] = visitorData;
+    return value;
+  }
 }
 
 /// Attempts full-track progressive AAC from a small collection of public
@@ -198,16 +201,17 @@ class YouTubeMusicDirectResolver {
         'prettyPrint': 'false',
       });
       try {
+        final headers = <String, String>{
+          'Content-Type': 'application/json',
+          'User-Agent': profile.userAgent,
+          'Origin': 'https://${profile.host}',
+          'X-YouTube-Client-Name': profile.headerId,
+          'X-YouTube-Client-Version': profile.version,
+        };
+        if (visitor != null) headers['X-Goog-Visitor-Id'] = visitor;
         final response = await _client.post(
           endpoint,
-          headers: {
-            'Content-Type': 'application/json',
-            'User-Agent': profile.userAgent,
-            'Origin': 'https://${profile.host}',
-            'X-YouTube-Client-Name': profile.headerId,
-            'X-YouTube-Client-Version': profile.version,
-            if (visitor != null) 'X-Goog-Visitor-Id': visitor,
-          },
+          headers: headers,
           body: jsonEncode({
             'context': {
               'client': profile.context(visitorData: visitor),
