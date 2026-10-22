@@ -73,7 +73,7 @@ jobs:
             -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded
       - name: Optional live YouTube Music iOS playback check (provider-dependent)
         continue-on-error: true
-        if: ${{ (github.event_name == 'push' && contains(github.event.head_commit.message, 'Brassplay-inspired')) || inputs.youtube_video_id != '' }}
+        if: ${{ github.event_name == 'push' || inputs.youtube_video_id != '' }}
         shell: bash
         env:
           RENEE_TEST_ID: ${{ github.event_name == 'push' && 'Z85lxckrtzg' || inputs.youtube_video_id }}
