@@ -6,6 +6,8 @@ on:
     paths:
       - 'integration_test/renee_streaming_transport_test.dart'
       - 'integration_test/renee_youtube_music_live_test.dart'
+      - 'lib/services/streaming/**'
+      - 'lib/widgets/renee_stream_button.dart'
       - 'third_party/audioplayers_darwin/**'
       - '.github/workflows/renee-ios-streaming-smoke.yml'
   workflow_dispatch:
@@ -70,10 +72,10 @@ jobs:
           flutter test integration_test/renee_streaming_transport_test.dart \
             -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded
       - name: Test requested public YouTube Music video on iOS simulator
-        if: ${{ github.event_name == 'push' || inputs.youtube_video_id != '' }}
+        if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Test Thriller playback and package diagnostic iPhone IPA') || inputs.youtube_video_id != '' }}
         shell: bash
         env:
-          RENEE_TEST_ID: ${{ github.event_name == 'push' && 'O4A6kWeUyA0' || inputs.youtube_video_id }}
+          RENEE_TEST_ID: ${{ github.event_name == 'push' && 'Z85lxckrtzg' || inputs.youtube_video_id }}
         run: |
           set -euo pipefail
           if [[ ! "$RENEE_TEST_ID" =~ ^[A-Za-z0-9_-]{11}$ ]]; then
