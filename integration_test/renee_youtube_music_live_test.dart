@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mornye/services/music_playback_deck.dart';
 import 'package:mornye/services/streaming/youtube_music_direct_resolver.dart';
+import 'package:mornye/services/streaming/streaming_playback_issue.dart';
 
 /// An explicit, real-provider check: requires a publicly playable YouTube
 /// video ID for which the tester has permission to access playback.
@@ -26,12 +27,17 @@ void main() {
       final deck = MusicPlaybackDeck(playerId: 'renee-live-ytm-test');
       final started = Stopwatch()..start();
       try {
-        final resource = await resolver.resolve(videoId);
+        StreamingPlaybackIssue? failure;
+        final resource = await resolver.resolve(
+          videoId,
+          onIssue: (issue) => failure = issue,
+        );
         expect(
           resource,
           isNotNull,
           reason: 'Provider did not supply a public, directly playable '
-              'iOS-compatible resource. Playback was NOT validated.',
+              'iOS-compatible resource. Playback was NOT validated. '
+              '${failure?.userMessage ?? 'No resolver details.'}',
         );
         expect(resource!.uri.scheme, 'https');
         expect(resource.headers, isEmpty);

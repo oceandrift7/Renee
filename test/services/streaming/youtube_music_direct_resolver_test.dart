@@ -149,6 +149,9 @@ void main() {
     () async {
       var calls = 0;
       final client = MockClient((request) async {
+        if (request.method == 'GET') {
+          return http.Response('<html></html>', 200);
+        }
         calls++;
         expect(request.method, 'POST');
         expect(request.url.host, 'www.youtube.com');
@@ -166,8 +169,9 @@ void main() {
   );
 
   test('reports access denial without exposing API response bodies', () async {
-    final client = MockClient((_) async =>
-        http.Response('a sensitive URL must never be displayed', 403));
+    final client = MockClient((request) async => request.method == 'GET'
+        ? http.Response('<html></html>', 200)
+        : http.Response('a sensitive URL must never be displayed', 403));
     final resolver = YouTubeMusicDirectResolver(client: client);
     StreamingPlaybackIssue? issue;
     final result = await resolver.resolve(
@@ -176,6 +180,7 @@ void main() {
     );
     expect(result, isNull);
     expect(issue?.code, StreamingPlaybackIssueCode.youtubeHttpFailure);
+    expect(issue?.clientAttempts.length, 4);
     expect(issue?.httpStatus, 403);
     expect(issue?.userMessage, contains('HTTP 403'));
     expect(issue?.userMessage, isNot(contains('sensitive URL')));
@@ -183,7 +188,9 @@ void main() {
   });
 
   test('identifies rejected video playability status', () async {
-    final client = MockClient((_) async => http.Response(
+    final client = MockClient((request) async => request.method == 'GET'
+        ? http.Response('<html></html>', 200)
+        : http.Response(
       jsonEncode({
         'playabilityStatus': {
           'status': 'LOGIN_REQUIRED',
@@ -203,18 +210,21 @@ void main() {
     );
     expect(issue?.code, StreamingPlaybackIssueCode.youtubeRestricted);
     expect(issue?.youtubeStatus, 'LOGIN_REQUIRED');
+    expect(issue?.clientAttempts, hasLength(4));
     expect(issue?.userMessage, isNot(contains('private provider message')));
     client.close();
   });
 
   test('distinguishes unsupported audio from missing streaming data', () async {
     final responses = [
-      payload([opus]),
-      {'playabilityStatus': {'status': 'OK'}},
+      ...List.generate(4, (_) => payload([opus])),
+      ...List.generate(4, (_) => {'playabilityStatus': {'status': 'OK'}}),
     ];
     var index = 0;
-    final client = MockClient((_) async => http.Response(
-      jsonEncode(responses[index++]),
+    final client = MockClient((request) async => http.Response(
+      request.method == 'GET'
+          ? '<html></html>'
+          : jsonEncode(responses[index++]),
       200,
     ));
     final resolver = YouTubeMusicDirectResolver(client: client);
@@ -228,13 +238,12 @@ void main() {
         isNull,
       );
     }
-    expect(
-      issues.map((issue) => issue.code),
-      [
-        StreamingPlaybackIssueCode.youtubeUnsupportedAudio,
-        StreamingPlaybackIssueCode.noAudioResource,
-      ],
-    );
+    // Each resolution now exhausts all profiles before reporting once.
+    expect(issues, hasLength(2));
+    expect(issues.first.code,
+        StreamingPlaybackIssueCode.youtubeUnsupportedAudio);
+    expect(issues.last.code,
+        StreamingPlaybackIssueCode.noAudioResource);
     client.close();
   });
 
@@ -249,6 +258,83 @@ void main() {
       isNull,
     );
     expect(issue?.code, StreamingPlaybackIssueCode.invalidVideoId);
+    client.close();
+  });
+
+  test('uses a public visitor ID in client context and request header', () async {
+    final client = MockClient((request) async {
+      if (request.method == 'GET') {
+        return http.Response(
+          '<script>{"visitorData":"CgtTestVisitorValue123"}</script>',
+          200,
+        );
+      }
+      expect(request.headers['x-goog-visitor-id'], 'CgtTestVisitorValue123');
+      final payload = jsonDecode(request.body) as Map<String, dynamic>;
+      final context = payload['context'] as Map<String, dynamic>;
+      final clientContext = context['client'] as Map<String, dynamic>;
+      expect(clientContext['visitorData'], 'CgtTestVisitorValue123');
+      expect(clientContext['clientName'], 'VISIONOS');
+      expect(request.headers['x-youtube-client-name'], '101');
+      return http.Response(jsonEncode({
+        'playabilityStatus': {'status': 'OK'},
+        'streamingData': {'adaptiveFormats': [aac]},
+      }), 200);
+    });
+    final resolver = YouTubeMusicDirectResolver(client: client);
+    expect(await resolver.resolve('Z85lxckrtzg'), isNotNull);
+    client.close();
+  });
+
+  test('falls back after LOGIN_REQUIRED without leaking failed status', () async {
+    var posted = 0;
+    final client = MockClient((request) async {
+      if (request.method == 'GET') return http.Response('', 503);
+      posted++;
+      final body = jsonDecode(request.body) as Map<String, dynamic>;
+      expect(body['videoId'], 'Z85lxckrtzg');
+      if (posted == 1) {
+        expect(request.headers['x-youtube-client-name'], '101');
+        return http.Response(jsonEncode({
+          'playabilityStatus': {'status': 'LOGIN_REQUIRED'},
+        }), 200);
+      }
+      expect(request.headers['x-youtube-client-name'], '28');
+      return http.Response(jsonEncode(payload([aac])), 200);
+    });
+    final issues = <StreamingPlaybackIssue>[];
+    final resolver = YouTubeMusicDirectResolver(client: client);
+    final result = await resolver.resolve('Z85lxckrtzg', onIssue: issues.add);
+    expect(result?.uri.host, 'rr1.googlevideo.com');
+    expect(posted, 2);
+    expect(issues, isEmpty);
+    client.close();
+  });
+
+  test('reports bounded, sanitized status across all failing profiles', () async {
+    var posts = 0;
+    final client = MockClient((request) async {
+      if (request.method == 'GET') return http.Response('', 500);
+      posts++;
+      return http.Response(jsonEncode({
+        'playabilityStatus': {
+          'status': 'LOGIN_REQUIRED',
+          'reason': 'signed=secret-private-url',
+        },
+      }), 200);
+    });
+    final resolver = YouTubeMusicDirectResolver(client: client);
+    final issues = <StreamingPlaybackIssue>[];
+    expect(
+      await resolver.resolve('Z85lxckrtzg', onIssue: issues.add),
+      isNull,
+    );
+    expect(posts, 4);
+    expect(issues, hasLength(1));
+    expect(issues.single.code, StreamingPlaybackIssueCode.youtubeRestricted);
+    expect(issues.single.clientAttempts, hasLength(4));
+    expect(issues.single.userMessage, contains('VISIONOS:LOGIN_REQUIRED'));
+    expect(issues.single.userMessage, isNot(contains('secret-private-url')));
     client.close();
   });
 }

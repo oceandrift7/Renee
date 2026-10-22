@@ -20,7 +20,7 @@ class YouTubeMusicStreamingSource implements StreamingSource {
   YouTubeMusicStreamingSource({
     required YouTubeAudioResourceResolver resolveAudio,
     YouTubeMusicSearch? catalogSearch,
-    this.lookupTimeout = const Duration(seconds: 8),
+    this.lookupTimeout = const Duration(seconds: 28),
   }) : _resolveAudio = resolveAudio,
        _search = catalogSearch ?? YouTubeMusicSearch(),
        _ownsSearch = catalogSearch == null;
@@ -28,6 +28,7 @@ class YouTubeMusicStreamingSource implements StreamingSource {
   final YouTubeAudioResourceResolver _resolveAudio;
   final YouTubeMusicSearch _search;
   final bool _ownsSearch;
+  // Accommodate bounded, sequential client fallback plus visitor bootstrap.
   final Duration lookupTimeout;
 
   @override

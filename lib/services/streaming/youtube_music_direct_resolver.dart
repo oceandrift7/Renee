@@ -7,177 +7,294 @@ import 'package:http/http.dart' as http;
 import 'streaming_playback_issue.dart';
 import 'streaming_source.dart';
 
-/// Experimental direct-resource resolver for publicly playable YouTube videos.
+/// Public, unauthenticated YouTube client profiles for experimental playback.
+/// Each response must independently provide a signed AAC URL; we deliberately
+/// do not parse signature ciphers, obtain PO tokens, or use account cookies.
 ///
-/// This deliberately does not decode signature ciphers, obtain PO tokens,
-/// bypass login/DRM, or download an entire track. YouTube can change or
-/// restrict its private player API at any time. A null result means that no
-/// directly playable resource was available through this limited path.
+/// Profile fallback and visitor-context handling are adapted architecturally
+/// from the user's Brassplay project, independently implemented in Dart.
+/// These unofficial endpoints may stop working without warning.
+class YouTubePlayerProfile {
+  const YouTubePlayerProfile({
+    required this.name,
+    required this.version,
+    required this.headerId,
+    required this.userAgent,
+    this.contextExtras = const {},
+    this.host = 'www.youtube.com',
+  });
+
+  final String name;
+  final String version;
+  final String headerId;
+  final String userAgent;
+  final Map<String, Object> contextExtras;
+  final String host;
+
+  Map<String, Object> context({String? visitorData}) => {
+    'clientName': name,
+    'clientVersion': version,
+    'hl': 'en',
+    'gl': 'US',
+    ...contextExtras,
+    if (visitorData != null) 'visitorData': visitorData,
+  };
+}
+
+/// Attempts full-track progressive AAC from a small collection of public
+/// YouTube client profiles. Search and catalog metadata remain independent.
+///
+/// A returned resource is not proof of successful AVPlayer preparation.
+/// Only HTTPS signed googlevideo.com URLs are returned to the native player.
 class YouTubeMusicDirectResolver {
   YouTubeMusicDirectResolver({
     http.Client? client,
-    this.requestTimeout = const Duration(seconds: 6),
+    this.requestTimeout = const Duration(seconds: 5),
+    this.visitorTimeout = const Duration(seconds: 3),
+    List<YouTubePlayerProfile>? profiles,
   }) : _client = client ?? http.Client(),
-       _ownsClient = client == null;
+       _ownsClient = client == null,
+       _profiles = profiles ?? defaultProfiles;
 
   final http.Client _client;
   final bool _ownsClient;
   final Duration requestTimeout;
+  final Duration visitorTimeout;
+  final List<YouTubePlayerProfile> _profiles;
 
-  /// Do not use extremely compressed AAC tracks, even when buffering fails.
-  /// Spotify-like smoothness should not come at the cost of 48 kbps playback.
   static const int minimumAudioBitrate = 96000;
   static const int preferredAudioBitrate = 128000;
-
-  // Adapted from the public client declaration in Mornye-Extension.
-  // Android VR does not normally require an external GVS PO token.
-  static const _clientName = 'ANDROID_VR';
-  static const _clientVersion = '1.65.10';
-  static const _clientHeaderName = '28';
-  static const _userAgent =
-      'com.google.android.apps.youtube.vr.oculus/1.65.10 '
-      '(Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip';
   static const _key = 'AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w';
 
+  /// Fallback only on absent/unplayable resources, not on native-player errors.
+  /// VisionOS is first because the Android VR path has returned LOGIN_REQUIRED
+  /// in real Renée tests. WEB_REMIX usually needs separate player work and is
+  /// intentionally last.
+  static const List<YouTubePlayerProfile> defaultProfiles = [
+    YouTubePlayerProfile(
+      name: 'VISIONOS',
+      version: '1.02',
+      headerId: '101',
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) '
+          'AppleWebKit/605.1.15 (KHTML, like Gecko) '
+          'Version/26.0 Safari/605.1.15',
+      contextExtras: {
+        'deviceMake': 'Apple',
+        'deviceModel': 'RealityDevice17,1',
+        'osName': 'visionOS',
+        'osVersion': '26.5.23O471',
+      },
+    ),
+    YouTubePlayerProfile(
+      name: 'ANDROID_VR',
+      version: '1.65.10',
+      headerId: '28',
+      userAgent: 'com.google.android.apps.youtube.vr.oculus/1.65.10 '
+          '(Linux; U; Android 12L; eureka-user '
+          'Build/SQ3A.220605.009.A1) gzip',
+      contextExtras: {
+        'deviceMake': 'Oculus',
+        'deviceModel': 'Quest 3',
+        'osName': 'Android',
+        'osVersion': '12L',
+        'androidSdkVersion': 32,
+        'platform': 'MOBILE',
+      },
+    ),
+    YouTubePlayerProfile(
+      name: 'ANDROID_VR',
+      version: '1.60.19',
+      headerId: '28',
+      userAgent: 'com.google.android.apps.youtube.vr.oculus/1.60.19 '
+          '(Linux; U; Android 12L; eureka-user '
+          'Build/SQ3A.220605.009.A1) gzip',
+      contextExtras: {
+        'deviceMake': 'Oculus',
+        'deviceModel': 'Quest 3',
+        'osName': 'Android',
+        'osVersion': '12L',
+        'androidSdkVersion': 32,
+        'platform': 'MOBILE',
+      },
+    ),
+    YouTubePlayerProfile(
+      name: 'WEB_REMIX',
+      version: '1.20240801.01.00',
+      headerId: '67',
+      host: 'music.youtube.com',
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+          'AppleWebKit/605.1.15 (KHTML, like Gecko) '
+          'Version/17.0 Safari/605.1.15',
+    ),
+  ];
+
+  /// The visitor ID is a public anonymous session value, not a login cookie.
+  /// On failure, keep trying the public clients without it.
+  Future<String?> _visitorData() async {
+    try {
+      final result = await _client.get(
+        Uri.parse('https://www.youtube.com/'),
+        headers: {'User-Agent': _profiles.first.userAgent},
+      ).timeout(visitorTimeout);
+      if (result.statusCode != 200) return null;
+      final match = RegExp(
+        r'"(?:visitorData|VISITOR_DATA)"\s*:\s*"([A-Za-z0-9_=%-]{8,256})"',
+      ).firstMatch(result.body);
+      return match?.group(1);
+    } catch (_) {
+      // Bootstrap is optional. Never display an HTML response or token.
+      return null;
+    }
+  }
+
+  /// onIssue fires only if ALL configured clients fail; a successful fallback
+  /// must not leave a stale LOGIN_REQUIRED issue in the UI.
   Future<StreamResource?> resolve(
     String videoId, {
     void Function(StreamingPlaybackIssue)? onIssue,
   }) async {
     if (!RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId)) {
-      onIssue?.call(
-        const StreamingPlaybackIssue(
-          StreamingPlaybackIssueCode.invalidVideoId,
-        ),
-      );
+      onIssue?.call(const StreamingPlaybackIssue(
+        StreamingPlaybackIssueCode.invalidVideoId,
+      ));
       return null;
     }
-    final endpoint = Uri.https('www.youtube.com', '/youtubei/v1/player', {
-      'key': _key,
-      'prettyPrint': 'false',
-    });
-    try {
-      final response = await _client
-          .post(
-            endpoint,
-            headers: const {
-              'Content-Type': 'application/json',
-              'User-Agent': _userAgent,
-              'Origin': 'https://www.youtube.com',
-              'X-YouTube-Client-Name': _clientHeaderName,
-              'X-YouTube-Client-Version': _clientVersion,
-            },
-            body: jsonEncode({
-              'context': {
-                'client': {
-                  'clientName': _clientName,
-                  'clientVersion': _clientVersion,
-                  'androidSdkVersion': 32,
-                  'hl': 'en',
-                  'gl': 'US',
-                  'osName': 'Android',
-                  'osVersion': '12L',
-                  'platform': 'MOBILE',
-                  'deviceMake': 'Oculus',
-                  'deviceModel': 'Quest 3',
-                },
-              },
-              'videoId': videoId,
-            }),
-          )
-          .timeout(requestTimeout);
-      if (response.statusCode != 200) {
-        onIssue?.call(
-          StreamingPlaybackIssue(
-            StreamingPlaybackIssueCode.youtubeHttpFailure,
-            httpStatus: response.statusCode,
-          ),
-        );
-        return null;
-      }
+    if (_profiles.isEmpty) {
+      onIssue?.call(const StreamingPlaybackIssue(
+        StreamingPlaybackIssueCode.noAudioResource,
+      ));
+      return null;
+    }
 
-      final dynamic payload;
+    final visitor = await _visitorData();
+    final attempts = <String>[];
+    StreamingPlaybackIssue? mostUsefulIssue;
+    void record(YouTubePlayerProfile profile, StreamingPlaybackIssue issue,
+        String outcome) {
+      // Profile and outcome come only from predefined names and sanitized
+      // status tokens. Never record exception text, JSON reasons, or URLs.
+      final safeProfile = profile.name.replaceAll(RegExp(r'[^A-Z_]'), '');
+      attempts.add('$safeProfile:$outcome');
+      final priority = switch (issue.code) {
+        StreamingPlaybackIssueCode.youtubeUnsupportedAudio => 5,
+        StreamingPlaybackIssueCode.youtubeRestricted => 4,
+        StreamingPlaybackIssueCode.noAudioResource => 3,
+        StreamingPlaybackIssueCode.youtubeHttpFailure => 2,
+        _ => 1,
+      };
+      final previousPriority = switch (mostUsefulIssue?.code) {
+        StreamingPlaybackIssueCode.youtubeUnsupportedAudio => 5,
+        StreamingPlaybackIssueCode.youtubeRestricted => 4,
+        StreamingPlaybackIssueCode.noAudioResource => 3,
+        StreamingPlaybackIssueCode.youtubeHttpFailure => 2,
+        _ => 0,
+      };
+      if (priority > previousPriority) mostUsefulIssue = issue;
+    }
+
+    for (final profile in _profiles) {
+      final endpoint = Uri.https(profile.host, '/youtubei/v1/player', {
+        'key': _key,
+        'prettyPrint': 'false',
+      });
       try {
-        payload = jsonDecode(response.body);
-      } on FormatException {
-        onIssue?.call(
-          const StreamingPlaybackIssue(
-            StreamingPlaybackIssueCode.youtubeInvalidResponse,
-          ),
-        );
-        return null;
-      }
-      if (payload is! Map<String, dynamic>) {
-        onIssue?.call(
-          const StreamingPlaybackIssue(
-            StreamingPlaybackIssueCode.youtubeInvalidResponse,
-          ),
-        );
-        return null;
-      }
+        final response = await _client.post(
+          endpoint,
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': profile.userAgent,
+            'Origin': 'https://${profile.host}',
+            'X-YouTube-Client-Name': profile.headerId,
+            'X-YouTube-Client-Version': profile.version,
+            if (visitor != null) 'X-Goog-Visitor-Id': visitor,
+          },
+          body: jsonEncode({
+            'context': {
+              'client': profile.context(visitorData: visitor),
+            },
+            'videoId': videoId,
+          }),
+        ).timeout(requestTimeout);
 
-      final status = payload['playabilityStatus'];
-      if (status is! Map || status['status'] != 'OK') {
-        final rawStatus = status is Map ? status['status'] : null;
-        final value = rawStatus is String &&
-                RegExp(r'^[A-Z_]{1,40}$').hasMatch(rawStatus)
-            ? rawStatus
-            : null;
-        onIssue?.call(
-          StreamingPlaybackIssue(
+        if (response.statusCode != 200) {
+          record(profile,
+              StreamingPlaybackIssue(
+                StreamingPlaybackIssueCode.youtubeHttpFailure,
+                httpStatus: response.statusCode,
+              ), 'HTTP_${response.statusCode}');
+          continue;
+        }
+        final dynamic decoded;
+        try {
+          decoded = jsonDecode(response.body);
+        } on FormatException {
+          record(profile, const StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.youtubeInvalidResponse,
+          ), 'INVALID_JSON');
+          continue;
+        }
+        if (decoded is! Map<String, dynamic>) {
+          record(profile, const StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.youtubeInvalidResponse,
+          ), 'INVALID_JSON');
+          continue;
+        }
+        final playability = decoded['playabilityStatus'];
+        if (playability is! Map || playability['status'] != 'OK') {
+          final raw = playability is Map ? playability['status'] : null;
+          final status = raw is String &&
+                  RegExp(r'^[A-Z_]{1,40}$').hasMatch(raw)
+              ? raw
+              : 'UNKNOWN';
+          record(profile, StreamingPlaybackIssue(
             StreamingPlaybackIssueCode.youtubeRestricted,
-            youtubeStatus: value,
-          ),
-        );
-        return null;
-      }
-
-      final resource = resourceFromPlayerResponse(payload);
-      if (resource == null) {
-        final data = payload['streamingData'];
+            youtubeStatus: status,
+          ), status);
+          continue;
+        }
+        final resource = resourceFromPlayerResponse(decoded);
+        if (resource != null) return resource;
+        final data = decoded['streamingData'];
         final hasFormats = data is Map &&
             ((data['adaptiveFormats'] is List &&
                     (data['adaptiveFormats'] as List).isNotEmpty) ||
                 (data['formats'] is List &&
                     (data['formats'] as List).isNotEmpty));
-        onIssue?.call(
-          StreamingPlaybackIssue(
-            hasFormats
-                ? StreamingPlaybackIssueCode.youtubeUnsupportedAudio
-                : StreamingPlaybackIssueCode.noAudioResource,
-          ),
+        final issue = StreamingPlaybackIssue(
+          hasFormats
+              ? StreamingPlaybackIssueCode.youtubeUnsupportedAudio
+              : StreamingPlaybackIssueCode.noAudioResource,
         );
-      }
-      return resource;
-    } on TimeoutException {
-      onIssue?.call(
-        const StreamingPlaybackIssue(
+        record(profile, issue, hasFormats ? 'NO_AAC' : 'NO_AUDIO');
+      } on TimeoutException {
+        record(profile, const StreamingPlaybackIssue(
           StreamingPlaybackIssueCode.youtubeTimeout,
-        ),
-      );
-      return null;
-    } on SocketException {
-      onIssue?.call(
-        const StreamingPlaybackIssue(
+        ), 'TIMEOUT');
+      } on SocketException {
+        record(profile, const StreamingPlaybackIssue(
           StreamingPlaybackIssueCode.youtubeNetworkFailure,
-        ),
-      );
-      return null;
-    } on http.ClientException {
-      onIssue?.call(
-        const StreamingPlaybackIssue(
+        ), 'NETWORK');
+      } on http.ClientException {
+        record(profile, const StreamingPlaybackIssue(
           StreamingPlaybackIssueCode.youtubeNetworkFailure,
-        ),
-      );
-      return null;
-    } catch (_) {
-      // Do not expose exception text; it may include a signed provider URL.
-      onIssue?.call(
-        const StreamingPlaybackIssue(
+        ), 'NETWORK');
+      } catch (_) {
+        record(profile, const StreamingPlaybackIssue(
           StreamingPlaybackIssueCode.youtubeInvalidResponse,
-        ),
-      );
-      return null;
+        ), 'ERROR');
+      }
     }
+
+    final issue = mostUsefulIssue ?? const StreamingPlaybackIssue(
+      StreamingPlaybackIssueCode.noAudioResource,
+    );
+    onIssue?.call(StreamingPlaybackIssue(
+      issue.code,
+      httpStatus: issue.httpStatus,
+      youtubeStatus: issue.youtubeStatus,
+      clientAttempts: attempts,
+    ));
+    return null;
   }
 
   /// Pure parser: keeps media selection testable without live YouTube traffic.

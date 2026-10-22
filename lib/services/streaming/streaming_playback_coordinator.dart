@@ -82,7 +82,10 @@ class StreamingPlaybackCoordinator {
       return false;
     }
 
-    final track = selected.track;
+    // The catalog owns display metadata; the online provider only supplies
+    // a recording ID and playable resource. Never replace catalog titles,
+    // artists or durations with inconsistent YouTube search-result metadata.
+    final track = requested;
     final urls = [resource.uri, ...resource.fallbackUris.take(1)];
     for (final url in urls) {
       if (isCurrentRequest != null && !isCurrentRequest()) return false;
@@ -98,7 +101,7 @@ class StreamingPlaybackCoordinator {
       }
 
       final item = PlayableMedia(
-        id: 'stream:${selected.sourceId}:${track.id}',
+        id: 'stream:${selected.sourceId}:${selected.track.id}',
         source: url.toString(),
         title: track.title,
         artist: track.artist,

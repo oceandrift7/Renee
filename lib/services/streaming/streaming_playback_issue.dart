@@ -22,6 +22,7 @@ class StreamingPlaybackIssue {
     this.code, {
     this.httpStatus,
     this.youtubeStatus,
+    this.clientAttempts = const [],
   });
 
   final StreamingPlaybackIssueCode code;
@@ -30,6 +31,9 @@ class StreamingPlaybackIssue {
   /// Only a short, sanitized status token such as LOGIN_REQUIRED, never the
   /// provider's free-form error message or a signed playback URL.
   final String? youtubeStatus;
+
+  /// Sanitized client/status pairs only. Never include URLs or API reasons.
+  final List<String> clientAttempts;
 
   String get diagnosticCode => switch (code) {
     StreamingPlaybackIssueCode.noConfidentMatch => 'MATCH-NONE',
@@ -80,6 +84,9 @@ class StreamingPlaybackIssue {
       StreamingPlaybackIssueCode.unexpectedFailure =>
         'An unexpected online playback failure occurred.',
     };
-    return '$explanation [$diagnosticCode]';
+    final details = clientAttempts.isEmpty
+        ? ''
+        : ' Attempts: ${clientAttempts.join(', ')}.';
+    return '$explanation$details [$diagnosticCode]';
   }
 }
