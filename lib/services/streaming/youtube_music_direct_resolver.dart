@@ -159,7 +159,8 @@ class YouTubeMusicDirectResolver {
         now.isBefore(_sharedVisitorExpiresAt!)) {
       return _sharedVisitor;
     }
-    if (_visitorRequest != null) return _visitorRequest;
+    final inFlight = _visitorRequest;
+    if (inFlight != null) return inFlight;
     if (_retryVisitorAfter != null && now.isBefore(_retryVisitorAfter!)) {
       return null;
     }
