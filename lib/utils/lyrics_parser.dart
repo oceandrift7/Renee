@@ -632,7 +632,7 @@ class LyricsParser {
       )) {
         final id = agent.getAttribute(
           'id',
-          namespaceUri: 'http://www.w3.org/XML/1998/namespace',
+          namespace: 'http://www.w3.org/XML/1998/namespace',
         );
         if (id == null || id.isEmpty) continue;
         final group =
@@ -644,7 +644,7 @@ class LyricsParser {
       LyricVoice? voiceOf(XmlElement element, LyricVoice? inherited) {
         final id = element.getAttribute(
           'agent',
-          namespaceUri: metadataNamespace,
+          namespace: metadataNamespace,
         );
         if (id == null || id.isEmpty) return inherited;
         return voices.putIfAbsent(
@@ -698,7 +698,7 @@ class LyricsParser {
             final nextVoice = voiceOf(node, voice);
             final nextBackground =
                 background ||
-                node.getAttribute('role', namespaceUri: metadataNamespace) ==
+                node.getAttribute('role', namespace: metadataNamespace) ==
                     'x-bg';
             final spanBegin = node == p
                 ? null
