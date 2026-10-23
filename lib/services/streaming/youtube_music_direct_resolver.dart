@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'streaming_playback_issue.dart';
+import 'youtube_music_signed_session.dart';
 import 'streaming_source.dart';
 
 /// Public, unauthenticated YouTube client profiles for experimental playback.
@@ -65,6 +66,7 @@ class YouTubeMusicDirectResolver {
     this.visitorTimeout = const Duration(seconds: 3),
     this.probeTimeout = const Duration(seconds: 4),
     List<YouTubePlayerProfile>? profiles,
+    this.signedInSession,
   }) : _client = client ?? http.Client(),
        _ownsClient = client == null,
        _profiles = profiles ?? defaultProfiles;
@@ -75,6 +77,7 @@ class YouTubeMusicDirectResolver {
   final Duration visitorTimeout;
   final Duration probeTimeout;
   final List<YouTubePlayerProfile> _profiles;
+  final YouTubeMusicSignedSession? signedInSession;
   // Only verified media refusals are cached, not LOGIN_REQUIRED or timeouts.
   final Map<String, DateTime> _mediaRefusals = {};
   static const mediaRefusalCooldown = Duration(minutes: 10);
@@ -296,6 +299,64 @@ class YouTubeMusicDirectResolver {
     }
   }
 
+  /// First ask the browser-authenticated YouTube Music player, using only an
+  /// explicitly provided, signed-in session. A session's cookies and hash
+  /// MUST go only to music.youtube.com, never to any alternate host.
+  /// A LOGIN_REQUIRED response still denotes a provider refusal, not proof
+  /// the session is invalid or a prompt to retry indefinitely.
+  Future<StreamResource?> _resolveSignedIn(String videoId) async {
+    final session = signedInSession;
+    if (session == null) return null;
+    final headers = session.headers();
+    if (headers == null) return null;
+    try {
+      final response = await _client.post(
+        Uri.https('music.youtube.com', '/youtubei/v1/player', {
+          'key': _key,
+          'prettyPrint': 'false',
+        }),
+        headers: headers,
+        body: jsonEncode({
+          'context': {
+            'client': {
+              'clientName': 'WEB_REMIX',
+              'clientVersion': session.clientVersion,
+              'hl': 'en',
+              'gl': 'US',
+              if (session.visitorData != null)
+                'visitorData': session.visitorData,
+            },
+            if (session.delegatedSessionId != null)
+              'user': {'onBehalfOfUser': session.delegatedSessionId},
+          },
+          'videoId': videoId,
+          'contentCheckOk': true,
+          'racyCheckOk': true,
+        }),
+      ).timeout(requestTimeout);
+      if (response.statusCode != 200) return null;
+      final parsed = jsonDecode(response.body);
+      if (parsed is! Map<String, dynamic>) return null;
+      final picked = resourceFromPlayerResponse(parsed);
+      if (picked == null) return null;
+      // Browser web-player streams may require matching browser User-Agent
+      // and Origin/Referer headers on subsequent byte-range media requests.
+      // Never forward signing cookies or Authorization to Googlevideo.
+      final mediaHeaders = <String, String>{
+        'User-Agent': headers['User-Agent']!,
+        'Referer': YouTubeMusicSignedSession.origin + '/',
+      };
+      for (final uri in [picked.uri, ...picked.fallbackUris]) {
+        if (await _probeMedia(uri, headers: mediaHeaders) == null) {
+          return StreamResource(uri: uri, headers: mediaHeaders);
+        }
+      }
+    } catch (_) {
+      // Do not print headers, tokens, cookies or signed URLs.
+    }
+    return null;
+  }
+
   /// onIssue fires only if ALL configured clients fail; a successful fallback
   /// must not leave a stale LOGIN_REQUIRED issue in the UI.
   Future<StreamResource?> resolve(
@@ -316,6 +377,9 @@ class YouTubeMusicDirectResolver {
       );
       return null;
     }
+
+    final signed = await _resolveSignedIn(videoId);
+    if (signed != null) return signed;
 
     final visitor = await _visitorData();
     final attempts = <String>[];
