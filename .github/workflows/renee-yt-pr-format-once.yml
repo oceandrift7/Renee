@@ -6,6 +6,7 @@ on:
       - fix/yt-embedded-client-and-live-validation
     paths:
       - '.github/workflows/renee-yt-pr-format-once.yml'
+      - 'lib/services/streaming/youtube_music_signed_session.dart'
 
 permissions:
   contents: write
