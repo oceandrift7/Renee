@@ -55,12 +55,11 @@ class ReneeOnlinePlayback {
     WidgetRef ref,
     Track track, {
     int? requestGeneration,
-  }) async =>
-      (await tryPlayDiagnosed(
-        ref,
-        track,
-        requestGeneration: requestGeneration,
-      )).result;
+  }) async => (await tryPlayDiagnosed(
+    ref,
+    track,
+    requestGeneration: requestGeneration,
+  )).result;
 
   Future<ReneeOnlinePlaybackAttempt> tryPlayDiagnosed(
     WidgetRef ref,
@@ -96,12 +95,11 @@ class ReneeOnlinePlayback {
         id: track.id,
         title: track.name,
         artist: track.artistName,
-        duration: track.duration > 0
-            ? Duration(seconds: track.duration)
-            : null,
+        duration: track.duration > 0 ? Duration(seconds: track.duration) : null,
         isrc: track.isrc,
         album: track.albumName,
-        artworkUrl: catalogArtwork != null &&
+        artworkUrl:
+            catalogArtwork != null &&
                 catalogArtwork.scheme == 'https' &&
                 catalogArtwork.host.isNotEmpty
             ? catalogArtwork

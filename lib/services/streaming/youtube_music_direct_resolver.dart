@@ -310,30 +310,32 @@ class YouTubeMusicDirectResolver {
     final headers = session.headers();
     if (headers == null) return null;
     try {
-      final response = await _client.post(
-        Uri.https('music.youtube.com', '/youtubei/v1/player', {
-          'key': session.apiKey ?? _key,
-          'prettyPrint': 'false',
-        }),
-        headers: headers,
-        body: jsonEncode({
-          'context': {
-            'client': {
-              'clientName': 'WEB_REMIX',
-              'clientVersion': session.clientVersion,
-              'hl': 'en',
-              'gl': 'US',
-              if (session.visitorData != null)
-                'visitorData': session.visitorData,
-            },
-            if (session.delegatedSessionId != null)
-              'user': {'onBehalfOfUser': session.delegatedSessionId},
-          },
-          'videoId': videoId,
-          'contentCheckOk': true,
-          'racyCheckOk': true,
-        }),
-      ).timeout(requestTimeout);
+      final response = await _client
+          .post(
+            Uri.https('music.youtube.com', '/youtubei/v1/player', {
+              'key': session.apiKey ?? _key,
+              'prettyPrint': 'false',
+            }),
+            headers: headers,
+            body: jsonEncode({
+              'context': {
+                'client': {
+                  'clientName': 'WEB_REMIX',
+                  'clientVersion': session.clientVersion,
+                  'hl': 'en',
+                  'gl': 'US',
+                  if (session.visitorData != null)
+                    'visitorData': session.visitorData,
+                },
+                if (session.delegatedSessionId != null)
+                  'user': {'onBehalfOfUser': session.delegatedSessionId},
+              },
+              'videoId': videoId,
+              'contentCheckOk': true,
+              'racyCheckOk': true,
+            }),
+          )
+          .timeout(requestTimeout);
       if (response.statusCode != 200) return null;
       final parsed = jsonDecode(response.body);
       if (parsed is! Map<String, dynamic>) return null;

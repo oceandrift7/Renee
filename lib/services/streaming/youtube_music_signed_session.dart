@@ -21,6 +21,7 @@ class YouTubeMusicSignedSession {
 
   final Map<String, String> cookies;
   final String clientVersion;
+
   /// Public client API key copied from YouTube Music's own ytcfg.
   final String? apiKey;
   final String? visitorData;
@@ -60,8 +61,7 @@ class YouTubeMusicSignedSession {
     final entries = <String>[];
     for (final entry in cookies.entries) {
       if (!RegExp(r'^[-A-Za-z0-9_]{1,128}$').hasMatch(entry.key) ||
-          !RegExp(r'^[\x21-\x3A\x3C-\x7E]{1,4096}$')
-              .hasMatch(entry.value)) {
+          !RegExp(r'^[\x21-\x3A\x3C-\x7E]{1,4096}$').hasMatch(entry.value)) {
         return null;
       }
       entries.add('${entry.key}=${entry.value}');
@@ -103,8 +103,10 @@ class YouTubeMusicSignedSession {
   };
 
   static YouTubeMusicSignedSession? fromPrivateJson(Object? raw) {
-    if (raw is! Map || raw['version'] != 1 ||
-        raw['cookies'] is! Map || raw['clientVersion'] is! String) {
+    if (raw is! Map ||
+        raw['version'] != 1 ||
+        raw['cookies'] is! Map ||
+        raw['clientVersion'] is! String) {
       return null;
     }
     final map = raw['cookies'] as Map;
