@@ -76,7 +76,7 @@ jobs:
             -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded
       - name: Verify native iOS JavaScriptCore challenge bridge
         run: |
-          flutter test integration_test/renee_youtube_js_bridge_test.dart \\
+          flutter test integration_test/renee_youtube_js_bridge_test.dart \
             -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded
       - name: Optional live YouTube Music iOS playback check (provider-dependent)
         continue-on-error: true
@@ -100,7 +100,7 @@ jobs:
           # Keep the full Xcode diagnostics when Flutter's summary only reports
           # a generic provisioning or compilation failure.
           if ! flutter build ios --release --no-codesign --target lib/main.dart -v > /tmp/renee-ios-build.log 2>&1; then
-            grep -nE 'error:|Error Domain|provisioning|Provisioning|Signing|Failed to build|SwiftCompile|CompileSwift|BUILD FAILED' /tmp/renee-ios-build.log | tail -100 || true
+            grep -nE 'error:|Error Domain|provisioning|Provisioning|Signing|Failed to build|PhaseScriptExecution|Command PhaseScriptExecution|BUILD FAILED|^.*(Error|error|failed):' /tmp/renee-ios-build.log | tail -100 | cut -c1-600 || true
             tail -100 /tmp/renee-ios-build.log
             exit 1
           fi
