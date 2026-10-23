@@ -90,14 +90,14 @@ void main() {
         expect(old.path, isNot(fresh.path));
         final former = await (await httpClient.getUrl(old)).close();
         expect(former.statusCode, HttpStatus.notFound);
-        await former.drain();
+        await former.drain<void>();
         final current = await (await httpClient.getUrl(fresh)).close();
         expect(current.statusCode, HttpStatus.ok);
-        await current.drain();
+        await current.drain<void>();
         proxy.revoke();
         final revoked = await (await httpClient.getUrl(fresh)).close();
         expect(revoked.statusCode, HttpStatus.notFound);
-        await revoked.drain();
+        await revoked.drain<void>();
       } finally {
         httpClient.close(force: true);
         await proxy.dispose();
