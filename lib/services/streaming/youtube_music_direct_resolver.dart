@@ -23,6 +23,7 @@ class YouTubePlayerProfile {
     this.contextExtras = const {},
     this.host = 'www.youtube.com',
     this.embedUrl,
+    this.mediaNeedsUserAgent = false,
   });
 
   final String name;
@@ -34,6 +35,8 @@ class YouTubePlayerProfile {
 
   /// Required by the anonymous embedded player client as thirdParty.embedUrl.
   final String? embedUrl;
+  /// Googlevideo requires the same client identity on the media request.
+  final bool mediaNeedsUserAgent;
 
   Map<String, Object> context({String? visitorData}) {
     final value = <String, Object>{
@@ -103,6 +106,7 @@ class YouTubeMusicDirectResolver {
       name: 'ANDROID_VR',
       version: '1.65.10',
       headerId: '28',
+      mediaNeedsUserAgent: true,
       userAgent:
           'com.google.android.apps.youtube.vr.oculus/1.65.10 '
           '(Linux; U; Android 12L; eureka-user '
@@ -120,6 +124,7 @@ class YouTubeMusicDirectResolver {
       name: 'ANDROID_VR',
       version: '1.60.19',
       headerId: '28',
+      mediaNeedsUserAgent: true,
       userAgent:
           'com.google.android.apps.youtube.vr.oculus/1.60.19 '
           '(Linux; U; Android 12L; eureka-user '
@@ -241,10 +246,14 @@ class YouTubeMusicDirectResolver {
 
   /// Check a small byte range before handing any signed URL to AVPlayer.
   /// No complete song is downloaded, and signed URLs never enter diagnostics.
-  Future<String?> _probeMedia(Uri url) async {
+  Future<String?> _probeMedia(
+    Uri url, {
+    Map<String, String> headers = const {},
+  }) async {
     try {
       final request = http.Request('GET', url)
         ..followRedirects = false
+        ..headers.addAll(headers)
         ..headers['Range'] = 'bytes=0-16383';
       final response = await _client.send(request).timeout(probeTimeout);
       if (response.statusCode != 200 && response.statusCode != 206) {
@@ -438,15 +447,18 @@ class YouTubeMusicDirectResolver {
           // If Googlevideo refuses one client, try its AAC backup and then
           // a different player-client profile rather than failing playback.
           final urls = [resource.uri, ...resource.fallbackUris];
+          final mediaHeaders = profile.mediaNeedsUserAgent
+              ? <String, String>{'User-Agent': profile.userAgent}
+              : const <String, String>{};
           String? lastFailure;
           for (final url in urls) {
-            final refusal = await _probeMedia(url);
+            final refusal = await _probeMedia(url, headers: mediaHeaders);
             if (refusal != null) {
               lastFailure = refusal;
               continue;
             }
             _mediaRefusals.remove(refusalKey);
-            return StreamResource(uri: url);
+            return StreamResource(uri: url, headers: mediaHeaders);
           }
           if (lastFailure != 'MEDIA_TIMEOUT' &&
               lastFailure != 'MEDIA_NETWORK' &&
