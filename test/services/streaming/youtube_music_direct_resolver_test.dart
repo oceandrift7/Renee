@@ -371,7 +371,7 @@ void main() {
       return http.Response(jsonEncode(payload([
         {
           ...aac,
-          'url': 'https://rr${posts}.googlevideo.com/videoplayback?expire=9999999999',
+          'url': 'https://rr$posts.googlevideo.com/videoplayback?expire=9999999999',
         },
       ])), 200);
     });
