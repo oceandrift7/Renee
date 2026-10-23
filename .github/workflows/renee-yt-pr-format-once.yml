@@ -1,0 +1,44 @@
+name: Renée YouTube PR one-shot formatting
+
+on:
+  push:
+    branches:
+      - fix/yt-embedded-client-and-live-validation
+    paths:
+      - '.github/workflows/renee-yt-pr-format-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Set up Flutter and Dart
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+      - name: Format only YouTube PR Dart changes
+        run: |
+          dart format \
+            lib/services/streaming/youtube_music_direct_resolver.dart \
+            lib/services/streaming/youtube_music_fallback_resolver.dart \
+            test/services/streaming/youtube_music_direct_resolver_test.dart \
+            test/services/streaming/youtube_explode_audio_resolver_test.dart
+      - name: Commit formatter output to this PR branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "$(git status --porcelain -- lib/services/streaming/youtube_music_direct_resolver.dart lib/services/streaming/youtube_music_fallback_resolver.dart test/services/streaming/youtube_music_direct_resolver_test.dart test/services/streaming/youtube_explode_audio_resolver_test.dart)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -- lib/services/streaming/youtube_music_direct_resolver.dart lib/services/streaming/youtube_music_fallback_resolver.dart test/services/streaming/youtube_music_direct_resolver_test.dart test/services/streaming/youtube_explode_audio_resolver_test.dart
+            git commit -m "style(youtube): format PR implementation and regression tests"
+            git push origin HEAD:fix/yt-embedded-client-and-live-validation
+          fi
