@@ -22,6 +22,7 @@ class YouTubePlayerProfile {
     required this.userAgent,
     this.contextExtras = const {},
     this.host = 'www.youtube.com',
+    this.embedUrl,
   });
 
   final String name;
@@ -30,11 +31,14 @@ class YouTubePlayerProfile {
   final String userAgent;
   final Map<String, Object> contextExtras;
   final String host;
+  /// Required by the anonymous embedded player client as thirdParty.embedUrl.
+  final String? embedUrl;
 
   Map<String, Object> context({String? visitorData}) {
     final value = <String, Object>{
       'clientName': name,
       'clientVersion': version,
+      'userAgent': userAgent,
       'hl': 'en',
       'gl': 'US',
       ...contextExtras,
@@ -74,10 +78,10 @@ class YouTubeMusicDirectResolver {
   static const int preferredAudioBitrate = 128000;
   static const _key = 'AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w';
 
-  /// Fallback only on absent/unplayable resources, not on native-player errors.
-  /// VisionOS is first because the Android VR path has returned LOGIN_REQUIRED
-  /// in real Renée tests. WEB_REMIX usually needs separate player work and is
-  /// intentionally last.
+  /// Anonymous client fallbacks. VisionOS is first; Android VR can return
+  /// LOGIN_REQUIRED or HTTP 403. The final embedded profile is useful only
+  /// for embeddable recordings and may still require cipher/PO-token work.
+  /// Never mistake an 'OK' playability status for verified media access.
   static const List<YouTubePlayerProfile> defaultProfiles = [
     YouTubePlayerProfile(
       name: 'VISIONOS',
@@ -126,13 +130,13 @@ class YouTubeMusicDirectResolver {
       },
     ),
     YouTubePlayerProfile(
-      name: 'WEB_REMIX',
-      version: '1.20240801.01.00',
-      headerId: '67',
-      host: 'music.youtube.com',
+      name: 'WEB_EMBEDDED_PLAYER',
+      version: '2.20260708.00.00',
+      headerId: '56',
       userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
           'AppleWebKit/605.1.15 (KHTML, like Gecko) '
-          'Version/17.0 Safari/605.1.15',
+          'Version/15.5 Safari/605.1.15,gzip(gfe)',
+      embedUrl: 'https://www.youtube.com/',
     ),
   ];
 
@@ -267,12 +271,17 @@ class YouTubeMusicDirectResolver {
           'X-YouTube-Client-Version': profile.version,
         };
         if (visitor != null) headers['X-Goog-Visitor-Id'] = visitor;
+        if (profile.embedUrl != null) {
+          headers['Referer'] = profile.embedUrl!;
+        }
         final response = await _client.post(
           endpoint,
           headers: headers,
           body: jsonEncode({
             'context': {
               'client': profile.context(visitorData: visitor),
+              if (profile.embedUrl != null)
+                'thirdParty': {'embedUrl': profile.embedUrl},
             },
             'videoId': videoId,
           }),
