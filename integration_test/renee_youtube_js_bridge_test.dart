@@ -10,12 +10,12 @@ import 'package:integration_test/integration_test.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('native JavaScriptCore evaluates a cipher-style challenge',
-      (tester) async {
+  testWidgets('native JavaScriptCore evaluates a cipher-style challenge', (
+    tester,
+  ) async {
     const channel = MethodChannel('com.zarz.mornye/youtube_js');
     final initialized = await channel.invokeMethod<bool>('initialize', {
-      'script':
-          'globalThis.jsc = (input) => ({type: "result", responses: input.requests});',
+      'script': 'globalThis.jsc = (input) => ({type: "result", responses: input.requests});',
     });
     expect(initialized, isTrue);
     final raw = await channel.invokeMethod<String>('evaluate', {

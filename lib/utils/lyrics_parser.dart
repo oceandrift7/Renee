@@ -629,9 +629,9 @@ class LyricsParser {
         (node) =>
             node.name.local == 'agent' &&
             (node.name.namespaceUri == metadataNamespace ||
-                node.ancestors
-                    .whereType<XmlElement>()
-                    .any((parent) => parent.name.local == 'metadata')),
+                node.ancestors.whereType<XmlElement>().any(
+                  (parent) => parent.name.local == 'metadata',
+                )),
       )) {
         // xml 6.x can report an unresolved metadata prefix. The xml:id
         // attribute remains identifiable by its reserved xml prefix.
@@ -656,10 +656,7 @@ class LyricsParser {
       }
 
       LyricVoice? voiceOf(XmlElement element, LyricVoice? inherited) {
-        final id = element.getAttribute(
-          'agent',
-          namespace: metadataNamespace,
-        );
+        final id = element.getAttribute('agent', namespace: metadataNamespace);
         if (id == null || id.isEmpty) return inherited;
         return voices.putIfAbsent(
           id,
