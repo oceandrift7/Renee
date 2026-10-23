@@ -6,6 +6,9 @@ on:
     paths:
       - 'lib/services/streaming/**'
       - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'lib/utils/lyrics_parser.dart'
+      - 'test/lyrics_parser_test.dart'
       - 'lib/services/playable_media.dart'
       - 'lib/services/music_playback_deck.dart'
       - 'lib/services/music_player_service.dart'
@@ -32,8 +35,13 @@ jobs:
           channel: stable
           flutter-version-file: .fvmrc
           cache: true
-      - run: flutter pub get
+      - name: Fetch dependencies and verify committed lockfile
+        run: |
+          flutter pub get
+          git diff --exit-code -- pubspec.lock
       - name: Analyze streaming and UI changes
-        run: flutter analyze lib/services/streaming lib/services/playable_media.dart lib/services/music_playback_deck.dart lib/services/music_player_service.dart lib/widgets/renee_stream_button.dart lib/widgets/track_list_tile.dart
+        run: flutter analyze lib/services/streaming lib/services/playable_media.dart lib/services/music_playback_deck.dart lib/services/music_player_service.dart lib/widgets/renee_stream_button.dart lib/widgets/track_list_tile.dart lib/utils/lyrics_parser.dart
       - name: Run streaming unit tests
         run: flutter test test/services/streaming
+      - name: Run TTML parser regression tests
+        run: flutter test test/lyrics_parser_test.dart
