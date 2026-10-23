@@ -50,7 +50,7 @@ void main() {
     final result = YouTubeMusicSearch.parseResults({
       'musicResponsiveListItemRenderer': {
         'playlistItemData': {'videoId': 'MPREb12345'},
-        'flexColumns': [],
+        'flexColumns': <Object>[],
       },
     });
     expect(result, isEmpty);
