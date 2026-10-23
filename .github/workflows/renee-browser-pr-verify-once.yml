@@ -1,0 +1,72 @@
+name: Renee iOS YouTube browser one-shot verification
+
+on:
+  push:
+    branches:
+      - fix/yt-embedded-client-and-live-validation
+    paths:
+      - '.github/workflows/renee-browser-pr-verify-once.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  flutter-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Pin Flutter from repository
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+      - name: Restore Dart packages
+        run: flutter pub get
+      - name: Format new and touched Dart files
+        run: |
+          dart format \
+            lib/screens/settings/youtube_music_connection_page.dart \
+            lib/screens/settings/app_settings_page.dart
+      - name: Analyze connection UI, settings and session storage
+        run: |
+          flutter analyze \
+            lib/screens/settings/youtube_music_connection_page.dart \
+            lib/screens/settings/app_settings_page.dart \
+            lib/services/streaming/youtube_music_signed_session.dart \
+            lib/services/streaming/youtube_music_direct_resolver.dart
+      - name: Test authenticated resolver, anonymous visitor, and HTTP relay
+        run: |
+          flutter test \
+            test/services/streaming/youtube_music_signed_session_test.dart \
+            test/services/streaming/youtube_music_direct_resolver_test.dart \
+            test/services/streaming/network_audio_header_proxy_test.dart
+      - name: Commit formatting and remove one-shot verification workflow
+        run: |
+          set -euo pipefail
+          git rm -- .github/workflows/renee-browser-pr-verify-once.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            lib/screens/settings/youtube_music_connection_page.dart \
+            lib/screens/settings/app_settings_page.dart
+          git commit -m "style(ios): validate connection UI and remove browser preflight"
+          git push origin HEAD:fix/yt-embedded-client-and-live-validation
+
+  swift-syntax:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Parse native Swift browser and AppDelegate
+        run: |
+          xcrun swiftc -frontend -parse \
+            ios/Runner/ReneeYouTubeMusicBrowser.swift \
+            ios/Runner/AppDelegate.swift
+      - name: Validate Runner Xcode project format
+        run: plutil -lint ios/Runner.xcodeproj/project.pbxproj
