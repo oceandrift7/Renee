@@ -257,10 +257,10 @@ private final class ReneeYouTubeMusicBrowserController: UIViewController, WKNavi
                     let session: [String: Any] = [
                         "cookies": values,
                         "clientVersion": version,
-                        "apiKey": config["apiKey"] as? String ?? NSNull(),
-                        "visitorData": config["visitorData"] as? String ?? NSNull(),
+                        "apiKey": config["apiKey"] ?? NSNull(),
+                        "visitorData": config["visitorData"] ?? NSNull(),
                         "authUser": config["authUser"] as? String ?? "0",
-                        "delegatedSessionId": config["delegatedSessionId"] as? String ?? NSNull(),
+                        "delegatedSessionId": config["delegatedSessionId"] ?? NSNull(),
                     ]
                     self.onFinish(session)
                 })
