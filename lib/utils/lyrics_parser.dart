@@ -628,12 +628,26 @@ class LyricsParser {
       for (final agent in elements.where(
         (node) =>
             node.name.local == 'agent' &&
-            node.name.namespaceUri == metadataNamespace,
+            (node.name.namespaceUri == metadataNamespace ||
+                node.ancestors
+                    .whereType<XmlElement>()
+                    .any((parent) => parent.name.local == 'metadata')),
       )) {
-        final id = agent.getAttribute(
-          'id',
-          namespace: 'http://www.w3.org/XML/1998/namespace',
-        );
+        // xml 6.x can report an unresolved metadata prefix. The xml:id
+        // attribute remains identifiable by its reserved xml prefix.
+        final id =
+            agent.getAttribute(
+              'id',
+              namespace: 'http://www.w3.org/XML/1998/namespace',
+            ) ??
+            agent.attributes
+                .where(
+                  (attribute) =>
+                      attribute.name.local == 'id' &&
+                      attribute.name.prefix == 'xml',
+                )
+                .firstOrNull
+                ?.value;
         if (id == null || id.isEmpty) continue;
         final group =
             agent.getAttribute('type') == 'group' || id.toLowerCase() == 'v3';
