@@ -5,6 +5,9 @@ on:
     branches: [dev]
     paths:
       - 'integration_test/renee_streaming_transport_test.dart'
+      - 'integration_test/renee_youtube_js_bridge_test.dart'
+      - 'ios/Runner/AppDelegate.swift'
+      - 'pubspec.yaml'
       - 'integration_test/renee_youtube_music_live_test.dart'
       - 'lib/services/streaming/**'
       - 'lib/widgets/renee_stream_button.dart'
@@ -70,6 +73,10 @@ jobs:
       - name: Run real native AVPlayer constrained-network smoke
         run: |
           flutter test integration_test/renee_streaming_transport_test.dart \
+            -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded
+      - name: Verify native iOS JavaScriptCore challenge bridge
+        run: |
+          flutter test integration_test/renee_youtube_js_bridge_test.dart \\
             -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded
       - name: Optional live YouTube Music iOS playback check (provider-dependent)
         continue-on-error: true
