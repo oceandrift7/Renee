@@ -5,6 +5,7 @@ on:
     branches: [dev]
     paths:
       - 'lib/services/streaming/**'
+      - 'pubspec.yaml'
       - 'lib/services/playable_media.dart'
       - 'lib/services/music_playback_deck.dart'
       - 'lib/services/music_player_service.dart'
