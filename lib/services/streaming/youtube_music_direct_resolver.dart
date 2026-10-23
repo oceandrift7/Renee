@@ -140,23 +140,97 @@ class YouTubeMusicDirectResolver {
     ),
   ];
 
-  /// The visitor ID is a public anonymous session value, not a login cookie.
-  /// On failure, keep trying the public clients without it.
+  // Anonymous visitor IDs are reused across new resolver instances (one is
+  // created per Play tap). Refetching for every song triggers needless
+  // requests; missing visitor data causes many player profiles to reject
+  // otherwise publicly playable tracks with LOGIN_REQUIRED.
+  static String? _sharedVisitor;
+  static DateTime? _sharedVisitorExpiresAt;
+  static DateTime? _retryVisitorAfter;
+  static Future<String?>? _visitorRequest;
+
+  /// Anonymous homepage visitor ID, not an account cookie or login token.
+  /// Mock clients stay isolated from production's static session cache.
   Future<String?> _visitorData() async {
-    try {
-      final result = await _client.get(
-        Uri.parse('https://www.youtube.com/'),
-        headers: {'User-Agent': _profiles.first.userAgent},
-      ).timeout(visitorTimeout);
-      if (result.statusCode != 200) return null;
-      final match = RegExp(
-        r'"(?:visitorData|VISITOR_DATA)"\s*:\s*"([A-Za-z0-9_=%-]{8,256})"',
-      ).firstMatch(result.body);
-      return match?.group(1);
-    } catch (_) {
-      // Bootstrap is optional. Never display an HTML response or token.
+    if (!_ownsClient) return _fetchVisitorData();
+    final now = DateTime.now();
+    if (_sharedVisitor != null &&
+        _sharedVisitorExpiresAt != null &&
+        now.isBefore(_sharedVisitorExpiresAt!)) {
+      return _sharedVisitor;
+    }
+    if (_visitorRequest != null) return _visitorRequest;
+    if (_retryVisitorAfter != null && now.isBefore(_retryVisitorAfter!)) {
       return null;
     }
+    final request = _fetchVisitorData();
+    _visitorRequest = request;
+    try {
+      final visitor = await request;
+      if (visitor != null) {
+        _sharedVisitor = visitor;
+        _sharedVisitorExpiresAt = DateTime.now().add(
+          const Duration(minutes: 45),
+        );
+        _retryVisitorAfter = null;
+      } else {
+        _retryVisitorAfter = DateTime.now().add(
+          const Duration(seconds: 30),
+        );
+      }
+      return visitor;
+    } finally {
+      if (identical(_visitorRequest, request)) _visitorRequest = null;
+    }
+  }
+
+  /// Real YouTube visitor values can exceed 256 characters and include
+  /// JavaScript-escaped '=' or '/' characters. Never log the raw visitor.
+  static String? visitorFromHomepage(String body) {
+    final match = RegExp(
+      r'"(?:visitorData|VISITOR_DATA|EOM_VISITOR_DATA)"\s*:\s*"((?:\\.|[^"\\]){8,4096})"',
+    ).firstMatch(body);
+    if (match == null) return null;
+    final jsEscaped = match.group(1)!;
+    // \xNN is valid JavaScript string syntax, not a JSON escape. Convert
+    // before letting the JSON decoder handle \u003d and escaped slashes.
+    final normalized = jsEscaped.replaceAllMapped(
+      RegExp(r'\\x([0-9a-fA-F]{2})'),
+      (match) => r'\u00' + match.group(1)!,
+    );
+    try {
+      final decoded = jsonDecode('"$normalized"');
+      if (decoded is String &&
+          RegExp(r'^[A-Za-z0-9+/_=%-]{8,4096}$').hasMatch(decoded)) {
+        return decoded;
+      }
+    } catch (_) {
+      // Consent pages or non-JSON JavaScript strings are not visitor IDs.
+    }
+    return null;
+  }
+
+  /// Music homepage uses the same anonymous visitor session as its player
+  /// API. Try the regular YouTube homepage only if the music page is blocked
+  /// or returns no visitor. Every request is individually time-bounded.
+  Future<String?> _fetchVisitorData() async {
+    for (final origin in [
+      'https://music.youtube.com/',
+      'https://www.youtube.com/',
+    ]) {
+      try {
+        final response = await _client.get(
+          Uri.parse(origin),
+          headers: {'User-Agent': _profiles.first.userAgent},
+        ).timeout(visitorTimeout);
+        if (response.statusCode != 200) continue;
+        final visitor = visitorFromHomepage(response.body);
+        if (visitor != null) return visitor;
+      } catch (_) {
+        // Keep progressing through profiles without returning a bogus ID.
+      }
+    }
+    return null;
   }
 
   /// Check a small byte range before handing any signed URL to AVPlayer.
