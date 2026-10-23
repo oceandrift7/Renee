@@ -66,6 +66,9 @@ class YouTubeMusicDirectResolver {
   final Duration visitorTimeout;
   final Duration probeTimeout;
   final List<YouTubePlayerProfile> _profiles;
+  // Only verified media refusals are cached, not LOGIN_REQUIRED or timeouts.
+  final Map<String, DateTime> _mediaRefusals = {};
+  static const mediaRefusalCooldown = Duration(minutes: 10);
 
   static const int minimumAudioBitrate = 96000;
   static const int preferredAudioBitrate = 128000;
@@ -240,7 +243,17 @@ class YouTubeMusicDirectResolver {
       if (priority > previousPriority) mostUsefulIssue = issue;
     }
 
-    for (final profile in _profiles) {
+    for (var profileIndex = 0; profileIndex < _profiles.length; profileIndex++) {
+      final profile = _profiles[profileIndex];
+      final refusalKey = '$videoId:$profileIndex';
+      final refusedAt = _mediaRefusals[refusalKey];
+      if (refusedAt != null) {
+        if (DateTime.now().difference(refusedAt) < mediaRefusalCooldown) {
+          attempts.add('${profile.name}:MEDIA_COOLDOWN');
+          continue;
+        }
+        _mediaRefusals.remove(refusalKey);
+      }
       final endpoint = Uri.https(profile.host, '/youtubei/v1/player', {
         'key': _key,
         'prettyPrint': 'false',
@@ -313,7 +326,13 @@ class YouTubeMusicDirectResolver {
               lastFailure = refusal;
               continue;
             }
+            _mediaRefusals.remove(refusalKey);
             return StreamResource(uri: url);
+          }
+          if (lastFailure != 'MEDIA_TIMEOUT' &&
+              lastFailure != 'MEDIA_NETWORK' &&
+              lastFailure != 'MEDIA_ERROR') {
+            _mediaRefusals[refusalKey] = DateTime.now();
           }
           record(
             profile,
@@ -458,6 +477,7 @@ class YouTubeMusicDirectResolver {
   }
 
   void close() {
+    _mediaRefusals.clear();
     if (_ownsClient) _client.close();
   }
 }
