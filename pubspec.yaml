@@ -148,6 +148,7 @@ flutter:
     - assets/licenses/libsmb2.txt
     - assets/licenses/native_palette.txt
     - assets/licenses/native_data_jobs.txt
+    - assets/licenses/youtube_explode_dart.txt
 
   fonts:
     - family: Inter
