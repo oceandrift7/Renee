@@ -1,8 +1,7 @@
-name: Renée one-time Dart format repair
+name: Renée targeted Dart format repair
 
-# Format the streaming bitrate-quality policy update on the dev branch.
-# Its formatting commit does
-# not change this workflow, so it cannot create a push loop.
+# Normalize only the Renée files touched during the current build repair.
+# The follow-up formatter commit does not edit this workflow or retrigger itself.
 on:
   push:
     branches: [dev]
@@ -26,15 +25,22 @@ jobs:
           channel: stable
           flutter-version-file: .fvmrc
           cache: true
-      - name: Normalize Dart formatting
-        run: dart format lib test integration_test
-      - name: Commit formatter changes to dev
+      - name: Normalize touched Dart files only
+        run: |
+          dart format \
+            lib/utils/lyrics_parser.dart \
+            lib/screens/settings/library_settings_page_widgets.dart \
+            integration_test/renee_youtube_js_bridge_test.dart \
+            test/services/streaming/youtube_explode_audio_resolver_test.dart \
+            test/services/streaming/youtube_music_direct_resolver_test.dart \
+            test/services/streaming/youtube_music_search_test.dart
+      - name: Commit targeted formatting to dev
         shell: bash
         run: |
           if [[ -n "$(git status --porcelain -- lib test integration_test)" ]]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add -- lib test integration_test
-            git commit -m "Apply Dart formatter to Renée dev sources"
+            git commit -m "Format Renée build-repair source and regression tests"
             git push origin HEAD:dev
           fi
