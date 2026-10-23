@@ -198,41 +198,44 @@ void main() {
     },
   );
 
-  test('direct refusal falls back to independently verified extraction', () async {
-    final api = MockClient((request) async {
-      if (request.method == 'GET') return http.Response('', 503);
-      return http.Response(
-        jsonEncode({
-          'playabilityStatus': {'status': 'LOGIN_REQUIRED'},
-        }),
-        200,
+  test(
+    'direct refusal falls back to independently verified extraction',
+    () async {
+      final api = MockClient((request) async {
+        if (request.method == 'GET') return http.Response('', 503);
+        return http.Response(
+          jsonEncode({
+            'playabilityStatus': {'status': 'LOGIN_REQUIRED'},
+          }),
+          200,
+        );
+      });
+      final probe = MockClient(
+        (_) async => http.Response(
+          'audio bytes',
+          206,
+          headers: {'content-type': 'audio/mp4'},
+        ),
       );
-    });
-    final probe = MockClient(
-      (_) async =>
-          http.Response('audio bytes', 206, headers: {'content-type': 'audio/mp4'}),
-    );
-    final enhanced = YouTubeExplodeAudioResolver(
-      probeClient: probe,
-      manifestLookup: (_, _) async => [candidate()],
-    );
-    final direct = YouTubeMusicDirectResolver(client: api);
-    final combined = YouTubeMusicFallbackResolver(
-      explode: enhanced,
-      direct: direct,
-    );
-    final issues = <StreamingPlaybackIssue>[];
-    final stream = await combined.resolve(
-      'Z85lxckrtzg',
-      onIssue: issues.add,
-    );
-    expect(stream?.uri.host, 'rr1.googlevideo.com');
-    expect(issues, isEmpty);
-    enhanced.close();
-    direct.close();
-    probe.close();
-    api.close();
-  });
+      final enhanced = YouTubeExplodeAudioResolver(
+        probeClient: probe,
+        manifestLookup: (_, _) async => [candidate()],
+      );
+      final direct = YouTubeMusicDirectResolver(client: api);
+      final combined = YouTubeMusicFallbackResolver(
+        explode: enhanced,
+        direct: direct,
+      );
+      final issues = <StreamingPlaybackIssue>[];
+      final stream = await combined.resolve('Z85lxckrtzg', onIssue: issues.add);
+      expect(stream?.uri.host, 'rr1.googlevideo.com');
+      expect(issues, isEmpty);
+      enhanced.close();
+      direct.close();
+      probe.close();
+      api.close();
+    },
+  );
 
   test(
     'fallback preserves provider LOGIN_REQUIRED and extraction attempts',

@@ -30,10 +30,9 @@ class YouTubeMusicFallbackResolver {
     StreamingPlaybackIssue? directIssue;
 
     try {
-      final fast = await direct.resolve(
-        videoId,
-        onIssue: (issue) => directIssue = issue,
-      ).timeout(const Duration(seconds: 36));
+      final fast = await direct
+          .resolve(videoId, onIssue: (issue) => directIssue = issue)
+          .timeout(const Duration(seconds: 36));
       if (fast != null) return fast;
     } on TimeoutException {
       directIssue = const StreamingPlaybackIssue(
@@ -46,10 +45,12 @@ class YouTubeMusicFallbackResolver {
     }
 
     try {
-      final enhanced = await explode.resolve(
-        videoId,
-        onFailure: (attempts) => extractorAttempts = attempts,
-      ).timeout(const Duration(seconds: 65));
+      final enhanced = await explode
+          .resolve(
+            videoId,
+            onFailure: (attempts) => extractorAttempts = attempts,
+          )
+          .timeout(const Duration(seconds: 65));
       if (enhanced != null) return enhanced;
     } on TimeoutException {
       extractorAttempts = ['EXTRACT:TIMEOUT'];
@@ -57,19 +58,19 @@ class YouTubeMusicFallbackResolver {
       extractorAttempts = ['EXTRACT:FAILED'];
     }
 
-    final issue = directIssue ??
+    final issue =
+        directIssue ??
         const StreamingPlaybackIssue(
           StreamingPlaybackIssueCode.noAudioResource,
         );
-    onIssue?.call(StreamingPlaybackIssue(
-      issue.code,
-      httpStatus: issue.httpStatus,
-      youtubeStatus: issue.youtubeStatus,
-      clientAttempts: [
-        ...extractorAttempts,
-        ...issue.clientAttempts,
-      ],
-    ));
+    onIssue?.call(
+      StreamingPlaybackIssue(
+        issue.code,
+        httpStatus: issue.httpStatus,
+        youtubeStatus: issue.youtubeStatus,
+        clientAttempts: [...extractorAttempts, ...issue.clientAttempts],
+      ),
+    );
     return null;
   }
 }

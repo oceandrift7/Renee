@@ -31,6 +31,7 @@ class YouTubePlayerProfile {
   final String userAgent;
   final Map<String, Object> contextExtras;
   final String host;
+
   /// Required by the anonymous embedded player client as thirdParty.embedUrl.
   final String? embedUrl;
 
@@ -87,7 +88,8 @@ class YouTubeMusicDirectResolver {
       name: 'VISIONOS',
       version: '1.02',
       headerId: '101',
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) '
+      userAgent:
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) '
           'AppleWebKit/605.1.15 (KHTML, like Gecko) '
           'Version/26.0 Safari/605.1.15',
       contextExtras: {
@@ -101,7 +103,8 @@ class YouTubeMusicDirectResolver {
       name: 'ANDROID_VR',
       version: '1.65.10',
       headerId: '28',
-      userAgent: 'com.google.android.apps.youtube.vr.oculus/1.65.10 '
+      userAgent:
+          'com.google.android.apps.youtube.vr.oculus/1.65.10 '
           '(Linux; U; Android 12L; eureka-user '
           'Build/SQ3A.220605.009.A1) gzip',
       contextExtras: {
@@ -117,7 +120,8 @@ class YouTubeMusicDirectResolver {
       name: 'ANDROID_VR',
       version: '1.60.19',
       headerId: '28',
-      userAgent: 'com.google.android.apps.youtube.vr.oculus/1.60.19 '
+      userAgent:
+          'com.google.android.apps.youtube.vr.oculus/1.60.19 '
           '(Linux; U; Android 12L; eureka-user '
           'Build/SQ3A.220605.009.A1) gzip',
       contextExtras: {
@@ -133,7 +137,8 @@ class YouTubeMusicDirectResolver {
       name: 'WEB_EMBEDDED_PLAYER',
       version: '2.20260708.00.00',
       headerId: '56',
-      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
+      userAgent:
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) '
           'AppleWebKit/605.1.15 (KHTML, like Gecko) '
           'Version/15.5 Safari/605.1.15,gzip(gfe)',
       embedUrl: 'https://www.youtube.com/',
@@ -175,9 +180,7 @@ class YouTubeMusicDirectResolver {
         );
         _retryVisitorAfter = null;
       } else {
-        _retryVisitorAfter = DateTime.now().add(
-          const Duration(seconds: 30),
-        );
+        _retryVisitorAfter = DateTime.now().add(const Duration(seconds: 30));
       }
       return visitor;
     } finally {
@@ -220,10 +223,12 @@ class YouTubeMusicDirectResolver {
       'https://www.youtube.com/',
     ]) {
       try {
-        final response = await _client.get(
-          Uri.parse(origin),
-          headers: {'User-Agent': _profiles.first.userAgent},
-        ).timeout(visitorTimeout);
+        final response = await _client
+            .get(
+              Uri.parse(origin),
+              headers: {'User-Agent': _profiles.first.userAgent},
+            )
+            .timeout(visitorTimeout);
         if (response.statusCode != 200) continue;
         final visitor = visitorFromHomepage(response.body);
         if (visitor != null) return visitor;
@@ -245,8 +250,11 @@ class YouTubeMusicDirectResolver {
       if (response.statusCode != 200 && response.statusCode != 206) {
         return 'MEDIA_HTTP_${response.statusCode}';
       }
-      final contentType =
-          (response.headers['content-type'] ?? '').split(';').first.trim().toLowerCase();
+      final contentType = (response.headers['content-type'] ?? '')
+          .split(';')
+          .first
+          .trim()
+          .toLowerCase();
       if (contentType.isNotEmpty &&
           !contentType.startsWith('audio/') &&
           !contentType.startsWith('video/') &&
@@ -255,7 +263,8 @@ class YouTubeMusicDirectResolver {
       }
       final chunk = await response.stream.first.timeout(probeTimeout);
       if (chunk.isEmpty) return 'MEDIA_EMPTY';
-      final prefix = ascii.decode(chunk.take(96).toList(), allowInvalid: true)
+      final prefix = ascii
+          .decode(chunk.take(96).toList(), allowInvalid: true)
           .trimLeft()
           .toLowerCase();
       if (prefix.startsWith('<!doctype html') ||
@@ -284,23 +293,28 @@ class YouTubeMusicDirectResolver {
     void Function(StreamingPlaybackIssue)? onIssue,
   }) async {
     if (!RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId)) {
-      onIssue?.call(const StreamingPlaybackIssue(
-        StreamingPlaybackIssueCode.invalidVideoId,
-      ));
+      onIssue?.call(
+        const StreamingPlaybackIssue(StreamingPlaybackIssueCode.invalidVideoId),
+      );
       return null;
     }
     if (_profiles.isEmpty) {
-      onIssue?.call(const StreamingPlaybackIssue(
-        StreamingPlaybackIssueCode.noAudioResource,
-      ));
+      onIssue?.call(
+        const StreamingPlaybackIssue(
+          StreamingPlaybackIssueCode.noAudioResource,
+        ),
+      );
       return null;
     }
 
     final visitor = await _visitorData();
     final attempts = <String>[];
     StreamingPlaybackIssue? mostUsefulIssue;
-    void record(YouTubePlayerProfile profile, StreamingPlaybackIssue issue,
-        String outcome) {
+    void record(
+      YouTubePlayerProfile profile,
+      StreamingPlaybackIssue issue,
+      String outcome,
+    ) {
       // Profile and outcome come only from predefined names and sanitized
       // status tokens. Never record exception text, JSON reasons, or URLs.
       final safeProfile = profile.name.replaceAll(RegExp(r'[^A-Z_]'), '');
@@ -322,7 +336,11 @@ class YouTubeMusicDirectResolver {
       if (priority > previousPriority) mostUsefulIssue = issue;
     }
 
-    for (var profileIndex = 0; profileIndex < _profiles.length; profileIndex++) {
+    for (
+      var profileIndex = 0;
+      profileIndex < _profiles.length;
+      profileIndex++
+    ) {
       final profile = _profiles[profileIndex];
       final refusalKey = '$videoId:$profileIndex';
       final refusedAt = _mediaRefusals[refusalKey];
@@ -349,53 +367,70 @@ class YouTubeMusicDirectResolver {
         if (profile.embedUrl != null) {
           headers['Referer'] = profile.embedUrl!;
         }
-        final response = await _client.post(
-          endpoint,
-          headers: headers,
-          body: jsonEncode({
-            'context': {
-              'client': profile.context(visitorData: visitor),
-              if (profile.embedUrl != null)
-                'thirdParty': {'embedUrl': profile.embedUrl},
-            },
-            'videoId': videoId,
-          }),
-        ).timeout(requestTimeout);
+        final response = await _client
+            .post(
+              endpoint,
+              headers: headers,
+              body: jsonEncode({
+                'context': {
+                  'client': profile.context(visitorData: visitor),
+                  if (profile.embedUrl != null)
+                    'thirdParty': {'embedUrl': profile.embedUrl},
+                },
+                'videoId': videoId,
+              }),
+            )
+            .timeout(requestTimeout);
 
         if (response.statusCode != 200) {
-          record(profile,
-              StreamingPlaybackIssue(
-                StreamingPlaybackIssueCode.youtubeHttpFailure,
-                httpStatus: response.statusCode,
-              ), 'HTTP_${response.statusCode}');
+          record(
+            profile,
+            StreamingPlaybackIssue(
+              StreamingPlaybackIssueCode.youtubeHttpFailure,
+              httpStatus: response.statusCode,
+            ),
+            'HTTP_${response.statusCode}',
+          );
           continue;
         }
         final dynamic decoded;
         try {
           decoded = jsonDecode(response.body);
         } on FormatException {
-          record(profile, const StreamingPlaybackIssue(
-            StreamingPlaybackIssueCode.youtubeInvalidResponse,
-          ), 'INVALID_JSON');
+          record(
+            profile,
+            const StreamingPlaybackIssue(
+              StreamingPlaybackIssueCode.youtubeInvalidResponse,
+            ),
+            'INVALID_JSON',
+          );
           continue;
         }
         if (decoded is! Map<String, dynamic>) {
-          record(profile, const StreamingPlaybackIssue(
-            StreamingPlaybackIssueCode.youtubeInvalidResponse,
-          ), 'INVALID_JSON');
+          record(
+            profile,
+            const StreamingPlaybackIssue(
+              StreamingPlaybackIssueCode.youtubeInvalidResponse,
+            ),
+            'INVALID_JSON',
+          );
           continue;
         }
         final playability = decoded['playabilityStatus'];
         if (playability is! Map || playability['status'] != 'OK') {
           final raw = playability is Map ? playability['status'] : null;
-          final status = raw is String &&
-                  RegExp(r'^[A-Z_]{1,40}$').hasMatch(raw)
+          final status =
+              raw is String && RegExp(r'^[A-Z_]{1,40}$').hasMatch(raw)
               ? raw
               : 'UNKNOWN';
-          record(profile, StreamingPlaybackIssue(
-            StreamingPlaybackIssueCode.youtubeRestricted,
-            youtubeStatus: status,
-          ), status);
+          record(
+            profile,
+            StreamingPlaybackIssue(
+              StreamingPlaybackIssueCode.youtubeRestricted,
+              youtubeStatus: status,
+            ),
+            status,
+          );
           continue;
         }
         final resource = resourceFromPlayerResponse(decoded);
@@ -428,7 +463,8 @@ class YouTubeMusicDirectResolver {
           continue;
         }
         final data = decoded['streamingData'];
-        final hasFormats = data is Map &&
+        final hasFormats =
+            data is Map &&
             ((data['adaptiveFormats'] is List &&
                     (data['adaptiveFormats'] as List).isNotEmpty) ||
                 (data['formats'] is List &&
@@ -440,33 +476,53 @@ class YouTubeMusicDirectResolver {
         );
         record(profile, issue, hasFormats ? 'NO_AAC' : 'NO_AUDIO');
       } on TimeoutException {
-        record(profile, const StreamingPlaybackIssue(
-          StreamingPlaybackIssueCode.youtubeTimeout,
-        ), 'TIMEOUT');
+        record(
+          profile,
+          const StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.youtubeTimeout,
+          ),
+          'TIMEOUT',
+        );
       } on SocketException {
-        record(profile, const StreamingPlaybackIssue(
-          StreamingPlaybackIssueCode.youtubeNetworkFailure,
-        ), 'NETWORK');
+        record(
+          profile,
+          const StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.youtubeNetworkFailure,
+          ),
+          'NETWORK',
+        );
       } on http.ClientException {
-        record(profile, const StreamingPlaybackIssue(
-          StreamingPlaybackIssueCode.youtubeNetworkFailure,
-        ), 'NETWORK');
+        record(
+          profile,
+          const StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.youtubeNetworkFailure,
+          ),
+          'NETWORK',
+        );
       } catch (_) {
-        record(profile, const StreamingPlaybackIssue(
-          StreamingPlaybackIssueCode.youtubeInvalidResponse,
-        ), 'ERROR');
+        record(
+          profile,
+          const StreamingPlaybackIssue(
+            StreamingPlaybackIssueCode.youtubeInvalidResponse,
+          ),
+          'ERROR',
+        );
       }
     }
 
-    final issue = mostUsefulIssue ?? const StreamingPlaybackIssue(
-      StreamingPlaybackIssueCode.noAudioResource,
+    final issue =
+        mostUsefulIssue ??
+        const StreamingPlaybackIssue(
+          StreamingPlaybackIssueCode.noAudioResource,
+        );
+    onIssue?.call(
+      StreamingPlaybackIssue(
+        issue.code,
+        httpStatus: issue.httpStatus,
+        youtubeStatus: issue.youtubeStatus,
+        clientAttempts: attempts,
+      ),
     );
-    onIssue?.call(StreamingPlaybackIssue(
-      issue.code,
-      httpStatus: issue.httpStatus,
-      youtubeStatus: issue.youtubeStatus,
-      clientAttempts: attempts,
-    ));
     return null;
   }
 

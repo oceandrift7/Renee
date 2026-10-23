@@ -534,10 +534,7 @@ void main() {
         expect(clientContext['clientName'], 'WEB_EMBEDDED_PLAYER');
         expect(clientContext['clientVersion'], '2.20260708.00.00');
         expect(clientContext['userAgent'], contains('Safari'));
-        expect(
-          context['thirdParty'],
-          {'embedUrl': 'https://www.youtube.com/'},
-        );
+        expect(context['thirdParty'], {'embedUrl': 'https://www.youtube.com/'});
         return http.Response(jsonEncode(payloadWithAudio), 200);
       });
       // The fixture represents a successfully permitted embed, never a
