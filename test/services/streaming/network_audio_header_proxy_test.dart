@@ -99,15 +99,15 @@ void main() {
         ),
         isFalse,
       );
-      expect(
-        () => proxy.prepare(
+      await expectLater(
+        proxy.prepare(
           Uri.parse('https://localhost/internal'),
           headers: {'User-Agent': 'test'},
         ),
         throwsArgumentError,
       );
-      expect(
-        () => proxy.prepare(
+      await expectLater(
+        proxy.prepare(
           upstream,
           headers: {'Host': 'malicious.example.org'},
         ),
