@@ -28,9 +28,9 @@ extension _SetupScreenSteps on _SetupScreenState {
     return LayoutBuilder(
       builder: (context, constraints) {
         final shortestSide = MediaQuery.sizeOf(context).shortestSide;
-        final textScale = MediaQuery.textScalerOf(
-          context,
-        ).scale(1.0).clamp(1.0, 1.4);
+        final textScale = MediaQuery.textScalerOf(context)
+            .scale(1.0)
+            .clamp(1.0, 1.4);
         final logoSize = (shortestSide * 0.24).clamp(80.0, 104.0);
         final titleGap = (shortestSide * 0.06).clamp(16.0, 32.0);
         final subtitleGap = (shortestSide * 0.04).clamp(8.0, 16.0);

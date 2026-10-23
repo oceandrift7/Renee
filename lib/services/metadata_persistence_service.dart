@@ -45,14 +45,13 @@ class MetadataSaveRequest {
 
 enum MetadataSaveCodec { mp3, m4a, opus }
 
-typedef MetadataEmbed =
-    Future<String?> Function(
-      MetadataSaveCodec codec,
-      String path,
-      String? coverPath,
-      Map<String, String> metadata,
-      String artistTagMode,
-    );
+typedef MetadataEmbed = Future<String?> Function(
+  MetadataSaveCodec codec,
+  String path,
+  String? coverPath,
+  Map<String, String> metadata,
+  String artistTagMode,
+);
 
 /// Writes tags without widget state, and owns resources until every writer ends.
 class MetadataPersistenceService {

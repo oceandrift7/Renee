@@ -107,9 +107,9 @@ void main() {
           picker = Completer<String?>();
           pickerCalls++;
           expect(call.arguments, {'for_setup': true});
-          final draft =
-              jsonDecode(prefs.getString('setup_progress_v1')!)
-                  as Map<String, dynamic>;
+          final draft = jsonDecode(
+            prefs.getString('setup_progress_v1')!,
+          ) as Map<String, dynamic>;
           expect(draft['step'], 4);
           return picker.future;
         case 'readSetupFolderSelection':
@@ -118,9 +118,9 @@ void main() {
           expect((call.arguments as Map)['payload'], retainedSelection);
           if (retainedSelection == _selection) {
             // The native copy must not be removed before the Dart draft is safe.
-            final draft =
-                jsonDecode(prefs.getString('setup_progress_v1')!)
-                    as Map<String, dynamic>;
+            final draft = jsonDecode(
+              prefs.getString('setup_progress_v1')!,
+            ) as Map<String, dynamic>;
             expect(draft['treeUri'], _treeUri);
           }
           retainedSelection = null;

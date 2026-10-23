@@ -107,9 +107,8 @@ class _HomeTagline extends StatelessWidget {
     homeTagline(context.l10n),
     maxLines: 1,
     overflow: TextOverflow.ellipsis,
-    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
-    ),
+    style: Theme.of(context).textTheme.bodyLarge
+        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
   );
 }
 
@@ -678,9 +677,9 @@ class _HomeShortcuts extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
     final colorScheme = Theme.of(context).colorScheme;
-    void open(Widget screen) => Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => screen));
+    void open(Widget screen) =>
+        Navigator.of(context)
+            .push(MaterialPageRoute<void>(builder: (_) => screen));
 
     // Shuffle is the one emphasized action; the other tools share a neutral
     // tile so color marks importance rather than varying per tile.
@@ -792,9 +791,8 @@ class _HomeShortcutTile extends StatelessWidget {
                 label,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(color: onContainer),
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(color: onContainer),
               ),
             ],
           ),

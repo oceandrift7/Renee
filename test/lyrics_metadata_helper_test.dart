@@ -19,9 +19,8 @@ void main() {
       () async {
         final dir = await Directory.systemTemp.createTemp('reenrich-lyrics-');
         addTearDown(() => dir.delete(recursive: true));
-        final audio = await File(
-          '${dir.path}/Song.flac',
-        ).writeAsBytes([1, 2, 3]);
+        final audio = await File('${dir.path}/Song.flac')
+            .writeAsBytes([1, 2, 3]);
         final sidecar = await File('${dir.path}/Song.lrc').writeAsString(
           '[00:01.00]Old lyrics that are deliberately longer than the replacement lyric line',
         );

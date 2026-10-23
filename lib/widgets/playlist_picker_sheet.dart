@@ -123,9 +123,8 @@ class _PlaylistPickerSheetContentState
       _log.e('Failed to add tracks to selected playlists', error, stack);
       if (!mounted) return;
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.friendlyError(error))));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.friendlyError(error))));
       return;
     }
 

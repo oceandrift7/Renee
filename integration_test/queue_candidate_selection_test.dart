@@ -93,9 +93,8 @@ Map<String, int> _indexCosts(DownloadQueueState initial) {
   final progress = Stopwatch()..start();
   for (var tick = 0; tick < 5000; tick++) {
     final index = activeIndices[tick % activeIndices.length];
-    final next = ChunkedList<DownloadItem>.from(
-      state.items,
-    ).updated({index: state.items[index].copyWith(progress: tick / 5000)});
+    final next = ChunkedList<DownloadItem>.from(state.items)
+        .updated({index: state.items[index].copyWith(progress: tick / 5000)});
     state = state.copyWith(
       items: next,
       lookup: state.lookup.updatedForIndices(
@@ -122,8 +121,7 @@ void main() {
     binding.reportData!['queue_candidate_selection'] = {
       'platform': Platform.operatingSystem,
       'completed_cases': cases.length,
-      'note':
-          'Five alternating scan/indexed pairs after warmup: 100 actual scheduler admissions of three items including immutable status/index updates. Both variants maintain current indexes. Setup, async work/drain and rendering excluded. Separate full-index-build and progress-only costs compared to retained pre-index baseline. iOS debug correctness only.',
+      'note': 'Five alternating scan/indexed pairs after warmup: 100 actual scheduler admissions of three items including immutable status/index updates. Both variants maintain current indexes. Setup, async work/drain and rendering excluded. Separate full-index-build and progress-only costs compared to retained pre-index baseline. iOS debug correctness only.',
       'cases': cases,
     };
   });

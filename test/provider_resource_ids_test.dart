@@ -66,14 +66,11 @@ void main() {
       );
     });
 
-    test(
-      'returns null for an unprefixed id with no known provider (the #368 case)',
-      () {
-        expect(
-          resolvePreferredMetadataProviderId(null, '37i9dQZF1DXcBWIGoYBM5M'),
-          isNull,
-        );
-      },
-    );
+    test('returns null for an unprefixed id with no known provider (the #368 case)', () {
+      expect(
+        resolvePreferredMetadataProviderId(null, '37i9dQZF1DXcBWIGoYBM5M'),
+        isNull,
+      );
+    });
   });
 }

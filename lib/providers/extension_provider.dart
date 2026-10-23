@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
@@ -722,9 +723,8 @@ class ExtensionNotifier extends Notifier<ExtensionState> {
     Directory? destDir;
     try {
       final tmp = await getTemporaryDirectory();
-      destDir = await Directory(
-        '${tmp.path}/mornye_restore_ext',
-      ).create(recursive: true);
+      destDir = await Directory('${tmp.path}/mornye_restore_ext')
+          .create(recursive: true);
       await PlatformBridge.initExtensionRepo(destDir.path);
       if (registryUrl.isNotEmpty) {
         await PlatformBridge.setRepoRegistryUrl(registryUrl);

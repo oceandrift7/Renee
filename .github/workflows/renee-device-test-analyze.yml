@@ -1,0 +1,28 @@
+name: Renée streaming device-test analyzer
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'integration_test/renee_streaming_transport_test.dart'
+      - 'integration_test/renee_youtube_music_live_test.dart'
+      - '.github/workflows/renee-device-test-analyze.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dart-analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+      - name: Get dependencies
+        run: flutter pub get
+      - name: Compile-check iOS integration test source
+        run: flutter analyze integration_test/renee_streaming_transport_test.dart integration_test/renee_youtube_music_live_test.dart

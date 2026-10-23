@@ -103,40 +103,37 @@ void main() {
     }
   });
 
-  test(
-    'bridge snapshots, deduplicates and bounds requests, retaining successful chunks',
-    () async {
-      final ids = [for (var i = 0; i < 600; i++) 'id-$i', 'id-0'];
-      final original = ids.toList();
-      final calls = <List<String>>[];
-      var concurrent = 0;
-      var peak = 0;
-      messenger.setMockMethodCallHandler(backend, (call) async {
-        expect(call.method, 'resetDownloadCancels');
-        final chunk = List<String>.from(
-          (call.arguments as Map)['item_ids'] as List,
-        );
-        calls.add(chunk);
-        concurrent++;
-        if (concurrent > peak) peak = concurrent;
-        await Future<void>.delayed(Duration.zero);
-        concurrent--;
-        if (chunk.first == 'id-256') throw PlatformException(code: 'fixture');
-        return null;
-      });
-      final reset = PlatformBridge.resetDownloadCancels(ids);
-      ids.clear();
-      expect(await reset, {
-        ...original.take(256),
-        ...original.skip(512).take(88),
-      });
-      expect(calls.map((chunk) => chunk.length), [256, 256, 88]);
-      expect(calls.expand((chunk) => chunk), original.take(600));
-      expect(peak, 1);
-      expect(await PlatformBridge.resetDownloadCancels([]), isEmpty);
-      expect(calls, hasLength(3));
-    },
-  );
+  test('bridge snapshots, deduplicates and bounds requests, retaining successful chunks', () async {
+    final ids = [for (var i = 0; i < 600; i++) 'id-$i', 'id-0'];
+    final original = ids.toList();
+    final calls = <List<String>>[];
+    var concurrent = 0;
+    var peak = 0;
+    messenger.setMockMethodCallHandler(backend, (call) async {
+      expect(call.method, 'resetDownloadCancels');
+      final chunk = List<String>.from(
+        (call.arguments as Map)['item_ids'] as List,
+      );
+      calls.add(chunk);
+      concurrent++;
+      if (concurrent > peak) peak = concurrent;
+      await Future<void>.delayed(Duration.zero);
+      concurrent--;
+      if (chunk.first == 'id-256') throw PlatformException(code: 'fixture');
+      return null;
+    });
+    final reset = PlatformBridge.resetDownloadCancels(ids);
+    ids.clear();
+    expect(await reset, {
+      ...original.take(256),
+      ...original.skip(512).take(88),
+    });
+    expect(calls.map((chunk) => chunk.length), [256, 256, 88]);
+    expect(calls.expand((chunk) => chunk), original.take(600));
+    expect(peak, 1);
+    expect(await PlatformBridge.resetDownloadCancels([]), isEmpty);
+    expect(calls, hasLength(3));
+  });
 
   for (final networkOnly in [false, true]) {
     for (final failFirst in [false, true]) {

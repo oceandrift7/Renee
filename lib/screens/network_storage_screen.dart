@@ -847,9 +847,9 @@ class _NetworkConnectionFormState extends State<_NetworkConnectionForm> {
                               onPressed: _busy ? null : _remove,
                               icon: const Icon(Icons.link_off),
                               style: TextButton.styleFrom(
-                                foregroundColor: Theme.of(
-                                  context,
-                                ).colorScheme.error,
+                                foregroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .error,
                               ),
                               child: Text(context.l10n.networkRemoveConnection),
                             ),
@@ -988,10 +988,8 @@ class _NetworkMessage extends StatelessWidget {
               const SizedBox(height: 20),
               Text(
                 message,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  height: 1.45,
-                ),
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: scheme.onSurfaceVariant, height: 1.45),
               ),
               if (action != null) ...[const SizedBox(height: 24), action!],
             ],

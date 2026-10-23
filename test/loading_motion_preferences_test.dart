@@ -19,9 +19,8 @@ void main() {
               builder: (context, setState) {
                 update = setState;
                 return MediaQuery(
-                  data: MediaQuery.of(
-                    context,
-                  ).copyWith(disableAnimations: reduced && stopped),
+                  data: MediaQuery.of(context)
+                      .copyWith(disableAnimations: reduced && stopped),
                   child: TickerMode(
                     enabled: reduced || !stopped,
                     child: const Column(

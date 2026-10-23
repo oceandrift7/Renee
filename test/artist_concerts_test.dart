@@ -58,9 +58,8 @@ void main() {
       expect(concert.date.day, 6);
       expect(concert.date.hour, 21);
     }
-    final dateOnly = ArtistConcert.parseList([
-      event(date: '2026-10-06'),
-    ]).single;
+    final dateOnly = ArtistConcert.parseList([event(date: '2026-10-06')])
+        .single;
     expect(dateOnly.hasTime, isFalse);
     expect(dateOnly.date.day, 6);
   });

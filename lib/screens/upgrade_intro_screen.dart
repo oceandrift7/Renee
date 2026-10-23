@@ -84,9 +84,8 @@ class _UpgradeIntroScreenState extends State<UpgradeIntroScreen> {
                       children: [
                         if (_page > 0)
                           AppIconButton(
-                            tooltip: MaterialLocalizations.of(
-                              context,
-                            ).backButtonTooltip,
+                            tooltip: MaterialLocalizations.of(context)
+                                .backButtonTooltip,
                             onPressed: () => _goTo(_page - 1),
                             color: scheme.primary,
                             icon: Icon(

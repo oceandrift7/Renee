@@ -16,9 +16,8 @@ void main() {
         'source-deletion-',
       );
       addTearDown(() => directory.delete(recursive: true));
-      final file = await File(
-        '${directory.path}/song.flac',
-      ).writeAsString('audio');
+      final file = await File('${directory.path}/song.flac')
+          .writeAsString('audio');
       final events = SourceDeletionEvents();
       final entered = Completer<void>();
       final cleaned = Completer<void>();
@@ -111,9 +110,8 @@ void main() {
     () async {
       final directory = await Directory.systemTemp.createTemp('cue-deletion-');
       addTearDown(() => directory.delete(recursive: true));
-      final cue = await File(
-        '${directory.path}/album.cue',
-      ).writeAsString('cue');
+      final cue = await File('${directory.path}/album.cue')
+          .writeAsString('cue');
       final events = SourceDeletionEvents();
       final reactions = <String>[];
       events.subscribe((source) async => reactions.add(source));

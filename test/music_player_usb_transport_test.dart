@@ -262,35 +262,32 @@ void main() {
       native.messenger.setMockMethodCallHandler(events, null);
     });
 
-    test(
-      'verified route plays, pauses and seeks without software gain or rate changes',
-      () async {
-        await deck.setSource(
-          DeviceFileSource('/one.flac'),
-          preferBitPerfect: true,
-        );
-        expect(usbAudioStatus.value.reason, 'ready');
-        await deck.resume();
-        await deck.setVolume(0.4);
-        await deck.setPlaybackRate(1.1);
-        expect(native.playing, isEmpty);
-        expect(usbAudioStatus.value.reason, 'active');
-        expect(usbAudioStatus.value.sampleRate, 96000);
-        await deck.seek(const Duration(seconds: 21));
-        expect(await deck.getCurrentPosition(), const Duration(seconds: 21));
-        await deck.pause();
-        expect(deck.state, PlayerState.paused);
-        expect(usbCalls, ['prepare', 'resume', 'seek', 'position', 'pause']);
-        expect(
-          native.calls.where(
-            (c) =>
-                c.$1 == 'usb-test' &&
-                ['setVolume', 'setPlaybackRate'].contains(c.$2),
-          ),
-          isEmpty,
-        );
-      },
-    );
+    test('verified route plays, pauses and seeks without software gain or rate changes', () async {
+      await deck.setSource(
+        DeviceFileSource('/one.flac'),
+        preferBitPerfect: true,
+      );
+      expect(usbAudioStatus.value.reason, 'ready');
+      await deck.resume();
+      await deck.setVolume(0.4);
+      await deck.setPlaybackRate(1.1);
+      expect(native.playing, isEmpty);
+      expect(usbAudioStatus.value.reason, 'active');
+      expect(usbAudioStatus.value.sampleRate, 96000);
+      await deck.seek(const Duration(seconds: 21));
+      expect(await deck.getCurrentPosition(), const Duration(seconds: 21));
+      await deck.pause();
+      expect(deck.state, PlayerState.paused);
+      expect(usbCalls, ['prepare', 'resume', 'seek', 'position', 'pause']);
+      expect(
+        native.calls.where(
+          (c) =>
+              c.$1 == 'usb-test' &&
+              ['setVolume', 'setPlaybackRate'].contains(c.$2),
+        ),
+        isEmpty,
+      );
+    });
 
     test('late pause reply does not pause a newly prepared source', () async {
       await deck.setSource(

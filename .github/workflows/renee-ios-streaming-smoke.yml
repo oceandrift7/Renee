@@ -1,0 +1,192 @@
+name: Renée iOS native streaming smoke
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'integration_test/renee_streaming_transport_test.dart'
+      - 'integration_test/renee_youtube_js_bridge_test.dart'
+      - 'ios/Runner/AppDelegate.swift'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'lib/utils/lyrics_parser.dart'
+      - 'test/lyrics_parser_test.dart'
+      - 'integration_test/renee_youtube_music_live_test.dart'
+      - 'lib/services/streaming/**'
+      - 'lib/widgets/renee_stream_button.dart'
+      - 'third_party/audioplayers_darwin/**'
+      - '.github/workflows/renee-ios-streaming-smoke.yml'
+  workflow_dispatch:
+    inputs:
+      youtube_video_id:
+        description: 'Optional public 11-character video ID for live provider playback validation'
+        type: string
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: renee-ios-streaming-smoke-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  native-streaming-smoke:
+    runs-on: macos-latest
+    timeout-minutes: 100
+    env:
+      MORNYE_DISCORD_SDK: '0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: rustup show
+      - name: Cache Rust compilation
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            rust_backend/target
+          key: renee-ios-smoke-${{ runner.os }}-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-${{ hashFiles('rust_backend/Cargo.lock') }}
+          restore-keys: renee-ios-smoke-${{ runner.os }}-
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+      # Fail quickly on shared Dart compilation errors before building Rust,
+      # booting a simulator, or consuming a macOS Xcode build.
+      - name: Fetch Flutter dependencies
+        run: flutter pub get
+      - name: Preflight shared Dart sources and TTML regression tests
+        run: |
+          flutter analyze lib/utils/lyrics_parser.dart lib/services/streaming
+          flutter test test/lyrics_parser_test.dart
+      - name: Build native iOS backend for device and simulator
+        run: bash scripts/build_rust_backend.sh ios
+      - name: Configure native iOS pods
+        run: |
+          cd ios
+          pod install
+      - name: Start iPhone simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          sim_id="$(xcrun simctl list devices available -j | python3 -c 'import json,sys; devices=json.load(sys.stdin)["devices"]; print(next(d["udid"] for variants in devices.values() for d in variants if d["name"].startswith("iPhone") and d.get("isAvailable",True)))')"
+          echo "RENEE_SIM_ID=$sim_id" >> "$GITHUB_ENV"
+          xcrun simctl boot "$sim_id" || true
+          xcrun simctl bootstatus "$sim_id" -b
+          flutter devices
+      - name: Run real native AVPlayer constrained-network smoke
+        run: |
+          set -o pipefail
+          mkdir -p build/renee-diagnostics
+          flutter test integration_test/renee_streaming_transport_test.dart \
+            -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded \
+            2>&1 | tee build/renee-diagnostics/avplayer-test.log
+      - name: Verify native iOS JavaScriptCore challenge bridge
+        run: |
+          set -o pipefail
+          mkdir -p build/renee-diagnostics
+          flutter test integration_test/renee_youtube_js_bridge_test.dart \
+            -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded \
+            2>&1 | tee build/renee-diagnostics/javascriptcore-test.log
+      - name: Optional live YouTube Music iOS playback check (provider-dependent)
+        continue-on-error: true
+        if: ${{ github.event_name == 'push' || inputs.youtube_video_id != '' }}
+        shell: bash
+        env:
+          RENEE_TEST_ID: ${{ github.event_name == 'push' && 'Z85lxckrtzg' || inputs.youtube_video_id }}
+        run: |
+          set -euo pipefail
+          if [[ ! "$RENEE_TEST_ID" =~ ^[A-Za-z0-9_-]{11}$ ]]; then
+            echo "Expected an 11-character video ID." >&2
+            exit 1
+          fi
+          flutter test integration_test/renee_youtube_music_live_test.dart \
+            -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded \
+            --dart-define="RENEE_YTM_TEST_VIDEO_ID=$RENEE_TEST_ID" \
+            2>&1 | tee build/renee-diagnostics/youtube-live-test.log
+      - name: Upload simulator test diagnostics
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Renee-ios-test-logs
+          path: build/renee-diagnostics/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  unsigned-iphone-ipa:
+    runs-on: macos-latest
+    timeout-minutes: 100
+    env:
+      MORNYE_DISCORD_SDK: '0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Activate pinned Rust toolchain
+        working-directory: rust_backend
+        run: rustup show
+      - name: Cache Rust compilation
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            rust_backend/target
+          key: renee-ios-smoke-${{ runner.os }}-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-${{ hashFiles('rust_backend/Cargo.lock') }}
+          restore-keys: renee-ios-smoke-${{ runner.os }}-
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+      # Fail quickly on shared Dart compilation errors before building Rust,
+      # booting a simulator, or consuming a macOS Xcode build.
+      - name: Fetch Flutter dependencies
+        run: flutter pub get
+      - name: Preflight shared Dart sources and TTML regression tests
+        run: |
+          flutter analyze lib/utils/lyrics_parser.dart lib/services/streaming
+          flutter test test/lyrics_parser_test.dart
+      - name: Build native iOS backend for device and simulator
+        run: bash scripts/build_rust_backend.sh ios
+      - name: Configure native iOS pods
+        run: |
+          cd ios
+          pod install
+      - name: Build unsigned iPhone app for physical-device testing
+        run: |
+          set -euo pipefail
+          # Keep the full Xcode diagnostics when Flutter's summary only reports
+          # a generic provisioning or compilation failure.
+          mkdir -p build
+          if ! flutter build ios --release --no-codesign --target lib/main.dart -v > build/renee-ios-build.log 2>&1; then
+            grep -nE 'error:|Error Domain|provisioning|Provisioning|Signing|Failed to build|PhaseScriptExecution|Command PhaseScriptExecution|BUILD FAILED|^.*(Error|error|failed):' build/renee-ios-build.log | tail -100 | cut -c1-600 || true
+            tail -100 build/renee-ios-build.log
+            exit 1
+          fi
+          test -d build/ios/iphoneos/Runner.app
+          mkdir -p build/renee-unsigned/Payload
+          cp -R build/ios/iphoneos/Runner.app build/renee-unsigned/Payload/
+          (cd build/renee-unsigned && zip -qr Renee-dev-unsigned.ipa Payload)
+          test -s build/renee-unsigned/Renee-dev-unsigned.ipa
+      - name: Upload unsigned IPA for signing and sideloading
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Renee-dev-unsigned-ipa
+          path: build/renee-unsigned/Renee-dev-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 7
+      - name: Upload iOS build diagnostics
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Renee-ios-build-logs
+          path: build/renee-ios-build.log
+          if-no-files-found: ignore
+          retention-days: 7

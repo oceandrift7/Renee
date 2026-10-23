@@ -14,39 +14,36 @@ Map<String, dynamic> _media(int index, {String? artwork, String? source}) =>
     ).toJson();
 
 void main() {
-  test(
-    'iOS restore validates rebased artwork and requests a queue rewrite',
-    () async {
-      const oldContainer =
-          '/var/mobile/Containers/Data/Application/11111111-1111-1111-1111-111111111111';
-      const currentContainer =
-          '/var/mobile/Containers/Data/Application/22222222-2222-2222-2222-222222222222';
-      const suffix = '/Library/Application Support/covers/Album Cover.jpg';
-      final checked = <String>[];
-      final result = await prepareRestoredPlaybackMedia(
-        [
-          _media(
-            0,
-            source: 'network://fixture/music.flac',
-            artwork: Uri.file('$oldContainer$suffix').toString(),
-          ),
-        ],
-        iosDocumentsPath: '$currentContainer/Documents',
-        fileExists: (path) async {
-          checked.add(path);
-          return path == '$currentContainer$suffix';
-        },
-        loadLibraryCoverPath: (_) => throw StateError('Unexpected lookup'),
-      );
-      expect(checked, ['$currentContainer$suffix']);
-      expect(
-        result.items.single.artUri,
-        Uri.file('$currentContainer$suffix').toString(),
-      );
-      expect(result.keptOriginalIndices, [0]);
-      expect(result.artworkRelocated, isTrue);
-    },
-  );
+  test('iOS restore validates rebased artwork and requests a queue rewrite', () async {
+    const oldContainer =
+        '/var/mobile/Containers/Data/Application/11111111-1111-1111-1111-111111111111';
+    const currentContainer =
+        '/var/mobile/Containers/Data/Application/22222222-2222-2222-2222-222222222222';
+    const suffix = '/Library/Application Support/covers/Album Cover.jpg';
+    final checked = <String>[];
+    final result = await prepareRestoredPlaybackMedia(
+      [
+        _media(
+          0,
+          source: 'network://fixture/music.flac',
+          artwork: Uri.file('$oldContainer$suffix').toString(),
+        ),
+      ],
+      iosDocumentsPath: '$currentContainer/Documents',
+      fileExists: (path) async {
+        checked.add(path);
+        return path == '$currentContainer$suffix';
+      },
+      loadLibraryCoverPath: (_) => throw StateError('Unexpected lookup'),
+    );
+    expect(checked, ['$currentContainer$suffix']);
+    expect(
+      result.items.single.artUri,
+      Uri.file('$currentContainer$suffix').toString(),
+    );
+    expect(result.keptOriginalIndices, [0]);
+    expect(result.artworkRelocated, isTrue);
+  });
 
   test(
     'cache eviction rechecks old paths while retaining shared cover and order',
@@ -179,30 +176,27 @@ void main() {
     expect(result.artworkRelocated, isTrue);
   });
 
-  test(
-    'remote and SAF sources skip file access and invalid entries retain indices',
-    () async {
-      final result = await prepareRestoredPlaybackMedia(
-        [
-          null,
-          {'id': 'invalid'},
-          _media(
-            2,
-            source: 'network://fixture/track.flac',
-            artwork: 'https://example.test/a.jpg',
-          ),
-          _media(
-            3,
-            source: 'content://example.documents/track',
-            artwork: 'https://example.test/a.jpg',
-          ),
-        ],
-        fileExists: (_) => throw StateError('Unexpected file check'),
-        loadLibraryCoverPath: (_) => throw StateError('Unexpected lookup'),
-      );
-      expect(result.keptOriginalIndices, [2, 3]);
-      expect(result.items.map((item) => item.id), ['2', '3']);
-      expect(result.artworkRelocated, isFalse);
-    },
-  );
+  test('remote and SAF sources skip file access and invalid entries retain indices', () async {
+    final result = await prepareRestoredPlaybackMedia(
+      [
+        null,
+        {'id': 'invalid'},
+        _media(
+          2,
+          source: 'network://fixture/track.flac',
+          artwork: 'https://example.test/a.jpg',
+        ),
+        _media(
+          3,
+          source: 'content://example.documents/track',
+          artwork: 'https://example.test/a.jpg',
+        ),
+      ],
+      fileExists: (_) => throw StateError('Unexpected file check'),
+      loadLibraryCoverPath: (_) => throw StateError('Unexpected lookup'),
+    );
+    expect(result.keptOriginalIndices, [2, 3]);
+    expect(result.items.map((item) => item.id), ['2', '3']);
+    expect(result.artworkRelocated, isFalse);
+  });
 }

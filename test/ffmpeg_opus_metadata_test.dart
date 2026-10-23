@@ -127,9 +127,8 @@ void main() {
                 (argument) => argument.startsWith(prefix),
               );
               pictureBytes = base64Decode(argument.substring(prefix.length));
-              await File(
-                arguments[arguments.length - 2],
-              ).writeAsBytes(audioBytes);
+              await File(arguments[arguments.length - 2])
+                  .writeAsBytes(audioBytes);
               return FFmpegResult(success: true, returnCode: 0, output: '');
             },
           ),

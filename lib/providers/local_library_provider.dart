@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -136,8 +137,10 @@ class LocalLibraryState {
   }
 }
 
-typedef LocalLibraryAvailabilityProbe =
-    Future<bool?> Function(String path, {String? bookmark});
+typedef LocalLibraryAvailabilityProbe = Future<bool?> Function(
+  String path, {
+  String? bookmark,
+});
 
 class LocalLibraryNotifier extends Notifier<LocalLibraryState> {
   LocalLibraryNotifier({
@@ -210,11 +213,10 @@ class LocalLibraryNotifier extends Notifier<LocalLibraryState> {
         final requestId = _nativeLibraryRequestId;
         if (requestId != null) {
           unawaited(
-            PlatformBridge.cancelNativeDataJob(requestId).catchError((
-              Object error,
-            ) {
-              _log.w('Failed to cancel disposed library ingestion: $error');
-            }),
+            PlatformBridge.cancelNativeDataJob(requestId)
+                .catchError((Object error) {
+                  _log.w('Failed to cancel disposed library ingestion: $error');
+                }),
           );
         }
         unawaited(
@@ -611,9 +613,10 @@ class LocalLibraryNotifier extends Notifier<LocalLibraryState> {
             }
             // Recheck access after the file probes, before deleting a page.
             // An empty but readable source is valid; an offline one throws.
-            await Directory(
-              securityAccess?.path ?? source.path,
-            ).list(followLinks: false).take(1).drain<void>();
+            await Directory(securityAccess?.path ?? source.path)
+                .list(followLinks: false)
+                .take(1)
+                .drain<void>();
             return true;
           },
         );

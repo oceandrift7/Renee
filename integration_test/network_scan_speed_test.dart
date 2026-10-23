@@ -203,8 +203,7 @@ void main() {
         binding.reportData!['network_scan_speed'] = {
           'completed_cases': 1,
           'samples': samples,
-          'note':
-              'Native Rust metadata reader over local WebDAV; 40 ms simulated request latency. First sample is warmup. No live NAS comparison.',
+          'note': 'Native Rust metadata reader over local WebDAV; 40 ms simulated request latency. First sample is warmup. No live NAS comparison.',
         };
       } finally {
         await storage.dispose();

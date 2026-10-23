@@ -378,9 +378,10 @@ void main() {
         final prefs = await SharedPreferences.getInstance();
         await openSettings(tester, prefs);
         final page = find.byType(AppearanceSettingsPage);
-        final original = Theme.of(
-          tester.element(page),
-        ).textTheme.bodyLarge!.fontFamily;
+        final original = Theme.of(tester.element(page))
+            .textTheme
+            .bodyLarge!
+            .fontFamily;
         final setting = find.text('Use system font');
         await tester.scrollUntilVisible(
           setting,

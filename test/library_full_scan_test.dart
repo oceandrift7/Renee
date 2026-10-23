@@ -79,9 +79,8 @@ void main() {
 
     test('forced scan resets checkpoints and cover paths (SAF=$saf)', () async {
       final oldCovers = await Directory('${root.path}/library_covers').create();
-      final oldCover = await File(
-        '${oldCovers.path}/cover_same-key.jpg',
-      ).writeAsBytes([1]);
+      final oldCover = await File('${oldCovers.path}/cover_same-key.jpg')
+          .writeAsBytes([1]);
       final unrelated = await File(
         '${root.path}/library_scan_other.ndjson.state',
       ).writeAsString('other source');

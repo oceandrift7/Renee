@@ -187,9 +187,8 @@ extension _EditMetadataSheetAutoFill on _EditMetadataSheetState {
                     height: 1,
                     indent: 88,
                     endIndent: 16,
-                    color: Theme.of(
-                      sheetContext,
-                    ).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                    color: Theme.of(sheetContext).colorScheme.outlineVariant
+                        .withValues(alpha: 0.3),
                   ),
               ],
             ],
@@ -486,9 +485,8 @@ extension _EditMetadataSheetAutoFill on _EditMetadataSheetState {
         if (_showAutoFill) ...[
           Text(
             context.l10n.editMetadataAutoFillDesc,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 12),
           Consumer(
@@ -729,9 +727,8 @@ extension _EditMetadataSheetAutoFill on _EditMetadataSheetState {
                     width: 104,
                     child: Text(
                       _fieldLabel(key),
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.labelMedium
+                          ?.copyWith(color: cs.onSurfaceVariant),
                     ),
                   ),
                   Expanded(

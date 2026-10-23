@@ -143,7 +143,7 @@ class _LibrarySourceSettingsItem extends StatelessWidget {
               )
             : null,
         subtitle: [
-          if (pathLine != null) pathLine,
+          ?pathLine,
           details,
           if (!isScanning && source.lastScanError?.trim().isNotEmpty == true)
             context.friendlyError(source.lastScanError!),
@@ -562,9 +562,8 @@ class _ScanProgressTile extends StatelessWidget {
                       isPaused
                           ? context.l10n.libraryScanPaused
                           : context.l10n.libraryScanning,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w500),
                     ),
                     Text(
                       isFinalizing
@@ -575,9 +574,8 @@ class _ScanProgressTile extends StatelessWidget {
                               totalFiles,
                             )
                           : context.l10n.libraryScanning,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -612,9 +610,8 @@ class _ScanProgressTile extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               currentFile!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

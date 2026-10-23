@@ -99,9 +99,8 @@ void main() {
   test(
     'local AC-4 repair completes before source promotion and stays MP4',
     () async {
-      final source = await File(
-        '${directory.path}/Song.mp4',
-      ).writeAsString('encrypted');
+      final source = await File('${directory.path}/Song.mp4')
+          .writeAsString('encrypted');
       final output = File('${directory.path}/work.mp4');
       final stage = finalizer(
         decrypt:
@@ -136,17 +135,15 @@ void main() {
   );
 
   test('normalizes audio-only MP4 without overwriting a sibling', () async {
-    final output = await File(
-      '${directory.path}/Song.mp4',
-    ).writeAsString('audio');
+    final output = await File('${directory.path}/Song.mp4')
+        .writeAsString('audio');
     final stage = finalizer(
-      decrypt:
-          ({
-            required inputPath,
-            required descriptor,
-            required deleteOriginal,
-            prepareOutput,
-          }) async => output.path,
+      decrypt: ({
+        required inputPath,
+        required descriptor,
+        required deleteOriginal,
+        prepareOutput,
+      }) async => output.path,
       probe: (_) async => 'aac',
     );
     final outcome = await decrypt(stage, encrypted(), output.path);
@@ -170,17 +167,16 @@ void main() {
               failure == DownloadDecryptionFailure.safAccess
               ? null
               : (await temp.writeAsString('encrypted')).path,
-          publish:
-              ({
-                required treeUri,
-                required relativeDir,
-                required fileName,
-                required srcPath,
-                required avoidOverwrite,
-                required preservedSuffix,
-                collisionCleanFileName,
-                collisionVariantFileName,
-              }) async => null,
+          publish: ({
+            required treeUri,
+            required relativeDir,
+            required fileName,
+            required srcPath,
+            required avoidOverwrite,
+            required preservedSuffix,
+            collisionCleanFileName,
+            collisionVariantFileName,
+          }) async => null,
           deleteSource: (_) async => fail('Source was deleted after failure'),
         );
         final stage = finalizer(
@@ -265,13 +261,12 @@ void main() {
     () async {
       final result = encrypted();
       final stage = finalizer(
-        convert:
-            ({
-              required inputPath,
-              required targetFormat,
-              required bitrate,
-              required deleteOriginal,
-            }) async => null,
+        convert: ({
+          required inputPath,
+          required targetFormat,
+          required bitrate,
+          required deleteOriginal,
+        }) async => null,
       );
       final outcome = await convert(stage, result, name: 'Song.flac');
       expect(outcome.converted, isFalse);

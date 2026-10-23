@@ -1,5 +1,6 @@
 import AuthenticationServices
 import Flutter
+import JavaScriptCore
 import UIKit
 import UniformTypeIdentifiers
 
@@ -27,6 +28,7 @@ import UniformTypeIdentifiers
     private var playbackNotification: PlaybackNotificationBridge?
     private var audioRouteInfo: AudioRouteInfoBridge?
     private var musicHaptics: MusicHapticsBridge?
+    private var youtubeJsBridge: ReneeYouTubeJavaScriptBridge?
     private let coreBackend: CoreBackend = createCoreBackend()
     private var pendingSessionGrantEvents: [[String: Any]] = []
 
@@ -66,6 +68,7 @@ import UniformTypeIdentifiers
             self?.activeWindow?.rootViewController
         }
         PlayerWidgetBridge.shared.attach(messenger)
+        youtubeJsBridge = ReneeYouTubeJavaScriptBridge(messenger: messenger)
         let channel = FlutterMethodChannel(
             name: CHANNEL,
             binaryMessenger: messenger
@@ -860,5 +863,78 @@ class SceneDelegate: FlutterSceneDelegate {
     override func sceneWillEnterForeground(_ scene: UIScene) {
         super.sceneWillEnterForeground(scene)
         appDelegate?.willEnterForeground()
+    }
+}
+
+
+/// Isolated native JavaScriptCore executor for Renée's hash-pinned EJS modules.
+/// JS evaluation takes place on a private serial queue, never the UI thread.
+/// The only return value is a short JSON string; source and signed URLs are
+/// never written to logs or passed through error messages.
+private final class ReneeYouTubeJavaScriptBridge {
+    private let channel: FlutterMethodChannel
+    private let queue = DispatchQueue(label: "com.zarz.mornye.youtube_js", qos: .userInitiated)
+    private var context: JSContext?
+
+    init(messenger: FlutterBinaryMessenger) {
+        channel = FlutterMethodChannel(
+            name: "com.zarz.mornye/youtube_js",
+            binaryMessenger: messenger
+        )
+        channel.setMethodCallHandler { [weak self] call, result in
+            guard let self else {
+                result(FlutterError(code: "JS_UNAVAILABLE", message: nil, details: nil))
+                return
+            }
+            guard let args = call.arguments as? [String: Any],
+                  let script = args["script"] as? String else {
+                result(FlutterError(code: "JS_ARGUMENTS", message: nil, details: nil))
+                return
+            }
+            self.queue.async {
+                let value: Any
+                if call.method == "initialize" {
+                    guard script.utf8.count <= 12_000_000,
+                          let newContext = JSContext() else {
+                        self.respond(result, code: "JS_INIT_LIMIT")
+                        return
+                    }
+                    // The module is fetched and hash-checked by the Dart EJS
+                    // library before it reaches this method.
+                    _ = newContext.evaluateScript(script)
+                    guard newContext.exception == nil else {
+                        self.respond(result, code: "JS_INIT_FAILED")
+                        return
+                    }
+                    self.context = newContext
+                    value = true
+                } else if call.method == "evaluate" {
+                    guard script.utf8.count <= 4_000_000,
+                          let engine = self.context else {
+                        self.respond(result, code: "JS_NOT_READY")
+                        return
+                    }
+                    engine.exception = nil
+                    guard let evaluated = engine.evaluateScript(script),
+                          engine.exception == nil,
+                          let output = evaluated.toString(),
+                          output.utf8.count <= 2_000_000 else {
+                        self.respond(result, code: "JS_EVAL_FAILED")
+                        return
+                    }
+                    value = output
+                } else {
+                    self.respond(result, code: "JS_METHOD_UNKNOWN")
+                    return
+                }
+                DispatchQueue.main.async { result(value) }
+            }
+        }
+    }
+
+    private func respond(_ result: @escaping FlutterResult, code: String) {
+        DispatchQueue.main.async {
+            result(FlutterError(code: code, message: nil, details: nil))
+        }
     }
 }

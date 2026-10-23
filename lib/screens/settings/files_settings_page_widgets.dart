@@ -191,9 +191,8 @@ class _FilenameFormatEditorSheetState
           const SizedBox(height: 24),
           Text(
             context.l10n.downloadFilenameInsertTag,
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context).textTheme.titleSmall
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           Wrap(

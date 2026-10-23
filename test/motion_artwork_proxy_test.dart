@@ -177,9 +177,10 @@ two.ts
       expect(media, isNot(contains('https:')));
       expect(media, contains('#EXT-X-BYTERANGE:2@1'));
       expect(media, contains('BYTERANGE="2@0"'));
-      final attributes = RegExp(
-        r'URI="([^"]+)"',
-      ).allMatches(media).map((match) => Uri.parse(match[1]!)).toList();
+      final attributes = RegExp(r'URI="([^"]+)"')
+          .allMatches(media)
+          .map((match) => Uri.parse(match[1]!))
+          .toList();
       final segments = const LineSplitter()
           .convert(media)
           .where((line) => line.isNotEmpty && !line.startsWith('#'))

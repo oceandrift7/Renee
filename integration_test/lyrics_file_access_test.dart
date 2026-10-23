@@ -79,14 +79,12 @@ void main() {
     testWidgets('embed and read lyrics outside Downloads (alias: $alias)', (
       tester,
     ) async {
-      final audio = await File(
-        '${library.path}/song.flac',
-      ).writeAsBytes(_flac());
+      final audio = await File('${library.path}/song.flac')
+          .writeAsBytes(_flac());
       var path = audio.path;
       if (alias) {
-        final link = await Link(
-          '${root.path}/Library alias',
-        ).create(library.path);
+        final link = await Link('${root.path}/Library alias')
+            .create(library.path);
         path = '${link.path}/song.flac';
       }
 
@@ -152,9 +150,8 @@ void main() {
   testWidgets('lyrics operations cannot grant extension storage', (
     tester,
   ) async {
-    final protected = await File(
-      '${data.path}/private.flac',
-    ).writeAsBytes(_flac());
+    final protected = await File('${data.path}/private.flac')
+        .writeAsBytes(_flac());
     await expectLater(
       PlatformBridge.embedLyricsToFile(protected.path, _lyrics),
       throwsA(

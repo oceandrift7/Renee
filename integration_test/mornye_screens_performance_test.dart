@@ -228,9 +228,8 @@ void main() {
       warmup: librarySearchRoundTrip,
     );
     await tester.runAsync(() async {
-      Navigator.of(
-        tester.element(find.byType(Scrollable).hitTestable().first),
-      ).pop();
+      Navigator.of(tester.element(find.byType(Scrollable).hitTestable().first))
+          .pop();
       await probe.wait(const Duration(milliseconds: 500));
       await select(3);
     });
@@ -292,8 +291,7 @@ void main() {
     expect(databaseCalls, isEmpty);
     await probe.finish(
       metadata: {
-        'scope':
-            'Production QueueTab, MornyeLibraryScreen, HomeTab, LazyTabView and MornyeTabBar; synthetic provider data, no artwork/network/database/IME.',
+        'scope': 'Production QueueTab, MornyeLibraryScreen, HomeTab, LazyTabView and MornyeTabBar; synthetic provider data, no artwork/network/database/IME.',
         'trackCount': _tracks.length,
         'albumCount': _albums.length,
         'queueCount': 2000,

@@ -36,9 +36,8 @@ extension _QueueTabFilterSheet on _QueueTabState {
                 children: [
                   Text(
                     context.l10n.libraryFilterSource,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -62,9 +61,8 @@ extension _QueueTabFilterSheet on _QueueTabState {
 
                   Text(
                     context.l10n.libraryFilterQuality,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -89,9 +87,8 @@ extension _QueueTabFilterSheet on _QueueTabState {
 
                   Text(
                     context.l10n.libraryFilterFormat,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -121,9 +118,8 @@ extension _QueueTabFilterSheet on _QueueTabState {
 
                   Text(
                     context.l10n.libraryFilterMetadata,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -209,9 +205,8 @@ extension _QueueTabFilterSheet on _QueueTabState {
 
                   Text(
                     context.l10n.libraryFilterSort,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 8),
                   Wrap(

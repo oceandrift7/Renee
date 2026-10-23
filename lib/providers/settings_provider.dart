@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -264,11 +265,10 @@ class SettingsNotifier extends Notifier<AppSettings> {
       _log.w('Failed to sync network compatibility options to backend: $e');
     });
 
-    await PlatformBridge.setAllowPrivateNetwork(
-      state.allowLocalNetwork,
-    ).catchError((Object e) {
-      _log.w('Failed to sync allow local network option to backend: $e');
-    });
+    await PlatformBridge.setAllowPrivateNetwork(state.allowLocalNetwork)
+        .catchError((Object e) {
+          _log.w('Failed to sync allow local network option to backend: $e');
+        });
   }
 
   Future<void> _syncExtensionFallbackSettingsToBackend() async {

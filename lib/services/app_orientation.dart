@@ -28,11 +28,10 @@ class AppOrientationObserver extends NavigatorObserver {
     if (_playerVisible == playerVisible) return;
     _playerVisible = playerVisible;
     unawaited(
-      setAppOrientation(playerVisible: playerVisible).catchError((
-        Object error,
-      ) {
-        _log.w('Could not update screen orientation: $error');
-      }),
+      setAppOrientation(playerVisible: playerVisible)
+          .catchError((Object error) {
+            _log.w('Could not update screen orientation: $error');
+          }),
     );
   }
 

@@ -120,70 +120,67 @@ void main() {
   });
 
   for (final table in ['library', 'history']) {
-    test(
-      '$table migration preserves valid aliases and removes stale keys',
-      () async {
-        final db = await SqliteProcessDatabase.open();
-        addTearDown(db.close);
-        await db.execute(
-          'CREATE TABLE $table(id TEXT PRIMARY KEY, file_path TEXT)',
-        );
-        await createPathKeyTable(db, '${table}_path_keys');
-        // Cross a page boundary, include an empty id, and a row with no path.
-        await db.execute('''
+    test('$table migration preserves valid aliases and removes stale keys', () async {
+      final db = await SqliteProcessDatabase.open();
+      addTearDown(db.close);
+      await db.execute(
+        'CREATE TABLE $table(id TEXT PRIMARY KEY, file_path TEXT)',
+      );
+      await createPathKeyTable(db, '${table}_path_keys');
+      // Cross a page boundary, include an empty id, and a row with no path.
+      await db.execute('''
           WITH RECURSIVE tracks(n) AS (
             SELECT 0 UNION ALL SELECT n + 1 FROM tracks WHERE n < 502
           )
           INSERT INTO $table SELECT printf('%05d', n), '/music/' || n || '.flac'
           FROM tracks
         ''');
-        await db.insert(table, {'id': '', 'file_path': _path('special')});
-        await db.insert(table, {'id': 'null-path', 'file_path': null});
-        await db.execute('''
+      await db.insert(table, {'id': '', 'file_path': _path('special')});
+      await db.insert(table, {'id': 'null-path', 'file_path': null});
+      await db.execute('''
           INSERT INTO ${table}_path_keys
           SELECT id, file_path FROM $table WHERE file_path IS NOT NULL
         ''');
-        await db.insert('${table}_path_keys', {
-          'item_id': 'null-path',
-          'path_key': 'stale',
-        });
-        await db.insert('${table}_path_keys', {
-          'item_id': '',
-          'path_key': 'stale',
-        });
-        // An unchanged row must retain its rowid, not be deleted and reinserted.
-        final original = await db.rawQuery('''
+      await db.insert('${table}_path_keys', {
+        'item_id': 'null-path',
+        'path_key': 'stale',
+      });
+      await db.insert('${table}_path_keys', {
+        'item_id': '',
+        'path_key': 'stale',
+      });
+      // An unchanged row must retain its rowid, not be deleted and reinserted.
+      final original = await db.rawQuery('''
           SELECT rowid, item_id, path_key FROM ${table}_path_keys
           WHERE path_key != 'stale' ORDER BY item_id
         ''');
-        await db.transaction(
-          (_) => backfillPathKeys(db, table, '${table}_path_keys'),
+      await db.transaction(
+        (_) => backfillPathKeys(db, table, '${table}_path_keys'),
+      );
+      for (final row in await db.query(table)) {
+        final keys = await db.query(
+          '${table}_path_keys',
+          where: 'item_id = ?',
+          whereArgs: [row['id']],
         );
-        for (final row in await db.query(table)) {
-          final keys = await db.query(
-            '${table}_path_keys',
-            where: 'item_id = ?',
-            whereArgs: [row['id']],
-          );
-          expect(
-            keys.map((key) => key['path_key']).toSet(),
-            buildPathMatchKeys(row['file_path'] as String?),
-          );
-        }
-        for (final key in original) {
-          expect(
-            (await db.rawQuery(
-              'SELECT rowid FROM ${table}_path_keys WHERE item_id = ? AND path_key = ?',
-              [key['item_id'], key['path_key']],
-            )).single['rowid'],
-            key['rowid'],
-          );
-        }
-        final before = await db.rawQuery('SELECT total_changes()');
-        await backfillPathKeys(db, table, '${table}_path_keys');
-        expect(await db.rawQuery('SELECT total_changes()'), before);
-      },
-    );
+        expect(
+          keys.map((key) => key['path_key']).toSet(),
+          buildPathMatchKeys(row['file_path'] as String?),
+        );
+      }
+      for (final key in original) {
+        expect(
+          (await db.rawQuery(
+            'SELECT rowid FROM ${table}_path_keys WHERE item_id = ? AND path_key = ?',
+            [key['item_id'], key['path_key']],
+          )).single['rowid'],
+          key['rowid'],
+        );
+      }
+      final before = await db.rawQuery('SELECT total_changes()');
+      await backfillPathKeys(db, table, '${table}_path_keys');
+      expect(await db.rawQuery('SELECT total_changes()'), before);
+    });
   }
 
   test('v14 upgrade rolls back a later-page failure and can retry', () async {
@@ -220,9 +217,8 @@ void main() {
     expect(await db.query('library_path_keys'), isEmpty);
     expect((await db.rawQuery('PRAGMA user_version')).single.values.single, 14);
     expect(
-      (await db.rawQuery(
-        'PRAGMA table_info(library)',
-      )).map((row) => row['name']),
+      (await db.rawQuery('PRAGMA table_info(library)'))
+          .map((row) => row['name']),
       isNot(contains('has_replaygain')),
     );
     expect(

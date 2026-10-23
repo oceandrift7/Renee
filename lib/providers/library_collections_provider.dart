@@ -177,9 +177,9 @@ class LibraryCollectionsNotifier extends Notifier<LibraryCollectionsState> {
       await dbDelete(key);
       if (!ref.mounted) return false;
       state = withList(
-        select(
-          state,
-        ).where((entry) => entry.key != key).toList(growable: false),
+        select(state)
+            .where((entry) => entry.key != key)
+            .toList(growable: false),
       );
       return false;
     }
@@ -328,9 +328,9 @@ class LibraryCollectionsNotifier extends Notifier<LibraryCollectionsState> {
     await dbDelete(key);
     if (!ref.mounted) return;
     state = withList(
-      select(
-        state,
-      ).where((entry) => keyOf(entry) != key).toList(growable: false),
+      select(state)
+          .where((entry) => keyOf(entry) != key)
+          .toList(growable: false),
     );
   });
 

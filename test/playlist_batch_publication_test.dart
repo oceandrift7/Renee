@@ -109,77 +109,75 @@ void main() {
     nativeJobRunner: runner ?? stage,
   );
 
-  test(
-    'publishes in order through live triggers and changes only target timestamp',
-    () async {
-      await publish();
-      expect(
-        (await live.rawQuery(
-          'SELECT track_key FROM playlist_tracks ORDER BY rowid',
-        )).map((row) => row['track_key']),
-        ['existing', 'new-a', 'new-b'],
-      );
-      expect(await live.rawQuery('SELECT * FROM published'), [
-        {'track_key': 'new-a'},
-        {'track_key': 'new-b'},
-      ]);
-      expect(
-        await live.rawQuery(
-          'SELECT id,name,updated_at FROM playlists ORDER BY rowid',
-        ),
-        [
-          {'id': 'p', 'name': 'Original', 'updated_at': 'new'},
-          {'id': 'other', 'name': 'Other', 'updated_at': 'old'},
-        ],
-      );
-      expect(await live.rawQuery('PRAGMA foreign_key_check'), isEmpty);
-      expect((await live.rawQuery('PRAGMA database_list')).length, 1);
-      expect(await File(retainedStage!).exists(), false);
-    },
-  );
+  test('publishes in order through live triggers and changes only target timestamp', () async {
+    await publish();
+    expect(
+      (await live.rawQuery(
+        'SELECT track_key FROM playlist_tracks ORDER BY rowid',
+      )).map((row) => row['track_key']),
+      ['existing', 'new-a', 'new-b'],
+    );
+    expect(await live.rawQuery('SELECT * FROM published'), [
+      {'track_key': 'new-a'},
+      {'track_key': 'new-b'},
+    ]);
+    expect(
+      await live.rawQuery(
+        'SELECT id,name,updated_at FROM playlists ORDER BY rowid',
+      ),
+      [
+        {'id': 'p', 'name': 'Original', 'updated_at': 'new'},
+        {'id': 'other', 'name': 'Other', 'updated_at': 'old'},
+      ],
+    );
+    expect(await live.rawQuery('PRAGMA foreign_key_check'), isEmpty);
+    expect((await live.rawQuery('PRAGMA database_list')).length, 1);
+    expect(await File(retainedStage!).exists(), false);
+  });
 
   for (final fail in [false, true]) {
-    test('shared staging publishes Loved atomically (failure: $fail)', () async {
-      if (fail) {
-        await live.execute(
-          "CREATE TRIGGER fail_loved BEFORE INSERT ON loved_tracks WHEN new.track_key='new-b' BEGIN SELECT RAISE(ABORT,'denied'); END",
+    test(
+      'shared staging publishes Loved atomically (failure: $fail)',
+      () async {
+        if (fail) {
+          await live.execute(
+            "CREATE TRIGGER fail_loved BEFORE INSERT ON loved_tracks WHEN new.track_key='new-b' BEGIN SELECT RAISE(ABORT,'denied'); END",
+          );
+        }
+        final operation = publishLovedBatch(
+          database: live,
+          addedAt: 'new',
+          rowsPath: input,
+          expectedCount: 2,
+          nativeJobRunner: stage,
+          temporaryDirectory: root,
         );
-      }
-      final operation = publishLovedBatch(
-        database: live,
-        addedAt: 'new',
-        rowsPath: input,
-        expectedCount: 2,
-        nativeJobRunner: stage,
-        temporaryDirectory: root,
-      );
-      if (fail) {
-        await expectLater(operation, throwsA(isA<StateError>()));
-        expect(await live.rawQuery('SELECT * FROM loved_tracks'), isEmpty);
-      } else {
-        await operation;
+        if (fail) {
+          await expectLater(operation, throwsA(isA<StateError>()));
+          expect(await live.rawQuery('SELECT * FROM loved_tracks'), isEmpty);
+        } else {
+          await operation;
+          expect(
+            (await live.rawQuery(
+              'SELECT track_key FROM loved_tracks ORDER BY added_at DESC,rowid DESC',
+            )).map((row) => row['track_key']),
+            ['new-b', 'new-a'],
+          );
+        }
+        expect(await File(retainedStage!).exists(), isFalse);
+        expect((await live.rawQuery('PRAGMA database_list')).length, 1);
         expect(
-          (await live.rawQuery(
-            'SELECT track_key FROM loved_tracks ORDER BY added_at DESC,rowid DESC',
-          )).map((row) => row['track_key']),
-          ['new-b', 'new-a'],
+          (await live.rawQuery('SELECT track_key FROM playlist_tracks'))
+              .single['track_key'],
+          'existing',
         );
-      }
-      expect(await File(retainedStage!).exists(), isFalse);
-      expect((await live.rawQuery('PRAGMA database_list')).length, 1);
-      expect(
-        (await live.rawQuery(
-          'SELECT track_key FROM playlist_tracks',
-        )).single['track_key'],
-        'existing',
-      );
-      expect(
-        (await live.rawQuery(
-          "SELECT updated_at FROM playlists WHERE id='p'",
-        )).single['updated_at'],
-        'old',
-      );
-    });
+        expect(
+          (await live.rawQuery("SELECT updated_at FROM playlists WHERE id='p'"))
+              .single['updated_at'],
+          'old',
+        );
+      },
+    );
   }
 
   test('bounded Loved inserts and deletes roll back earlier chunks', () async {
@@ -223,16 +221,14 @@ void main() {
       );
       await expectLater(publish(), throwsA(isA<StateError>()));
       expect(
-        (await live.rawQuery(
-          'SELECT track_key FROM playlist_tracks',
-        )).single['track_key'],
+        (await live.rawQuery('SELECT track_key FROM playlist_tracks'))
+            .single['track_key'],
         'existing',
       );
       expect(await live.rawQuery('SELECT * FROM published'), isEmpty);
       expect(
-        (await live.rawQuery(
-          "SELECT updated_at FROM playlists WHERE id='p'",
-        )).single['updated_at'],
+        (await live.rawQuery("SELECT updated_at FROM playlists WHERE id='p'"))
+            .single['updated_at'],
         'old',
       );
       expect((await live.rawQuery('PRAGMA database_list')).length, 1);
@@ -274,18 +270,15 @@ void main() {
     expect((await live.rawQuery('PRAGMA database_list')).length, 1);
   });
 
-  test(
-    'failed detach retains its file without reporting a durable commit as failure',
-    () async {
-      await publish(database: _DetachFailure(live));
-      expect(
-        (await live.rawQuery('SELECT track_key FROM playlist_tracks')).length,
-        3,
-      );
-      expect(await File(retainedStage!).exists(), true);
-      expect((await live.rawQuery('PRAGMA database_list')).length, 2);
-      await File(input).delete();
-      expect(await File(retainedStage!).exists(), true);
-    },
-  );
+  test('failed detach retains its file without reporting a durable commit as failure', () async {
+    await publish(database: _DetachFailure(live));
+    expect(
+      (await live.rawQuery('SELECT track_key FROM playlist_tracks')).length,
+      3,
+    );
+    expect(await File(retainedStage!).exists(), true);
+    expect((await live.rawQuery('PRAGMA database_list')).length, 2);
+    await File(input).delete();
+    expect(await File(retainedStage!).exists(), true);
+  });
 }

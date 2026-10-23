@@ -487,16 +487,14 @@ class _FetchingProgressDialogState extends State<_FetchingProgressDialog> {
           const SizedBox(height: 20),
           Text(
             context.l10n.discographyFetchingTracks,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Text(
             context.l10n.discographyFetchingAlbum(_current, _total),
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 8),
           ClipRRect(

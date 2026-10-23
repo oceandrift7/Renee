@@ -305,9 +305,8 @@ class _UpdateChannelSelector extends StatelessWidget {
                       currentChannel == 'preview'
                           ? context.l10n.optionsUpdateChannelPreview
                           : context.l10n.optionsUpdateChannelStable,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -342,9 +341,8 @@ class _UpdateChannelSelector extends StatelessWidget {
               Expanded(
                 child: Text(
                   context.l10n.optionsUpdateChannelWarning,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ),
             ],

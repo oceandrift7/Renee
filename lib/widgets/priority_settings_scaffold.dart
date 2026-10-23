@@ -79,9 +79,8 @@ class PrioritySettingsScaffold extends StatelessWidget {
                 ),
                 child: Text(
                   description,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ),
             ),

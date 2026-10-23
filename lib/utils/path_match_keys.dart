@@ -52,9 +52,8 @@ Set<String> buildPathMatchKeys(String? filePath) =>
 bool physicalFilePathsMatch(String? first, String? second) {
   final firstKeys = buildPhysicalPathMatchKeys(first);
   if (firstKeys.isEmpty) return false;
-  return buildPhysicalPathMatchKeys(
-    second,
-  ).any((key) => firstKeys.contains(key));
+  return buildPhysicalPathMatchKeys(second)
+      .any((key) => firstKeys.contains(key));
 }
 
 bool isPhysicalFileRetained(

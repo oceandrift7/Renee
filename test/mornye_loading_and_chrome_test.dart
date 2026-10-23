@@ -68,9 +68,9 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(ShellNavigationService.chromeBrightness.value, Brightness.dark);
-      final artistSurface = Theme.of(
-        tester.element(find.text('Artist')),
-      ).colorScheme.surface;
+      final artistSurface = Theme.of(tester.element(find.text('Artist')))
+          .colorScheme
+          .surface;
       expect(ShellNavigationService.chromeSurface.value, artistSurface);
 
       // Menus do not turn the bars light over a dark artist.

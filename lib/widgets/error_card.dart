@@ -74,9 +74,8 @@ class ErrorCard extends StatelessWidget {
                   ],
                   Text(
                     message,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: foreground),
+                    style: Theme.of(context).textTheme.bodyMedium
+                        ?.copyWith(color: foreground),
                   ),
                   if (onRetry != null) ...[
                     SizedBox(height: tokens.gapMd),

@@ -172,14 +172,13 @@ void main() {
       expect((rows.single['item'] as Map)['filePath'], _currentPath);
       expect((await store.counts(request)).allTrackCount, 1);
       expect(
-        (await store.trackPage(
-          const QueueLibraryDbQuery(source: 'local'),
-        )).rows,
+        (await store.trackPage(const QueueLibraryDbQuery(source: 'local')))
+            .rows,
         isEmpty,
       );
-      final keys = (await history.query(
-        'history_path_keys',
-      )).map((row) => row['path_key']).toSet();
+      final keys = (await history.query('history_path_keys'))
+          .map((row) => row['path_key'])
+          .toSet();
       expect(keys, buildPathMatchKeys(_currentPath));
       expect(keys.intersection(buildPathMatchKeys(_oldPath)), isEmpty);
       expect(
@@ -337,34 +336,37 @@ void main() {
     },
   );
 
-  test('external, network, SAF, and traversal paths remain unchanged', () async {
-    const paths = [
-      '/private/var/mobile/Library/Mobile Documents/com~apple~CloudDocs/Song.flac',
-      'network://connection/Music/Song.flac',
-      'content://example.documents/tree/root/document/song.flac',
-      '$_oldContainer/Documents/../tmp/Song.flac',
-    ];
-    await replaceHistoryRows(
-      history,
-      Stream.fromIterable([
-        for (var i = 0; i < paths.length; i++)
-          HistoryRowMapper.jsonToDbRow(_download('$i', paths[i])),
-      ]),
-    );
-    expect(
-      await migrateIosHistoryPaths(
+  test(
+    'external, network, SAF, and traversal paths remain unchanged',
+    () async {
+      const paths = [
+        '/private/var/mobile/Library/Mobile Documents/com~apple~CloudDocs/Song.flac',
+        'network://connection/Music/Song.flac',
+        'content://example.documents/tree/root/document/song.flac',
+        '$_oldContainer/Documents/../tmp/Song.flac',
+      ];
+      await replaceHistoryRows(
         history,
-        prefs,
-        containerPath: _currentContainer,
-      ),
-      0,
-    );
-    expect(
-      (await history.query(
-        'history',
-        orderBy: 'id',
-      )).map((row) => row['file_path']),
-      paths,
-    );
-  });
+        Stream.fromIterable([
+          for (var i = 0; i < paths.length; i++)
+            HistoryRowMapper.jsonToDbRow(_download('$i', paths[i])),
+        ]),
+      );
+      expect(
+        await migrateIosHistoryPaths(
+          history,
+          prefs,
+          containerPath: _currentContainer,
+        ),
+        0,
+      );
+      expect(
+        (await history.query(
+          'history',
+          orderBy: 'id',
+        )).map((row) => row['file_path']),
+        paths,
+      );
+    },
+  );
 }

@@ -33,9 +33,8 @@ class AppSheetHandle extends StatelessWidget {
               margin ??
               EdgeInsets.only(top: tokens.gapMd, bottom: tokens.gapSm),
           decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+            color: Theme.of(context).colorScheme.onSurfaceVariant
+                .withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(_height / 2),
           ),
         ),

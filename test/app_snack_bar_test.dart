@@ -211,9 +211,8 @@ void main() {
           child: MaterialApp(
             theme: mornye ? MornyeTheme.build(Brightness.light) : ThemeData(),
             builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(textScaler: TextScaler.linear(mornye ? 2 : 1)),
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(mornye ? 2 : 1)),
               child: AppScaffoldMessenger(child: child!),
             ),
             localizationsDelegates: AppLocalizations.localizationsDelegates,

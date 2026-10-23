@@ -1,4 +1,5 @@
 import 'dart:math';
+
 import 'package:flutter/widgets.dart';
 import 'package:mornye/models/track.dart';
 import 'package:mornye/utils/artist_utils.dart';
@@ -147,9 +148,8 @@ String? _batchAlbumIdentity(Track track) {
   final albumName = normalizeOptionalString(track.albumName)?.toLowerCase();
   if (albumName == null) return null;
 
-  final cover = normalizeOptionalString(
-    normalizeCoverReference(track.coverUrl),
-  )?.toLowerCase();
+  final cover = normalizeOptionalString(normalizeCoverReference(track.coverUrl))
+      ?.toLowerCase();
   if (cover != null) return '$source|cover:$albumName|$cover';
 
   final releaseDate = normalizeOptionalString(track.releaseDate) ?? '';
@@ -191,9 +191,9 @@ String? _sharedBatchAlbumArtist(List<Track> tracks) {
   // Preserve a provider's original separator whenever one of its credits is
   // already exactly the shared album credit.
   for (final rawCredit in albumArtists.whereType<String>()) {
-    final keys = splitArtistNames(
-      rawCredit,
-    ).map((name) => name.toLowerCase()).toSet();
+    final keys = splitArtistNames(rawCredit)
+        .map((name) => name.toLowerCase())
+        .toSet();
     if (keys.length == sharedKeys.length && keys.containsAll(sharedKeys)) {
       return rawCredit;
     }

@@ -46,9 +46,8 @@ void main() {
         if (await root.exists()) await root.delete(recursive: true);
       });
       final output = await Directory(p.join(root.path, 'output')).create();
-      final temporary = await Directory(
-        p.join(root.path, 'temporary'),
-      ).create();
+      final temporary = await Directory(p.join(root.path, 'temporary'))
+          .create();
       final cover = File(p.join(root.path, 'cover.jpg'));
       await cover.writeAsBytes([0xff, 0xd8, 0xff, 0xd9]);
       final history = List.generate(
@@ -143,9 +142,9 @@ void main() {
         temporaryDirectory: root,
       );
       final archive = ZipDecoder().decodeBytes(await file.readAsBytes());
-      final metadata =
-          jsonDecode(utf8.decode(archive.find('metadata.json')!.content))
-              as Map<String, dynamic>;
+      final metadata = jsonDecode(
+        utf8.decode(archive.find('metadata.json')!.content),
+      ) as Map<String, dynamic>;
       final data = metadata['data'] as Map<String, dynamic>;
       expect(data.containsKey('settings'), settings);
       expect(data.containsKey('collections'), collections);

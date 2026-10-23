@@ -132,9 +132,8 @@ class ExtensionRow extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       DefaultTextStyle.merge(
-                        style: Theme.of(context).textTheme.bodyLarge!.copyWith(
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: Theme.of(context).textTheme.bodyLarge!
+                            .copyWith(fontWeight: FontWeight.w500),
                         child: title,
                       ),
                       SizedBox(height: tokens.gapXs / 2),

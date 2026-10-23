@@ -120,9 +120,8 @@ void main() {
           );
           samples[codec] = base64Encode(await source.readAsBytes());
         }
-        final extension = await Directory(
-          '${sources.path}/example.audio',
-        ).create();
+        final extension = await Directory('${sources.path}/example.audio')
+            .create();
         await File('${extension.path}/manifest.json').writeAsString(
           jsonEncode({
             'name': 'example.audio',

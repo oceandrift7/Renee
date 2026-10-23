@@ -267,13 +267,11 @@ void main() {
         'persisted_rows': 12003,
         'input_commands': 12005,
         'input_tracks': 10000,
-        'mode':
-            'five alternating paired samples; original per-row sqflite versus complete production worker+spool+native transaction',
+        'mode': 'five alternating paired samples; original per-row sqflite versus complete production worker+spool+native transaction',
         'times_us': timings,
         'heartbeat': heartbeats,
         'sha256_rows': expected,
-        'scope':
-            'Collection restore latency; unchanged UI; no claim of whole-app FPS or device RAM.',
+        'scope': 'Collection restore latency; unchanged UI; no claim of whole-app FPS or device RAM.',
       };
       binding.reportData ??= {};
       binding.reportData!['collection_restore'] = report;

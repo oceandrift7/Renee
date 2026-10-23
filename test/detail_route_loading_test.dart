@@ -131,9 +131,9 @@ void main() {
       expect(find.text('Song 2'), findsOneWidget);
       expect(find.byType(AlbumTrackListSkeleton), findsNothing);
       expect(
-        ModalRoute.of(
-          tester.element(find.byType(LocalAlbumScreen)),
-        )!.animation!.value,
+        ModalRoute.of(tester.element(find.byType(LocalAlbumScreen)))!
+            .animation!
+            .value,
         lessThan(1),
       );
       await tester.pumpAndSettle();

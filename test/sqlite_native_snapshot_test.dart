@@ -86,9 +86,8 @@ void main() {
         );
         await database.execute("UPDATE parents SET value = 'changed'");
         expect(
-          (await snapshot.rawQuery(
-            'SELECT value FROM parents',
-          )).single['value'],
+          (await snapshot.rawQuery('SELECT value FROM parents'))
+              .single['value'],
           '音楽',
         );
         expect(
@@ -103,37 +102,34 @@ void main() {
     },
   );
 
-  test(
-    'closed staging publishes atomically through live triggers and foreign keys',
-    () async {
-      final path = '${root.path}/staging.db';
-      await createNativeSqliteSnapshot(
-        database,
-        path,
-        tables: ['parents', 'children'],
-        version: 15,
-        copyRows: false,
-      );
-      final staging = await SqliteProcessDatabase.open(path: path);
-      await staging.execute("INSERT INTO parents VALUES('new', 'new value')");
-      await staging.execute("INSERT INTO children VALUES('new', '/new.flac')");
-      await staging.close();
-      await replaceTablesFromNativeSnapshot(
-        database,
-        path,
-        tables: ['parents', 'children'],
-        deleteOrder: ['children', 'parents'],
-      );
-      expect(await database.query('parents'), [
-        {'id': 'new', 'value': 'new value'},
-      ]);
-      expect(await database.query('derived'), [
-        {'id': 'new'},
-      ]);
-      expect(await database.rawQuery('PRAGMA foreign_key_check'), isEmpty);
-      expect((await database.rawQuery('PRAGMA database_list')).length, 1);
-    },
-  );
+  test('closed staging publishes atomically through live triggers and foreign keys', () async {
+    final path = '${root.path}/staging.db';
+    await createNativeSqliteSnapshot(
+      database,
+      path,
+      tables: ['parents', 'children'],
+      version: 15,
+      copyRows: false,
+    );
+    final staging = await SqliteProcessDatabase.open(path: path);
+    await staging.execute("INSERT INTO parents VALUES('new', 'new value')");
+    await staging.execute("INSERT INTO children VALUES('new', '/new.flac')");
+    await staging.close();
+    await replaceTablesFromNativeSnapshot(
+      database,
+      path,
+      tables: ['parents', 'children'],
+      deleteOrder: ['children', 'parents'],
+    );
+    expect(await database.query('parents'), [
+      {'id': 'new', 'value': 'new value'},
+    ]);
+    expect(await database.query('derived'), [
+      {'id': 'new'},
+    ]);
+    expect(await database.rawQuery('PRAGMA foreign_key_check'), isEmpty);
+    expect((await database.rawQuery('PRAGMA database_list')).length, 1);
+  });
 
   test(
     'late publication failure rolls back original rows and derived index',

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/services.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:mornye/services/library_cleanup.dart';
@@ -104,47 +105,44 @@ void main() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
   tearDown(() => messenger.setMockMethodCallHandler(channel, null));
 
-  test(
-    'native pruning reads a detached projection without transferring reference lists',
-    () async {
-      final directory = await Directory.systemTemp.createTemp('native-prune-');
-      addTearDown(() => directory.delete(recursive: true));
-      final databasePath = '${directory.path}/local_library.db';
-      final database = await SqliteProcessDatabase.open(path: databasePath);
-      addTearDown(database.close);
-      await database.execute('CREATE TABLE library (cover_path TEXT)');
-      await database.execute("INSERT INTO library VALUES ('retained.jpg')");
-      final deleted = await pruneUnreferencedLibraryCovers(
-        directory,
-        {'not-transferred'},
-        libraryDatabase: database,
-        temporaryDirectory: directory,
-        requestId: 'scan-lease',
-        minimumAge: const Duration(minutes: 1),
-        nativeJobRunner: (request, {requestId}) async {
-          expect(requestId, 'scan-lease');
-          final snapshotPath = request['library_path'] as String;
-          expect(snapshotPath, isNot(databasePath));
-          expect(snapshotPath, endsWith('/local_library.db'));
-          expect(await File(snapshotPath).exists(), true);
-          expect(request, {
-            'operation': 'cache_prune_library',
-            'directory': directory.absolute.path,
-            'library_path': snapshotPath,
-            'minimum_age_us': 60000000,
-          });
-          return {
-            'deleted': 2,
-            'errors': <String>[],
-            'error_count': 0,
-            'committed': true,
-            'cancelled': true,
-          };
-        },
-      );
-      expect(deleted, 2);
-    },
-  );
+  test('native pruning reads a detached projection without transferring reference lists', () async {
+    final directory = await Directory.systemTemp.createTemp('native-prune-');
+    addTearDown(() => directory.delete(recursive: true));
+    final databasePath = '${directory.path}/local_library.db';
+    final database = await SqliteProcessDatabase.open(path: databasePath);
+    addTearDown(database.close);
+    await database.execute('CREATE TABLE library (cover_path TEXT)');
+    await database.execute("INSERT INTO library VALUES ('retained.jpg')");
+    final deleted = await pruneUnreferencedLibraryCovers(
+      directory,
+      {'not-transferred'},
+      libraryDatabase: database,
+      temporaryDirectory: directory,
+      requestId: 'scan-lease',
+      minimumAge: const Duration(minutes: 1),
+      nativeJobRunner: (request, {requestId}) async {
+        expect(requestId, 'scan-lease');
+        final snapshotPath = request['library_path'] as String;
+        expect(snapshotPath, isNot(databasePath));
+        expect(snapshotPath, endsWith('/local_library.db'));
+        expect(await File(snapshotPath).exists(), true);
+        expect(request, {
+          'operation': 'cache_prune_library',
+          'directory': directory.absolute.path,
+          'library_path': snapshotPath,
+          'minimum_age_us': 60000000,
+        });
+        return {
+          'deleted': 2,
+          'errors': <String>[],
+          'error_count': 0,
+          'committed': true,
+          'cancelled': true,
+        };
+      },
+    );
+    expect(deleted, 2);
+  });
 
   test(
     'cover cleanup retains recent payloads awaiting a DB reference',
@@ -176,24 +174,23 @@ void main() {
       addTearDown(() => root.delete(recursive: true));
       final directory = await Directory('${root.path}/covers').create();
       final alias = await Link('${root.path}/alias').create(directory.path);
-      final canonical = await File(
-        '${directory.path}/canonical.jpg',
-      ).writeAsBytes([1]);
-      final legacy = await File(
-        '${directory.path}/legacy.jpg',
-      ).writeAsBytes([2]);
-      final orphan = await File(
-        '${directory.path}/orphan.jpg',
-      ).writeAsBytes([3]);
+      final canonical = await File('${directory.path}/canonical.jpg')
+          .writeAsBytes([1]);
+      final legacy = await File('${directory.path}/legacy.jpg')
+          .writeAsBytes([2]);
+      final orphan = await File('${directory.path}/orphan.jpg')
+          .writeAsBytes([3]);
       final outside = await File('${root.path}/outside.jpg').writeAsBytes([4]);
       await Link('${directory.path}/outside.jpg').create(outside.path);
 
-      final deleted =
-          await pruneUnreferencedLibraryCovers(Directory(alias.path), {
-            await canonical.resolveSymbolicLinks(),
-            '${alias.path}/legacy.jpg',
-            '${alias.path}/already-missing.jpg',
-          });
+      final deleted = await pruneUnreferencedLibraryCovers(
+        Directory(alias.path),
+        {
+          await canonical.resolveSymbolicLinks(),
+          '${alias.path}/legacy.jpg',
+          '${alias.path}/already-missing.jpg',
+        },
+      );
 
       expect(await canonical.exists(), isTrue);
       expect(await legacy.exists(), isTrue);
@@ -280,9 +277,9 @@ void main() {
       final batches = <List<String>>[];
       messenger.setMockMethodCallHandler(channel, (call) async {
         expect(call.method, 'safExistsBatch');
-        final paths =
-            (jsonDecode((call.arguments as Map)['uris_json'] as String) as List)
-                .cast<String>();
+        final paths = (jsonDecode(
+          (call.arguments as Map)['uris_json'] as String,
+        ) as List).cast<String>();
         batches.add(paths);
         if (batches.length == 2) {
           throw PlatformException(code: 'permission-denied');
@@ -310,23 +307,20 @@ void main() {
     },
   );
 
-  test(
-    'local probes distinguish present and missing files and keep empty paths unknown',
-    () async {
-      final dir = await Directory.systemTemp.createTemp('cleanup_probes_');
-      addTearDown(() => dir.delete(recursive: true));
-      final file = await File('${dir.path}/album.cue').writeAsString('test');
-      final absent = '${dir.path}/missing.flac';
-      final result = await fileExistenceByPath([
-        file.path,
-        '${file.path}#track01',
-        absent,
-        '',
-      ]);
-      expect(result[file.path], isTrue);
-      expect(result['${file.path}#track01'], isTrue);
-      expect(result[absent], isFalse);
-      expect(result[''], isNull);
-    },
-  );
+  test('local probes distinguish present and missing files and keep empty paths unknown', () async {
+    final dir = await Directory.systemTemp.createTemp('cleanup_probes_');
+    addTearDown(() => dir.delete(recursive: true));
+    final file = await File('${dir.path}/album.cue').writeAsString('test');
+    final absent = '${dir.path}/missing.flac';
+    final result = await fileExistenceByPath([
+      file.path,
+      '${file.path}#track01',
+      absent,
+      '',
+    ]);
+    expect(result[file.path], isTrue);
+    expect(result['${file.path}#track01'], isTrue);
+    expect(result[absent], isFalse);
+    expect(result[''], isNull);
+  });
 }

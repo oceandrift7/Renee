@@ -80,9 +80,8 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('en'),
         builder: (context, child) => MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          data: MediaQuery.of(context)
+              .copyWith(textScaler: TextScaler.linear(textScale)),
           child: RepaintBoundary(key: capture, child: child),
         ),
         home: Scaffold(
@@ -103,9 +102,8 @@ void main() {
           capture.currentContext!.findRenderObject()! as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 2);
       final data = await image.toByteData(format: ui.ImageByteFormat.png);
-      await File(
-        '/tmp/mornye-hires-$name.png',
-      ).writeAsBytes(data!.buffer.asUint8List());
+      await File('/tmp/mornye-hires-$name.png')
+          .writeAsBytes(data!.buffer.asUint8List());
       image.dispose();
     });
   }

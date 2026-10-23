@@ -366,9 +366,8 @@ Future<List<String>> findPhysicalFileRowIds(
       WHERE keys.path_key IN ($placeholders)
     ''', chunk);
     for (final row in rows) {
-      if (buildPhysicalPathMatchKeys(
-        row['file_path'] as String?,
-      ).any(keys.contains)) {
+      if (buildPhysicalPathMatchKeys(row['file_path'] as String?)
+          .any(keys.contains)) {
         ids.add(row['id'] as String);
       }
     }
@@ -399,9 +398,8 @@ Future<void> backfillPathKeys(
     if (rows.isEmpty) break;
     final missingKeys = {
       for (final row in rows)
-        row['id'] as String: buildPathMatchKeys(
-          row['file_path'] as String?,
-        ).toSet(),
+        row['id'] as String: buildPathMatchKeys(row['file_path'] as String?)
+            .toSet(),
     };
     final ids = missingKeys.keys.toList(growable: false);
     final existingKeys = await db.query(

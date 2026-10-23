@@ -138,16 +138,14 @@ class _ExtensionPriorityLink extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: enabled ? null : colorScheme.outline,
-                    ),
+                    style: Theme.of(context).textTheme.bodyLarge
+                        ?.copyWith(color: enabled ? null : colorScheme.outline),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -333,9 +331,8 @@ class _SearchProviderSelector extends ConsumerWidget {
                         !hasAnyProvider
                             ? context.l10n.extensionsNoCustomSearch
                             : currentProviderName,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -482,9 +479,8 @@ class _HomeFeedProviderSelector extends ConsumerWidget {
                         !hasAnyProvider && !homeFeedDisabled
                             ? context.l10n.extensionsNoHomeFeedExtensions
                             : currentProviderName,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                        style: Theme.of(context).textTheme.bodySmall
+                            ?.copyWith(color: colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),

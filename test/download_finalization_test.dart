@@ -97,8 +97,7 @@ void main() {
       );
       expect(
         isStorageWriteFailure(
-          errorMessage:
-              'Native finalization failed: failed to publish deferred SAF output',
+          errorMessage: 'Native finalization failed: failed to publish deferred SAF output',
         ),
         isTrue,
       );

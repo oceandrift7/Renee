@@ -95,9 +95,8 @@ void main() {
       queue.reconnect(3);
       await tester.pumpAndSettle();
       expect(find.byType(SnackBar), findsOneWidget);
-      ScaffoldMessenger.of(
-        tester.element(find.byType(Scaffold)),
-      ).removeCurrentSnackBar();
+      ScaffoldMessenger.of(tester.element(find.byType(Scaffold)))
+          .removeCurrentSnackBar();
       await tester.pumpAndSettle();
       await tester.pumpWidget(
         _app(container, feedbackKey: const ValueKey('second')),

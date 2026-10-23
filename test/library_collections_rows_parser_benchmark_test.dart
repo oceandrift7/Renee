@@ -100,8 +100,7 @@ void main() {
       int median(List<int> samples) =>
           (List<int>.of(samples)..sort())[samples.length ~/ 2];
       final report = {
-        'scope':
-            'parse only: file read, strict UTF-8 decode, outer/inner JSON decode, ordered checksum; excludes full collection loading/hydration',
+        'scope': 'parse only: file read, strict UTF-8 decode, outer/inner JSON decode, ordered checksum; excludes full collection loading/hydration',
         'platform': Platform.operatingSystem,
         'mode': 'flutter test host',
         'rows': count,

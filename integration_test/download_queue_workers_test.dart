@@ -217,10 +217,9 @@ Map<String, dynamic> _queueReport(
 ) {
   binding.reportData ??= {};
   return binding.reportData!.putIfAbsent(
-        'queue_workers',
-        () => <String, dynamic>{},
-      )
-      as Map<String, dynamic>;
+    'queue_workers',
+    () => <String, dynamic>{},
+  ) as Map<String, dynamic>;
 }
 
 void main() {

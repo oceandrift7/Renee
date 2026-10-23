@@ -410,9 +410,8 @@ void main() {
   );
 
   test('completion bridge cards probe before showing Play or missing', () {
-    final source = File(
-      'lib/screens/queue_tab_collection_items.dart',
-    ).readAsStringSync();
+    final source = File('lib/screens/queue_tab_collection_items.dart')
+        .readAsStringSync();
     final gridStart = source.indexOf('Widget _buildBridgeGridItem(');
     final listStart = source.indexOf('Widget _buildBridgeListItem(');
     final badgeStart = source.indexOf('Widget _buildLibraryQualityBadge(');

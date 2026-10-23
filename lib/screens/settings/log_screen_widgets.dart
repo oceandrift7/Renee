@@ -268,9 +268,8 @@ class _LogSummaryCard extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 context.l10n.logTotalErrors(analysis.errorCount),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: colorScheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -414,9 +413,8 @@ class _IssueBadge extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             description,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurface),
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: colorScheme.onSurface),
           ),
           if (domains != null && domains!.isNotEmpty) ...[
             const SizedBox(height: 4),

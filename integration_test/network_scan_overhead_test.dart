@@ -38,8 +38,7 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   final report = <String, dynamic>{
     'platform': Platform.operatingSystem,
-    'note':
-        'Controlled metadata callback isolates Dart/filesystem overhead; not live NAS throughput or FPS.',
+    'note': 'Controlled metadata callback isolates Dart/filesystem overhead; not live NAS throughput or FPS.',
   };
   var completed = 0;
   tearDownAll(() {
@@ -87,9 +86,8 @@ void main() {
           'current': candidate,
         };
       }
-      final file = await File(
-        '${root.path}/writes.ndjson',
-      ).open(mode: FileMode.write);
+      final file = await File('${root.path}/writes.ndjson')
+          .open(mode: FileMode.write);
       try {
         final row =
             '${jsonEncode({'title': 'Example track', 'artist': 'Example', 'album': 'Album', 'padding': List.filled(300, 'x').join()})}\n';

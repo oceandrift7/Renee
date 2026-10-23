@@ -14,9 +14,9 @@ Future<Map<String, dynamic>> callTestVmService(
       service.resolve(method).replace(queryParameters: parameters),
     );
     final response = await request.close();
-    final decoded =
-        jsonDecode(await response.transform(utf8.decoder).join())
-            as Map<String, dynamic>;
+    final decoded = jsonDecode(
+      await response.transform(utf8.decoder).join(),
+    ) as Map<String, dynamic>;
     if (decoded['error'] != null) {
       throw StateError('VM service failed: ${decoded['error']}');
     }

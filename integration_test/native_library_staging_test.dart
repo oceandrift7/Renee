@@ -205,9 +205,8 @@ void main() {
 
         final music = await Directory('${root.path}/music').create();
         if (!initialized) {
-          final extensions = await Directory(
-            '${root.path}/extensions',
-          ).create();
+          final extensions = await Directory('${root.path}/extensions')
+              .create();
           final data = await Directory('${root.path}/extension-data').create();
           await PlatformBridge.initExtensionSystem(
             extensions.path,

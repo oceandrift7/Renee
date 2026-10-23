@@ -38,6 +38,7 @@ enum ReleaseMode: String {
   private var playbackRate: Double
   private var volume: Double
   private var url: String?
+  private var sourceIsLocal = true
 
   private var completionObserver: TimeObserver?
   private var playerItemStatusObservation: NSKeyValueObservation?
@@ -78,6 +79,7 @@ enum ReleaseMode: String {
     if self.url != url || playbackStatus == .failed || playbackStatus == nil {
       reset()
       self.url = url
+      self.sourceIsLocal = isLocal
       let playerItem = try createPlayerItem(url: url, isLocal: isLocal, mimeType: mimeType)
       // An outgoing item's render callbacks must not share filter history
       // or format storage with the next item.
@@ -119,11 +121,23 @@ enum ReleaseMode: String {
 
   func resume() {
     isPlaying = true
-    configParameters(player: player)
-    if #available(iOS 10.0, macOS 10.12, *) {
+    // Remote streams need AVPlayer's built-in stall prevention. Calling
+    // playImmediately(atRate:) bypasses its buffer assessment and can cause
+    // repeated pauses on slow or unstable connections.
+    player.volume = Float(volume)
+    if sourceIsLocal {
       player.playImmediately(atRate: Float(playbackRate))
     } else {
-      player.play()
+      player.automaticallyWaitsToMinimizeStalling = true
+      if #available(iOS 16.0, macOS 13.0, *) {
+        player.defaultRate = Float(playbackRate)
+        player.play()
+      } else if playbackRate == 1.0 {
+        player.play()
+      } else {
+        // Older OS versions lack defaultRate. Preserve the requested speed.
+        player.playImmediately(atRate: Float(playbackRate))
+      }
     }
     updateDuration()
   }
@@ -259,13 +273,6 @@ enum ReleaseMode: String {
       }
     }
     self.completionObserver = TimeObserver(player: player, observer: observer)
-  }
-
-  private func configParameters(player: AVPlayer) {
-    if isPlaying {
-      player.volume = Float(volume)
-      player.rate = Float(playbackRate)
-    }
   }
 
   private func reset() {

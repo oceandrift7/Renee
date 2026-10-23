@@ -243,8 +243,7 @@ void main() {
           'baseline': baseline,
           'native': native,
           'digest': expectedDigest,
-          'note':
-              'Full original sqflite queries+caller hydration versus same-engine private SQL projection+native file+worker, five alternating pairs; native never opens the live DB.',
+          'note': 'Full original sqflite queries+caller hydration versus same-engine private SQL projection+native file+worker, five alternating pairs; native never opens the live DB.',
         };
         publish();
       } finally {

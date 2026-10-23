@@ -19,9 +19,9 @@ class CustomFontService {
   final Map<String, Future<String>> _loads = {};
   static final _idPattern = RegExp(r'^[a-f0-9]{64}$');
 
-  static Future<Directory> _fontDirectory() async => Directory(
-    '${(await getApplicationSupportDirectory()).path}/custom_fonts',
-  ).create(recursive: true);
+  static Future<Directory> _fontDirectory() async =>
+      Directory('${(await getApplicationSupportDirectory()).path}/custom_fonts')
+          .create(recursive: true);
 
   static Future<void> _register(String family, Uint8List bytes) async {
     final loader = FontLoader(family)
@@ -59,9 +59,8 @@ class CustomFontService {
     final directory = await _directory();
     final destination = File('${directory.path}/$id.font');
     if (!await destination.exists()) {
-      final staged = await File(
-        '${directory.path}/$id.tmp',
-      ).writeAsBytes(bytes, flush: true);
+      final staged = await File('${directory.path}/$id.tmp')
+          .writeAsBytes(bytes, flush: true);
       await staged.rename(destination.path);
     }
     return id;

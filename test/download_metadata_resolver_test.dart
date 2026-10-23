@@ -206,34 +206,31 @@ void main() {
     },
   );
 
-  test(
-    'source preparation enriches before naming and preserves selected recording',
-    () async {
-      final resolver = DownloadMetadataResolver(
-        loadMetadata: (provider, kind, id) async {
-          expect((provider, kind, id), ('deezer', 'track', 'source-id'));
-          return {
-            'track': {
-              'name': 'Other recording',
-              'album_artist': 'Artist',
-              'composer': 'Composer',
-              'track_number': 2,
-              'total_tracks': 8,
-              'isrc': 'USAAA2400001',
-            },
-          };
-        },
-      );
-      expect(await resolver.prepareSourceTrack(track), same(track));
-      final prepared = await resolver.prepareSourceTrack(
-        track.copyWith(id: 'deezer:source-id'),
-      );
-      expect(prepared.name, track.name);
-      expect(prepared.albumArtist, 'Artist');
-      expect(prepared.deezerId, 'source-id');
-      expect(prepared.trackNumber, 2);
-    },
-  );
+  test('source preparation enriches before naming and preserves selected recording', () async {
+    final resolver = DownloadMetadataResolver(
+      loadMetadata: (provider, kind, id) async {
+        expect((provider, kind, id), ('deezer', 'track', 'source-id'));
+        return {
+          'track': {
+            'name': 'Other recording',
+            'album_artist': 'Artist',
+            'composer': 'Composer',
+            'track_number': 2,
+            'total_tracks': 8,
+            'isrc': 'USAAA2400001',
+          },
+        };
+      },
+    );
+    expect(await resolver.prepareSourceTrack(track), same(track));
+    final prepared = await resolver.prepareSourceTrack(
+      track.copyWith(id: 'deezer:source-id'),
+    );
+    expect(prepared.name, track.name);
+    expect(prepared.albumArtist, 'Artist');
+    expect(prepared.deezerId, 'source-id');
+    expect(prepared.trackNumber, 2);
+  });
 
   test(
     'legacy provider lookup resolves through an enabled metadata replacement',

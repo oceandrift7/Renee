@@ -83,9 +83,8 @@ Future<int> withLibraryCoverSnapshot(
       try {
         await db.execute('DROP TABLE temp.$references');
       } catch (error) {
-        AppLogger(
-          'LocalLibrary',
-        ).w('Failed clearing cover reference set: $error');
+        AppLogger('LocalLibrary')
+            .w('Failed clearing cover reference set: $error');
       }
     }
     // Do not unlink a DB whose system SQLite handle could still be attached.
@@ -93,9 +92,8 @@ Future<int> withLibraryCoverSnapshot(
       try {
         await directory.delete(recursive: true);
       } on FileSystemException catch (error) {
-        AppLogger(
-          'LocalLibrary',
-        ).w('Failed clearing private cover snapshot: $error');
+        AppLogger('LocalLibrary')
+            .w('Failed clearing private cover snapshot: $error');
       }
     }
   }

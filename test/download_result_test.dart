@@ -46,9 +46,8 @@ void main() {
         expect(DownloadResult.fromMap(raw).outputExtension(), expected);
       }
       expect(
-        DownloadResult.fromMap({
-          'file_path': '/source.flac',
-        }).outputExtension(path: '/final.mp3'),
+        DownloadResult.fromMap({'file_path': '/source.flac'})
+            .outputExtension(path: '/final.mp3'),
         '.mp3',
       );
       expect(DownloadResult.fromMap({}).outputExtension(), isNull);

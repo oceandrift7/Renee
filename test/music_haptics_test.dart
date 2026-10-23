@@ -260,8 +260,9 @@ void main() {
       messenger.setMockMethodCallHandler(channel, (call) async {
         expect(call.method, 'getSafFileModTimes');
         final source =
-            (jsonDecode((call.arguments as Map)['uris'] as String) as List)
-                    .single
+            (jsonDecode(
+                  (call.arguments as Map)['uris'] as String,
+                ) as List).single
                 as String;
         return {source: modified};
       });
@@ -270,9 +271,8 @@ void main() {
         jobs: AudioAnalysisJobs<bool>(
           start: (arguments) async {
             inputs.add(arguments[arguments.indexOf('-i') + 1]);
-            await File(
-              arguments.last,
-            ).writeAsBytes(_pcm(2, _hits(60, 0.5, 0.25)));
+            await File(arguments.last)
+                .writeAsBytes(_pcm(2, _hits(60, 0.5, 0.25)));
             return (id: inputs.length, completed: Future.value(true));
           },
           cancel: (_) async {},

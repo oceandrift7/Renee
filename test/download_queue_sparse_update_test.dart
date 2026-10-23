@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:math';
+
 import 'package:mornye/models/download_item.dart';
 import 'package:mornye/models/track.dart';
 import 'package:mornye/providers/download_queue_state.dart';

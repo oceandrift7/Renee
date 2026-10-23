@@ -255,9 +255,8 @@ void main() {
           'metadata-save-',
         );
         addTearDown(() => directory.delete(recursive: true));
-        final staged = await File(
-          '${directory.path}/staged.mp3',
-        ).writeAsBytes([1, 2, 3]);
+        final staged = await File('${directory.path}/staged.mp3')
+            .writeAsBytes([1, 2, 3]);
         var writes = 0;
         covers.extractCover = true;
         final service = MetadataPersistenceService(

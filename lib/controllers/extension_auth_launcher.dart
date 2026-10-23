@@ -362,9 +362,9 @@ Future<bool> showExtensionVerificationHelpDialog(
                 const SizedBox(height: 16),
                 DecoratedBox(
                   decoration: BoxDecoration(
-                    color: Theme.of(
-                      dialogContext,
-                    ).colorScheme.surfaceContainerHigh,
+                    color: Theme.of(dialogContext)
+                        .colorScheme
+                        .surfaceContainerHigh,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Padding(

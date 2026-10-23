@@ -127,9 +127,8 @@ class _OpenOnPlatformSheetState extends State<OpenOnPlatformSheet> {
             padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
             child: Text(
               context.l10n.trackOpenOnNoLinks,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
             ),
           );
         }

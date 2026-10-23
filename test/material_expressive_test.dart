@@ -76,12 +76,10 @@ void main() {
                 adapted = material_ui.Theme.of(context);
                 expressive = M3ETheme.of(context);
                 host = Theme.of(context);
-                adaptedCancel = material_ui.MaterialLocalizations.of(
-                  context,
-                ).cancelButtonLabel;
-                hostCancel = MaterialLocalizations.of(
-                  context,
-                ).cancelButtonLabel;
+                adaptedCancel = material_ui.MaterialLocalizations.of(context)
+                    .cancelButtonLabel;
+                hostCancel = MaterialLocalizations.of(context)
+                    .cancelButtonLabel;
                 return const SizedBox();
               },
             ),
@@ -266,9 +264,8 @@ void main() {
           builder: (context, setState) => Directionality(
             textDirection: TextDirection.rtl,
             child: MediaQuery(
-              data: MediaQuery.of(
-                context,
-              ).copyWith(padding: const EdgeInsets.only(bottom: 24)),
+              data: MediaQuery.of(context)
+                  .copyWith(padding: const EdgeInsets.only(bottom: 24)),
               child: ExpressiveNavigationBar(
                 selectedIndex: selected,
                 onDestinationSelected: (index) =>
@@ -320,9 +317,8 @@ void main() {
             _host(
               Builder(
                 builder: (context) => MediaQuery(
-                  data: MediaQuery.of(
-                    context,
-                  ).copyWith(padding: EdgeInsets.only(bottom: bottomInset)),
+                  data: MediaQuery.of(context)
+                      .copyWith(padding: EdgeInsets.only(bottom: bottomInset)),
                   child: RepaintBoundary(
                     key: capture,
                     child: SizedBox(

@@ -114,8 +114,8 @@ class EqualizerController extends Notifier<EqualizerState> {
     );
   }
 
-  String exportPreset(String name) =>
-      const JsonEncoder.withIndent('  ').convert({
+  String exportPreset(String name) => const JsonEncoder.withIndent('  ')
+      .convert({
         'format': 'mornye-equalizer',
         'version': 1,
         ...EqualizerPreset(name, state.settings).toJson(),

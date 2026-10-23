@@ -42,9 +42,8 @@ void main() {
             'type': ['metadata_provider'],
           }),
         );
-        await File(
-          '${source.path}/index.js',
-        ).writeAsString('registerExtension({});');
+        await File('${source.path}/index.js')
+            .writeAsString('registerExtension({});');
       }
       await data.create(recursive: true);
       await PlatformBridge.initExtensionSystem(
@@ -58,9 +57,8 @@ void main() {
       final snapshots = <String, List<int>>{};
       for (final id in ids) {
         await PlatformBridge.setExtensionSettings(id, {'region': 'example'});
-        snapshots[id] = await File(
-          '${data.path}/$id/settings.enc',
-        ).readAsBytes();
+        snapshots[id] = await File('${data.path}/$id/settings.enc')
+            .readAsBytes();
       }
       await PlatformBridge.cleanupExtensions();
 

@@ -43,49 +43,42 @@ void main() {
       })
       .then((_) {});
 
-  test(
-    'disabled NAS history does not pair with the replacement RSAF library',
-    () async {
-      await db.insert('library_sources', {
-        'id': 'nas',
-        'path': 'network://nas/',
-        'display_name': 'SMB',
-        'enabled': 0,
-        'available': 1,
-      });
-      await add(
-        'old-download',
-        'network://nas/Album/Track.flac',
-        history: true,
-      );
-      await add(
-        'new-scan',
-        'content://rsaf/document/remote%3AAlbum%2FTrack.flac',
-      );
-      await add(
-        'disabled-scan',
-        'network://nas/Album/Track.flac',
-        sourceId: 'nas',
-      );
-      expect(await readIsrcDuplicateGroups(db), isEmpty);
-      // The historical record is retained, not purged while storage is disabled.
-      expect(await db.query('history_db.history'), hasLength(1));
-      await db.update(
-        'library_sources',
-        {'enabled': 1},
-        where: 'id = ?',
-        whereArgs: ['nas'],
-      );
-      expect((await readIsrcDuplicateGroups(db)).single.entries, hasLength(2));
-      await db.update(
-        'library_sources',
-        {'available': 0},
-        where: 'id = ?',
-        whereArgs: ['nas'],
-      );
-      expect(await readIsrcDuplicateGroups(db), isEmpty);
-    },
-  );
+  test('disabled NAS history does not pair with the replacement RSAF library', () async {
+    await db.insert('library_sources', {
+      'id': 'nas',
+      'path': 'network://nas/',
+      'display_name': 'SMB',
+      'enabled': 0,
+      'available': 1,
+    });
+    await add('old-download', 'network://nas/Album/Track.flac', history: true);
+    await add(
+      'new-scan',
+      'content://rsaf/document/remote%3AAlbum%2FTrack.flac',
+    );
+    await add(
+      'disabled-scan',
+      'network://nas/Album/Track.flac',
+      sourceId: 'nas',
+    );
+    expect(await readIsrcDuplicateGroups(db), isEmpty);
+    // The historical record is retained, not purged while storage is disabled.
+    expect(await db.query('history_db.history'), hasLength(1));
+    await db.update(
+      'library_sources',
+      {'enabled': 1},
+      where: 'id = ?',
+      whereArgs: ['nas'],
+    );
+    expect((await readIsrcDuplicateGroups(db)).single.entries, hasLength(2));
+    await db.update(
+      'library_sources',
+      {'available': 0},
+      where: 'id = ?',
+      whereArgs: ['nas'],
+    );
+    expect(await readIsrcDuplicateGroups(db), isEmpty);
+  });
 
   test(
     'rescans and alternate SAF tree URIs do not duplicate one physical file',

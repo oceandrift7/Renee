@@ -73,9 +73,9 @@ void main() {
     test('sets incremental auto-vacuum only before app tables exist', () {
       final schemaCheckIndex = source.indexOf('FROM sqlite_master');
       final emptySchemaGuardIndex = source.indexOf('if (tables.isEmpty)');
-      final autoVacuumMatches = RegExp(
-        r"PRAGMA auto_vacuum = INCREMENTAL",
-      ).allMatches(source).toList();
+      final autoVacuumMatches = RegExp(r"PRAGMA auto_vacuum = INCREMENTAL")
+          .allMatches(source)
+          .toList();
       final onCreateIndex = source.indexOf('onCreate:');
 
       expect(autoVacuumMatches, hasLength(1));
@@ -124,9 +124,8 @@ void main() {
     });
 
     test('probes the runtime with a temporary trigram FTS5 table', () {
-      final source = File(
-        'lib/services/sqlite_helpers.dart',
-      ).readAsStringSync();
+      final source = File('lib/services/sqlite_helpers.dart')
+          .readAsStringSync();
 
       expect(source, contains('CREATE VIRTUAL TABLE temp.'));
       expect(source, contains("tokenize='trigram'"));

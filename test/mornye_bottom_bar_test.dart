@@ -658,8 +658,7 @@ void main() {
       expect(
         playerBuilds,
         lessThanOrEqualTo(2),
-        reason:
-            'The player rebuilds for compact mode, not for every animation tick',
+        reason: 'The player rebuilds for compact mode, not for every animation tick',
       );
       expect(tester.takeException(), isNull);
     },

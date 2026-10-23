@@ -131,9 +131,9 @@ void main() {
         preparationStage: 'embedding_metadata',
       );
 
-      final persisted =
-          jsonDecode(encodeDownloadQueueItemForPersistence(item))
-              as Map<String, dynamic>;
+      final persisted = jsonDecode(
+        encodeDownloadQueueItemForPersistence(item),
+      ) as Map<String, dynamic>;
 
       expect(persisted['id'], item.id);
       expect(persisted['status'], DownloadStatus.queued.name);

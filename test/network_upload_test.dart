@@ -143,9 +143,8 @@ void main() {
     bool lyrics = false,
   }) async {
     final work = await staging.workDirectory('item');
-    final audio = await File(
-      '${work.path}/Song #1.flac',
-    ).writeAsBytes(List.generate(300000, (i) => i % 251));
+    final audio = await File('${work.path}/Song #1.flac')
+        .writeAsBytes(List.generate(300000, (i) => i % 251));
     if (lyrics) {
       await File('${work.path}/Song #1.lrc').writeAsString('[00:01.00]Lyrics');
     }
@@ -230,40 +229,34 @@ void main() {
     expect(dav.files.keys, ['/music/Original/Song #1.flac']);
   });
 
-  test(
-    'write probe creates and removes its own file; permission errors remain errors',
-    () async {
-      await storage.checkUploadAccess(folder);
-      expect(dav.files, isEmpty);
-      dav.rejectWrites = true;
-      await expectLater(
-        storage.checkUploadAccess(folder),
-        throwsA(isA<HttpException>()),
-      );
-      expect(dav.files, isEmpty);
-    },
-  );
+  test('write probe creates and removes its own file; permission errors remain errors', () async {
+    await storage.checkUploadAccess(folder);
+    expect(dav.files, isEmpty);
+    dav.rejectWrites = true;
+    await expectLater(
+      storage.checkUploadAccess(folder),
+      throwsA(isA<HttpException>()),
+    );
+    expect(dav.files, isEmpty);
+  });
 
-  test(
-    'upload creates nested folders, publishes audio and LRC and retains staging until commit',
-    () async {
-      final file = await prepare(lyrics: true);
-      final destination = await publish();
-      expect(Uri.parse(destination).pathSegments.last, 'Song #1.flac');
-      expect(
-        dav.files['/music/Artist/Album/Song #1.flac'],
-        await file.readAsBytes(),
-      );
-      expect(
-        utf8.decode(dav.files['/music/Artist/Album/Song #1.lrc']!),
-        '[00:01.00]Lyrics',
-      );
-      expect(dav.files.keys.any((p) => p.endsWith('.part')), false);
-      expect(await file.exists(), true);
-      await staging.discard('item');
-      expect(await file.exists(), false);
-    },
-  );
+  test('upload creates nested folders, publishes audio and LRC and retains staging until commit', () async {
+    final file = await prepare(lyrics: true);
+    final destination = await publish();
+    expect(Uri.parse(destination).pathSegments.last, 'Song #1.flac');
+    expect(
+      dav.files['/music/Artist/Album/Song #1.flac'],
+      await file.readAsBytes(),
+    );
+    expect(
+      utf8.decode(dav.files['/music/Artist/Album/Song #1.lrc']!),
+      '[00:01.00]Lyrics',
+    );
+    expect(dav.files.keys.any((p) => p.endsWith('.part')), false);
+    expect(await file.exists(), true);
+    await staging.discard('item');
+    expect(await file.exists(), false);
+  });
 
   test(
     'existing name gets a suffix and existing bytes are unchanged',
@@ -304,9 +297,8 @@ void main() {
   test(
     'post-processing output is adopted into owned staging before upload',
     () async {
-      final output = await File(
-        '${temp.path}/converted.m4a',
-      ).writeAsBytes([1, 2, 3]);
+      final output = await File('${temp.path}/converted.m4a')
+          .writeAsBytes([1, 2, 3]);
       await File('${temp.path}/converted.lrc').writeAsString('Lyrics');
       await staging.save('item', {
         'localPath': output.path,

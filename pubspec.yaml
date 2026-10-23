@@ -35,6 +35,9 @@ dependencies:
 
 # HTTP & Network
   http: ^1.6.0
+  # BSD-3-Clause: independently maintained pure-Dart YouTube extraction.
+  # Pinned because our iOS JSCore adapter integrates with its EJS solver API.
+  youtube_explode_dart: 3.1.0
   # 7.3.2 requires dbus 0.8, while stable notifications still require 0.7.
   connectivity_plus: ^7.3.1
   crypto: ^3.0.7
@@ -78,7 +81,7 @@ dependencies:
 
   video_player: ^2.14.1
 
-  xml: ^7.1.0
+  xml: ^6.6.1
   html: ^0.15.7
   dart_smb2: 0.1.3
   synchronized: ^3.4.0
@@ -145,6 +148,7 @@ flutter:
     - assets/licenses/libsmb2.txt
     - assets/licenses/native_palette.txt
     - assets/licenses/native_data_jobs.txt
+    - assets/licenses/youtube_explode_dart.txt
 
   fonts:
     - family: Inter

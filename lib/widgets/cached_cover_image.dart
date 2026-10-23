@@ -106,9 +106,9 @@ class CachedCoverImage extends StatelessWidget {
 
   static int? _cacheExtentForLogicalSize(BuildContext context, double? size) {
     if (size == null || !size.isFinite || size <= 0) return null;
-    final dpr = MediaQuery.devicePixelRatioOf(
-      context,
-    ).clamp(1.0, 3.0).toDouble();
+    final dpr = MediaQuery.devicePixelRatioOf(context)
+        .clamp(1.0, 3.0)
+        .toDouble();
     return (size * dpr)
         .round()
         .clamp(_defaultMinCacheExtent, _defaultMaxCacheExtent)

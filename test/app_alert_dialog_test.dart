@@ -17,9 +17,8 @@ void main() {
               child: MaterialApp(
                 theme: MornyeTheme.build(brightness),
                 builder: (context, child) => MediaQuery(
-                  data: MediaQuery.of(
-                    context,
-                  ).copyWith(disableAnimations: reduceMotion),
+                  data: MediaQuery.of(context)
+                      .copyWith(disableAnimations: reduceMotion),
                   child: child!,
                 ),
                 home: Builder(
@@ -150,9 +149,9 @@ void main() {
           );
           expect(tester.getRect(remove).width, tester.getRect(cancel).width);
           expect(
-            DefaultTextStyle.of(
-              tester.element(find.text('Remove')),
-            ).style.color,
+            DefaultTextStyle.of(tester.element(find.text('Remove')))
+                .style
+                .color,
             MornyeTheme.build(Brightness.dark).colorScheme.primary,
           );
           expect(find.byType(CupertinoAlertDialog), findsNothing);

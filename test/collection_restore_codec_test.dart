@@ -8,13 +8,10 @@ void main() {
   test(
     'worker and streamed commands preserve the existing collection codec',
     () async {
-      final fixture =
-          jsonDecode(
-                File(
-                  'test/fixtures/collection_restore_contract.json',
-                ).readAsStringSync(),
-              )
-              as Map<String, dynamic>;
+      final fixture = jsonDecode(
+        File('test/fixtures/collection_restore_contract.json')
+            .readAsStringSync(),
+      ) as Map<String, dynamic>;
       final input = fixture['input'] as Map<String, dynamic>;
       final now = fixture['now'] as String;
       expect(

@@ -134,9 +134,9 @@ String? nonPlaceholderQuality(String? quality) {
 }
 
 String? normalizeAudioFormatValue(String? value) {
-  final normalized = normalizeOptionalString(
-    value,
-  )?.toLowerCase().replaceAll('-', '_');
+  final normalized = normalizeOptionalString(value)
+      ?.toLowerCase()
+      .replaceAll('-', '_');
   return switch (normalized) {
     'flac' => 'flac',
     'alac' => 'alac',
@@ -444,9 +444,9 @@ String? resolveDisplayQuality({
 }
 
 String? displayFormatForCodec(String? value) {
-  final normalized = normalizeOptionalString(
-    value,
-  )?.toLowerCase().replaceAll('-', '_');
+  final normalized = normalizeOptionalString(value)
+      ?.toLowerCase()
+      .replaceAll('-', '_');
   return switch (normalized) {
     'flac' => 'FLAC',
     'alac' => 'ALAC',

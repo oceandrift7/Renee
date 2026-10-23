@@ -81,31 +81,28 @@ void main() {
     );
   });
 
-  test(
-    'selected-provider enrichment filters unknown counts but keeps explicit zero',
-    () async {
-      final result = await service.enrich(
-        {
-          'title': 'Song',
-          'track_number': 0,
-          'explicit': 0,
-          'images': [
-            {'large': 'https://example.invalid/cover.jpg'},
-          ],
-        },
-        currentValues: const {},
-        fields: {'title', 'explicit', 'cover'},
-        providerId: 'example-provider',
-        sourceTrackId: null,
-        durationMs: 0,
-        syncLyricsSettings: () async {},
-        isCurrent: () => true,
-      );
-      expect(result!.values, {'title': 'Song', 'explicit': '0'});
-      expect(result.coverUrl, 'https://example.invalid/cover.jpg');
-      expect(result.sourceId, 'example-provider');
-    },
-  );
+  test('selected-provider enrichment filters unknown counts but keeps explicit zero', () async {
+    final result = await service.enrich(
+      {
+        'title': 'Song',
+        'track_number': 0,
+        'explicit': 0,
+        'images': [
+          {'large': 'https://example.invalid/cover.jpg'},
+        ],
+      },
+      currentValues: const {},
+      fields: {'title', 'explicit', 'cover'},
+      providerId: 'example-provider',
+      sourceTrackId: null,
+      durationMs: 0,
+      syncLyricsSettings: () async {},
+      isCurrent: () => true,
+    );
+    expect(result!.values, {'title': 'Song', 'explicit': '0'});
+    expect(result.coverUrl, 'https://example.invalid/cover.jpg');
+    expect(result.sourceId, 'example-provider');
+  });
 
   test('cancelled enrichment performs no lyrics work', () async {
     var synced = false;

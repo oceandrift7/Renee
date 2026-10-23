@@ -40,9 +40,8 @@ abstract final class FFmpegProbe {
 
   static Future<({int width, int height})?> imageDimensions(String path) async {
     try {
-      final info = (await FFprobeKit.getMediaInformation(
-        path,
-      )).getMediaInformation();
+      final info = (await FFprobeKit.getMediaInformation(path))
+          .getMediaInformation();
       if (info == null) return null;
       for (final stream in info.getStreams()) {
         final dimensions = imageDimensionsFromProperties(
@@ -89,9 +88,8 @@ abstract final class FFmpegProbe {
     String path,
   ) async {
     try {
-      final info = (await FFprobeKit.getMediaInformation(
-        path,
-      )).getMediaInformation();
+      final info = (await FFprobeKit.getMediaInformation(path))
+          .getMediaInformation();
       if (info == null) return const PrimaryAudioProperties();
       for (final stream in info.getStreams()) {
         final props = stream.getAllProperties() ?? const <String, dynamic>{};

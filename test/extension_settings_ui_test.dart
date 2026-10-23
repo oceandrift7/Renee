@@ -44,8 +44,7 @@ class _Extensions extends ExtensionNotifier {
             label: 'Connect my music account and complete verification',
             type: 'button',
             action: 'connectAccount',
-            description:
-                'Sign in using your own account. You may be asked for a verification code.',
+            description: 'Sign in using your own account. You may be asked for a verification code.',
           ),
         ],
       ),
@@ -113,9 +112,8 @@ void main() {
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               builder: (context, child) => MediaQuery(
-                data: MediaQuery.of(
-                  context,
-                ).copyWith(textScaler: const TextScaler.linear(1.3)),
+                data: MediaQuery.of(context)
+                    .copyWith(textScaler: const TextScaler.linear(1.3)),
                 child: child!,
               ),
               home: const ExtensionDetailPage(extensionId: 'example.account'),

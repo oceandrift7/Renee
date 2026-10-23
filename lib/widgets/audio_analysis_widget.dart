@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:mornye/theme/mornye_theme.dart';
 import 'package:mornye/services/audio_analysis_jobs.dart';

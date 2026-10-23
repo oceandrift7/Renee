@@ -82,27 +82,26 @@ db.commit()
   return db;
 }
 
-Future<LibraryCollectionsSnapshot> _legacy(
-  _ReadDatabase db,
-) async => LibraryCollectionsSnapshot(
-  wishlistRows: await db.rawQuery(
-    'SELECT * FROM wishlist_tracks ORDER BY added_at DESC,rowid DESC',
-  ),
-  lovedRows: await db.rawQuery(
-    'SELECT * FROM loved_tracks ORDER BY added_at DESC,rowid DESC',
-  ),
-  favoriteArtistRows: await db.rawQuery(
-    'SELECT * FROM favorite_artists ORDER BY added_at DESC,rowid DESC',
-  ),
-  playlistRows: await db.rawQuery(
-    """SELECT p.*,CASE WHEN p.cover_image_path IS NULL OR p.cover_image_path='' THEN
+Future<LibraryCollectionsSnapshot> _legacy(_ReadDatabase db) async =>
+    LibraryCollectionsSnapshot(
+      wishlistRows: await db.rawQuery(
+        'SELECT * FROM wishlist_tracks ORDER BY added_at DESC,rowid DESC',
+      ),
+      lovedRows: await db.rawQuery(
+        'SELECT * FROM loved_tracks ORDER BY added_at DESC,rowid DESC',
+      ),
+      favoriteArtistRows: await db.rawQuery(
+        'SELECT * FROM favorite_artists ORDER BY added_at DESC,rowid DESC',
+      ),
+      playlistRows: await db.rawQuery(
+        """SELECT p.*,CASE WHEN p.cover_image_path IS NULL OR p.cover_image_path='' THEN
     (SELECT pt.track_json FROM playlist_tracks pt WHERE pt.playlist_id=p.id ORDER BY pt.added_at ASC,pt.rowid ASC LIMIT 1)
     END AS preview_track_json FROM playlists p ORDER BY p.created_at DESC,p.rowid DESC""",
-  ),
-  playlistTrackRows: await db.rawQuery(
-    'SELECT playlist_id,track_key FROM playlist_tracks ORDER BY playlist_id ASC,rowid ASC',
-  ),
-);
+      ),
+      playlistTrackRows: await db.rawQuery(
+        'SELECT playlist_id,track_key FROM playlist_tracks ORDER BY playlist_id ASC,rowid ASC',
+      ),
+    );
 
 void main() {
   late Directory root;
@@ -209,9 +208,8 @@ void main() {
             for (final row in projected.favoriteArtistRows)
               {'kind': 'artist', 'row': row},
           ];
-          await File(
-            request['output_path'] as String,
-          ).writeAsString(rows.map(jsonEncode).join('\n'));
+          await File(request['output_path'] as String)
+              .writeAsString(rows.map(jsonEncode).join('\n'));
           return {
             'published': true,
             'rows_path': request['output_path'],
@@ -235,75 +233,72 @@ void main() {
     },
   );
 
-  test(
-    'lazy read projects only the selected playlist and preserves ties',
-    () async {
-      final db = await _fixture('${root.path}/library_collections.db', 800);
-      final expected = await db.rawQuery(
-        'SELECT * FROM playlist_tracks WHERE playlist_id=? ORDER BY added_at ASC,rowid ASC',
-        ['1'],
-      );
-      final snapshot =
-          await LibraryCollectionsDatabase.readDatabasePlaylistTracks(
-            db,
-            '1',
-            temporaryDirectory: root,
-            nativeJobRunner: (request) async {
-              expect(request['playlist_id'], '1');
-              final projectedPath = request['collections_path'] as String;
-              expect(projectedPath, isNot(db.path));
-              final projected = await SqliteProcessDatabase.open(
-                path: projectedPath,
-              );
-              try {
-                for (final table in [
-                  'wishlist_tracks',
-                  'loved_tracks',
-                  'favorite_artists',
-                ]) {
-                  expect(
-                    await projected.rawQuery('SELECT * FROM $table'),
-                    isEmpty,
-                  );
-                }
-                expect(await projected.rawQuery('SELECT id FROM playlists'), [
-                  {'id': '1'},
-                ]);
-                expect(await projected.rawQuery('PRAGMA user_version'), [
-                  {'user_version': 2},
-                ]);
-                final rows = await projected.rawQuery(
-                  'SELECT * FROM playlist_tracks ORDER BY added_at ASC,rowid ASC',
+  test('lazy read projects only the selected playlist and preserves ties', () async {
+    final db = await _fixture('${root.path}/library_collections.db', 800);
+    final expected = await db.rawQuery(
+      'SELECT * FROM playlist_tracks WHERE playlist_id=? ORDER BY added_at ASC,rowid ASC',
+      ['1'],
+    );
+    final snapshot =
+        await LibraryCollectionsDatabase.readDatabasePlaylistTracks(
+          db,
+          '1',
+          temporaryDirectory: root,
+          nativeJobRunner: (request) async {
+            expect(request['playlist_id'], '1');
+            final projectedPath = request['collections_path'] as String;
+            expect(projectedPath, isNot(db.path));
+            final projected = await SqliteProcessDatabase.open(
+              path: projectedPath,
+            );
+            try {
+              for (final table in [
+                'wishlist_tracks',
+                'loved_tracks',
+                'favorite_artists',
+              ]) {
+                expect(
+                  await projected.rawQuery('SELECT * FROM $table'),
+                  isEmpty,
                 );
-                expect(rows, expected);
-                await File(request['output_path'] as String).writeAsString(
-                  rows
-                      .map(
-                        (row) =>
-                            jsonEncode({'kind': 'playlist_track', 'row': row}),
-                      )
-                      .join('\n'),
-                );
-                return {
-                  'published': true,
-                  'rows_path': request['output_path'],
-                  'counts': {'playlist_track': rows.length},
-                };
-              } finally {
-                await projected.close();
               }
-            },
-          );
-      final staged = snapshot.nativeRowsDirectory!;
-      final tracks = await hydratePlaylistTracksSnapshot(
-        snapshot,
-        knownKeys: expected.map((row) => row['track_key'] as String).toSet(),
-      );
-      expect(tracks.membershipUnchanged, true);
-      expect(tracks.tracks, hasLength(200));
-      expect(await Directory(staged).exists(), false);
-    },
-  );
+              expect(await projected.rawQuery('SELECT id FROM playlists'), [
+                {'id': '1'},
+              ]);
+              expect(await projected.rawQuery('PRAGMA user_version'), [
+                {'user_version': 2},
+              ]);
+              final rows = await projected.rawQuery(
+                'SELECT * FROM playlist_tracks ORDER BY added_at ASC,rowid ASC',
+              );
+              expect(rows, expected);
+              await File(request['output_path'] as String).writeAsString(
+                rows
+                    .map(
+                      (row) =>
+                          jsonEncode({'kind': 'playlist_track', 'row': row}),
+                    )
+                    .join('\n'),
+              );
+              return {
+                'published': true,
+                'rows_path': request['output_path'],
+                'counts': {'playlist_track': rows.length},
+              };
+            } finally {
+              await projected.close();
+            }
+          },
+        );
+    final staged = snapshot.nativeRowsDirectory!;
+    final tracks = await hydratePlaylistTracksSnapshot(
+      snapshot,
+      knownKeys: expected.map((row) => row['track_key'] as String).toSet(),
+    );
+    expect(tracks.membershipUnchanged, true);
+    expect(tracks.tracks, hasLength(200));
+    expect(await Directory(staged).exists(), false);
+  });
 
   test(
     'failed projection detaches private database and removes staging',
@@ -347,9 +342,8 @@ void main() {
             db,
             temporaryDirectory: root,
             nativeJobRunner: (request) async {
-              await File(
-                request['output_path'] as String,
-              ).writeAsString('partial');
+              await File(request['output_path'] as String)
+                  .writeAsString('partial');
               if (fail) throw StateError('cancelled');
               return {
                 'published': true,

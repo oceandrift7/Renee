@@ -13,9 +13,8 @@ import 'package:mornye/utils/audio_format_utils.dart';
 
 void main() {
   group('app state database migrations', () {
-    final source = File(
-      'lib/services/app_state_database.dart',
-    ).readAsStringSync();
+    final source = File('lib/services/app_state_database.dart')
+        .readAsStringSync();
 
     test('v4 normalizes playback queue and scalar state', () {
       expect(source, contains('const _dbVersion = 4;'));
@@ -27,9 +26,8 @@ void main() {
   });
 
   group('iOS background download lifecycle', () {
-    final appDelegateSource = File(
-      'ios/Runner/AppDelegate.swift',
-    ).readAsStringSync();
+    final appDelegateSource = File('ios/Runner/AppDelegate.swift')
+        .readAsStringSync();
     final queueProviderSource = File(
       'lib/providers/download_queue_provider.dart',
     ).readAsStringSync();
@@ -97,9 +95,8 @@ void main() {
       'android/app/src/main/kotlin/com/zarz/mornye/'
       'NativeHistoryStore.kt',
     ).readAsStringSync();
-    final historyDatabaseSource = File(
-      'lib/services/history_schema.dart',
-    ).readAsStringSync();
+    final historyDatabaseSource = File('lib/services/history_schema.dart')
+        .readAsStringSync();
     final workerSnapshotSource = File(
       'android/app/src/main/kotlin/com/zarz/mornye/'
       'DownloadServiceSnapshot.kt',
@@ -132,16 +129,14 @@ void main() {
       'waits on one progress delta stream and preserves concurrent items',
       () {
         expect(
-          RegExp(
-            r'coreBackend\.openDownloadProgress\(',
-          ).allMatches(workerSnapshotSource),
+          RegExp(r'coreBackend\.openDownloadProgress\(')
+              .allMatches(workerSnapshotSource),
           hasLength(1),
         );
         expect(workerSnapshotSource, isNot(contains('Gobackend.')));
         expect(
-          RegExp(
-            r'\.waitDelta\(sinceSeq, 5_000L\)',
-          ).allMatches(workerSnapshotSource),
+          RegExp(r'\.waitDelta\(sinceSeq, 5_000L\)')
+              .allMatches(workerSnapshotSource),
           hasLength(1),
         );
         expect(workerSnapshotSource, contains('"item_deltas"'));
@@ -205,9 +200,10 @@ void main() {
         r'[\s\S]*?return values',
       ).firstMatch(finalizerHistorySource);
       expect(buildHistoryRow, isNotNull);
-      final nativeWrittenColumns = RegExp(
-        r'values\.put\("([a-z0-9_]+)"',
-      ).allMatches(buildHistoryRow!.group(0)!).map((m) => m.group(1)!).toSet();
+      final nativeWrittenColumns = RegExp(r'values\.put\("([a-z0-9_]+)"')
+          .allMatches(buildHistoryRow!.group(0)!)
+          .map((m) => m.group(1)!)
+          .toSet();
       expect(
         dartDefinitions.keys,
         containsAll(nativeWrittenColumns),

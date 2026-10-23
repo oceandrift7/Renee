@@ -164,70 +164,63 @@ void main() {
     },
   );
 
-  test(
-    'delayed settings load gates startup, install, upgrade, and repository init',
-    () async {
-      SharedPreferences.setMockInitialValues({});
-      final settings = _DelayedSettingsNotifier();
-      final notifier = _DelayedExtensionNotifier();
-      final container = ProviderContainer(
-        overrides: [
-          extensionProvider.overrideWith(() => notifier),
-          settingsProvider.overrideWith(() => settings),
-        ],
-      );
-      addTearDown(container.dispose);
-      container.read(extensionProvider);
-      final calls = <String>[];
-      messenger.setMockMethodCallHandler(backend, (call) async {
-        calls.add(call.method);
-        return {
-          'name': 'example-extension',
-          'display_name': 'Example',
-          'version': '1.0.0',
-        };
-      });
+  test('delayed settings load gates startup, install, upgrade, and repository init', () async {
+    SharedPreferences.setMockInitialValues({});
+    final settings = _DelayedSettingsNotifier();
+    final notifier = _DelayedExtensionNotifier();
+    final container = ProviderContainer(
+      overrides: [
+        extensionProvider.overrideWith(() => notifier),
+        settingsProvider.overrideWith(() => settings),
+      ],
+    );
+    addTearDown(container.dispose);
+    container.read(extensionProvider);
+    final calls = <String>[];
+    messenger.setMockMethodCallHandler(backend, (call) async {
+      calls.add(call.method);
+      return {
+        'name': 'example-extension',
+        'display_name': 'Example',
+        'version': '1.0.0',
+      };
+    });
 
-      final startup = notifier.ensureInitialized();
-      final install = notifier.installExtension(
-        '/cache/example-extension.sflx',
-      );
-      final upgrade = notifier.upgradeExtension(
-        '/cache/example-extension.sflx',
-      );
-      final repository = container
-          .read(repoProvider.notifier)
-          .initialize('/cache/store');
-      await Future<void>.delayed(Duration.zero);
+    final startup = notifier.ensureInitialized();
+    final install = notifier.installExtension('/cache/example-extension.sflx');
+    final upgrade = notifier.upgradeExtension('/cache/example-extension.sflx');
+    final repository = container
+        .read(repoProvider.notifier)
+        .initialize('/cache/store');
+    await Future<void>.delayed(Duration.zero);
 
-      expect(settings._loads, 1);
-      expect(notifier._initializations, 0);
-      expect(notifier._started.isCompleted, isFalse);
-      expect(calls, isEmpty);
+    expect(settings._loads, 1);
+    expect(notifier._initializations, 0);
+    expect(notifier._started.isCompleted, isFalse);
+    expect(calls, isEmpty);
 
-      settings.complete();
-      await notifier._started.future;
-      expect(notifier._initializations, 1);
-      expect(calls, isEmpty);
+    settings.complete();
+    await notifier._started.future;
+    expect(notifier._initializations, 1);
+    expect(calls, isEmpty);
 
-      notifier._ready.complete();
-      await startup;
-      expect(await install, isTrue);
-      expect(await upgrade, isTrue);
-      await repository;
-      expect(container.read(repoProvider).isInitialized, isTrue);
-      expect(settings._loads, 1);
-      expect(notifier._initializations, 1);
-      expect(
-        calls,
-        containsAll([
-          'loadExtensionFromPath',
-          'upgradeExtension',
-          'initExtensionRepo',
-        ]),
-      );
-    },
-  );
+    notifier._ready.complete();
+    await startup;
+    expect(await install, isTrue);
+    expect(await upgrade, isTrue);
+    await repository;
+    expect(container.read(repoProvider).isInitialized, isTrue);
+    expect(settings._loads, 1);
+    expect(notifier._initializations, 1);
+    expect(
+      calls,
+      containsAll([
+        'loadExtensionFromPath',
+        'upgradeExtension',
+        'initExtensionRepo',
+      ]),
+    );
+  });
 
   test('startup, install and upgrade wait for one initialization', () async {
     SharedPreferences.setMockInitialValues({});

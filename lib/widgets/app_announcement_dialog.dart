@@ -109,9 +109,8 @@ class AppAnnouncementDialog extends StatelessWidget {
           child: SingleChildScrollView(
             child: Text(
               announcement.message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(height: 1.45),
+              style: Theme.of(context).textTheme.bodyMedium
+                  ?.copyWith(height: 1.45),
             ),
           ),
         ),

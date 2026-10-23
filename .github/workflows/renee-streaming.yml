@@ -1,0 +1,47 @@
+name: Renée streaming checks
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'lib/services/streaming/**'
+      - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'lib/utils/lyrics_parser.dart'
+      - 'test/lyrics_parser_test.dart'
+      - 'lib/services/playable_media.dart'
+      - 'lib/services/music_playback_deck.dart'
+      - 'lib/services/music_player_service.dart'
+      - 'lib/widgets/renee_stream_button.dart'
+      - 'lib/widgets/track_list_tile.dart'
+      - 'test/services/streaming/**'
+      - '.github/workflows/renee-streaming.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: renee-streaming-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  flutter-streaming:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version-file: .fvmrc
+          cache: true
+      - name: Fetch dependencies and verify committed lockfile
+        run: |
+          flutter pub get
+          git diff --exit-code -- pubspec.lock
+      - name: Analyze streaming and UI changes
+        run: flutter analyze lib/services/streaming lib/services/playable_media.dart lib/services/music_playback_deck.dart lib/services/music_player_service.dart lib/widgets/renee_stream_button.dart lib/widgets/track_list_tile.dart lib/utils/lyrics_parser.dart
+      - name: Run streaming unit tests
+        run: flutter test test/services/streaming
+      - name: Run TTML parser regression tests
+        run: flutter test test/lyrics_parser_test.dart

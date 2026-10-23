@@ -50,9 +50,8 @@ extension _HomeTabRecentUI on _HomeTabState {
                 header: true,
                 child: Text(
                   context.l10n.homeRecent,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.titleSmall
+                      ?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
               ),
               if (uniqueItems.isNotEmpty)
@@ -88,9 +87,8 @@ extension _HomeTabRecentUI on _HomeTabState {
                   },
                   child: Text(
                     context.l10n.dialogClearAll,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: colorScheme.primary,
-                    ),
+                    style: Theme.of(context).textTheme.labelLarge
+                        ?.copyWith(color: colorScheme.primary),
                   ),
                 ),
             ],
@@ -115,9 +113,8 @@ extension _HomeTabRecentUI on _HomeTabState {
                     Text(
                       context.l10n.recentEmpty,
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                      style: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(color: colorScheme.onSurfaceVariant),
                     ),
                     if (hasHiddenDownloads) ...[
                       const SizedBox(height: 16),
@@ -202,9 +199,8 @@ extension _HomeTabRecentUI on _HomeTabState {
                       item.name,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: Theme.of(context).textTheme.bodyLarge
+                          ?.copyWith(fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -338,9 +334,8 @@ extension _HomeTabRecentUI on _HomeTabState {
         if (historyItem != null) {
           _navigateToMetadataScreen(historyItem);
         } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(item.name)));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(item.name)));
         }
         return;
       case RecentAccessType.playlist:

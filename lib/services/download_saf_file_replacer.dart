@@ -1,20 +1,18 @@
 import 'dart:io';
 
-typedef SafFileOperation =
-    Future<(String path, String fileName)?> Function(
-      String tempPath,
-      void Function(String path) addCleanup,
-    );
+typedef SafFileOperation = Future<(String path, String fileName)?> Function(
+  String tempPath,
+  void Function(String path) addCleanup,
+);
 
-typedef ReplaceSafDownloadFile =
-    Future<String?> Function({
-      required String uri,
-      required String treeUri,
-      required String relativeDir,
-      required SafFileOperation op,
-      bool avoidOverwrite,
-      void Function(String fileName)? onPublishedFileName,
-    });
+typedef ReplaceSafDownloadFile = Future<String?> Function({
+  required String uri,
+  required String treeUri,
+  required String relativeDir,
+  required SafFileOperation op,
+  bool avoidOverwrite,
+  void Function(String fileName)? onPublishedFileName,
+});
 
 typedef PublishSafDownloadFile =
     Future<({String uri, String fileName})?> Function({

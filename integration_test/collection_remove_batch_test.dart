@@ -83,8 +83,7 @@ void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   final report = <String, dynamic>{
     'platform': Platform.operatingSystem,
-    'note':
-        'Five alternating pairs, real production notifier and private platform SQLite. Heartbeat is not FPS.',
+    'note': 'Five alternating pairs, real production notifier and private platform SQLite. Heartbeat is not FPS.',
   };
   var completed = 0;
   late Directory root;

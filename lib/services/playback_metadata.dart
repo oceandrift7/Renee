@@ -47,8 +47,9 @@ Map<String, dynamic> mergePlaybackFileMetadata(
   return merged;
 }
 
-typedef PlaybackMetadataReader =
-    Future<Map<String, dynamic>> Function(String path);
+typedef PlaybackMetadataReader = Future<Map<String, dynamic>> Function(
+  String path,
+);
 
 /// Reads playback metadata with a small bounded retry window for transient
 /// cold-start/native bridge failures.
