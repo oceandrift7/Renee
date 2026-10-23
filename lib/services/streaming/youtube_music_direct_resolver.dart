@@ -312,7 +312,7 @@ class YouTubeMusicDirectResolver {
     try {
       final response = await _client.post(
         Uri.https('music.youtube.com', '/youtubei/v1/player', {
-          'key': _key,
+          'key': session.apiKey ?? _key,
           'prettyPrint': 'false',
         }),
         headers: headers,
