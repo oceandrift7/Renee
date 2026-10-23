@@ -67,6 +67,36 @@ Record the iPhone model, iOS version, song, network type, observed startup
 time, stall count, and any error message. **Never share signed stream URLs,
 authentication headers, session tokens, or accounts** in public issues.
 
+## Client-bound Googlevideo headers (BitChord / Lokal-Konnekt lesson)
+
+Some YouTube client identities mint media URLs that can only be fetched with
+specific HTTP request headers (especially a matching User-Agent). The iOS
+audioplayers plugin cannot attach headers to AVPlayer URL requests. Renée now
+includes a small, **127.0.0.1-only** HTTP byte-range relay to preserve those
+headers for the chosen signed Googlevideo URL; it streams on demand and does
+not write a downloaded song to disk.
+
+The mobile-client resolver verifies the candidate URL with the same media
+headers, forwards those headers via the ephemeral `StreamResource`, and the
+existing native audio deck connects to the loopback relay when required.
+Ordinary header-free streaming and local-library playback do not use it.
+The relay accepts only HTTPS `*.googlevideo.com` targets and returns an
+opaque local URL that never includes the source's signature or cookies.
+
+- Run `flutter test test/services/streaming/network_audio_header_proxy_test.dart`
+  to check forwarded User-Agent / Range, HTTP 206 / Content-Range, revocation,
+  and upstream host rejection.
+- Repeat a real streaming test on an iPhone. **A green unit test is not
+  evidence of successful YouTube playback.**
+- Lock the iPhone for a few minutes while a header-bound stream plays: Dart
+  loopback servicing in the background is not yet validated. If iOS suspends
+  the Dart server, move the relay to a native Swift resource loader instead.
+- Restart the app and change tracks; a signed URL and the loopback access
+  token must not persist in its library or history.
+
+This independently implements a transport architectural pattern seen in
+BitChord and Lokal-Konnekt. No GPL-licensed application code was copied.
+
 ## Current limitations
 
 The YouTube Music resolver uses undocumented playback endpoints and may
