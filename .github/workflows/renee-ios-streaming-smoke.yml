@@ -10,6 +10,8 @@ on:
       - 'pubspec.yaml'
       - 'pubspec.lock'
       - 'lib/utils/lyrics_parser.dart'
+      - 'pubspec.lock'
+      - 'lib/utils/lyrics_parser.dart'
       - 'test/lyrics_parser_test.dart'
       - 'integration_test/renee_youtube_music_live_test.dart'
       - 'lib/services/streaming/**'
