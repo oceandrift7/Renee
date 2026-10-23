@@ -67,6 +67,49 @@ Record the iPhone model, iOS version, song, network type, observed startup
 time, stall count, and any error message. **Never share signed stream URLs,
 authentication headers, session tokens, or accounts** in public issues.
 
+## `LOGIN_REQUIRED` investigation and signed-in session foundations
+
+`LOGIN_REQUIRED` **does not conclusively mean** that a user must type a
+password. YouTube sometimes also returns this status for an anonymous
+datacenter visitor, an unsupported player identity, or an anti-bot challenge.
+Account login and proof-of-origin tokens address different parts of that.
+
+BitChord, Lokal-Konnekt, and LastWave typically extract session cookies plus
+the page's `ytcfg` values after an *interactive* signed-in YouTube Music page
+has confirmed the selected account; they then make signed `WEB_REMIX`
+requests against `music.youtube.com`. They do not just send the Google
+account email address or reuse an arbitrary guest visitor ID.
+
+Renée now has an **opt-in session transport foundation**:
+
+- `YouTubeMusicSignedSession` validates session cookie values and creates
+  a timestamped, origin-bound `SAPISIDHASH` from the existing signing cookie,
+  plus `X-Goog-AuthUser`, `X-Goog-PageId`, and the signed-in visitor identity.
+- `YouTubeMusicSessionStore` persists the session only through
+  `flutter_secure_storage` (iOS Keychain), not app preferences.
+- The direct resolver attempts the authenticated `WEB_REMIX` player first
+  if a previously approved session exists, then retains anonymous fallback.
+  Signing cookies and Authorization are **never sent to Googlevideo**.
+- The actual site's `INNERTUBE_API_KEY` and client version can be bound to the
+  session. Tests verify signing and host isolation with fictitious cookies.
+
+**Critical missing piece:** Renée does not yet provide an account connection
+screen. Do not present it as an available login feature, and do not request
+Google cookies in GitHub issues or ChatGPT. Capturing account cookies carries
+substantial account-security risk.
+
+Google explicitly forbids embedded OAuth authorization screens controlled by
+the app (e.g. a WKWebView) and may reject them with `disallowed_useragent`.
+ASWebAuthenticationSession / official Google Sign-In is safer and supported
+for **documented OAuth APIs**, but it does **not** directly hand the app a
+YouTube Music browser-cookie session or authorize undocumented audio URLs.
+Do not spoof browser identity merely to circumvent Google's sign-in policy.
+
+Before any opt-in sign-in UI is built, independently verify a supported login
+and consent flow for the required feature. A valid WEB_REMIX cookie still does
+not guarantee that the *media* client can retrieve a playable AAC URL: the
+provider may also require PO tokens or decline that track altogether.
+
 ## Client-bound Googlevideo headers (BitChord / Lokal-Konnekt lesson)
 
 Some YouTube client identities mint media URLs that can only be fetched with
