@@ -107,7 +107,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 2 # compare this revision with its parent for changed-file formatting
+          fetch-depth: 2 # additional history for changed-file formatting
 
       - name: Setup Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
@@ -131,13 +131,19 @@ jobs:
       # failing every build on unrelated, historical formatter debt.
       - name: Check changed Dart formatting
         shell: bash
+        env:
+          # Pull-request checkout uses a synthetic merge commit. Use the
+          # actual dev HEAD so we check this revision, not every legacy file
+          # changed in the entire dev-to-main pull request.
+          FORMAT_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           set -euo pipefail
-          if ! git rev-parse HEAD^ >/dev/null 2>&1; then
-            echo "Cannot find the parent commit for changed-file formatting" >&2
+          git fetch --no-tags --depth=2 origin "$FORMAT_COMMIT"
+          if ! git rev-parse "$FORMAT_COMMIT^" >/dev/null 2>&1; then
+            echo "Cannot find the source commit parent for formatting" >&2
             exit 1
           fi
-          mapfile -d '' changed < <(git diff --name-only --diff-filter=ACMRT -z HEAD^ HEAD -- lib test integration_test)
+          mapfile -d '' changed < <(git diff --name-only --diff-filter=ACMRT -z "$FORMAT_COMMIT^" "$FORMAT_COMMIT" -- lib test integration_test)
           dart_files=()
           for file in "${changed[@]}"; do
             [[ "$file" == *.dart ]] && dart_files+=("$file")
