@@ -29,6 +29,7 @@ import UniformTypeIdentifiers
     private var audioRouteInfo: AudioRouteInfoBridge?
     private var musicHaptics: MusicHapticsBridge?
     private var youtubeJsBridge: ReneeYouTubeJavaScriptBridge?
+    private var youtubeMusicBrowser: ReneeYouTubeMusicBrowserBridge?
     private let coreBackend: CoreBackend = createCoreBackend()
     private var pendingSessionGrantEvents: [[String: Any]] = []
 
@@ -69,6 +70,9 @@ import UniformTypeIdentifiers
         }
         PlayerWidgetBridge.shared.attach(messenger)
         youtubeJsBridge = ReneeYouTubeJavaScriptBridge(messenger: messenger)
+        youtubeMusicBrowser = ReneeYouTubeMusicBrowserBridge(messenger: messenger) { [weak self] in
+            self?.activeWindow?.rootViewController
+        }
         let channel = FlutterMethodChannel(
             name: CHANNEL,
             binaryMessenger: messenger
