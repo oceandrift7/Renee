@@ -148,34 +148,92 @@ void main() {
   );
 
   test(
-    'fallback short-circuits the direct API after a verified stream',
+    'direct authorized AAC stream skips all expensive extraction profiles',
     () async {
-      final probe = MockClient(
-        (_) async =>
-            http.Response('media', 206, headers: {'content-type': 'audio/mp4'}),
-      );
-      final unused = MockClient((_) async {
-        fail('Direct InnerTube should not run after successful extraction');
+      var manifests = 0;
+      final client = MockClient((request) async {
+        if (request.method == 'GET') {
+          if (request.url.host.endsWith('.googlevideo.com')) {
+            return http.Response(
+              'audio bytes',
+              206,
+              headers: {'content-type': 'audio/mp4'},
+            );
+          }
+          return http.Response('', 503);
+        }
+        return http.Response(
+          jsonEncode({
+            'playabilityStatus': {'status': 'OK'},
+            'streamingData': {
+              'adaptiveFormats': [
+                {
+                  'itag': 140,
+                  'mimeType': 'audio/mp4; codecs="mp4a.40.2"',
+                  'bitrate': 128000,
+                  'url': 'https://rr1.googlevideo.com/videoplayback?expire=9999999999',
+                },
+              ],
+            },
+          }),
+          200,
+        );
       });
+      final enhanced = YouTubeExplodeAudioResolver(
+        manifestLookup: (_, _) async {
+          manifests++;
+          return const [];
+        },
+      );
+      final direct = YouTubeMusicDirectResolver(client: client);
+      final combined = YouTubeMusicFallbackResolver(
+        explode: enhanced,
+        direct: direct,
+      );
+      expect(await combined.resolve('Z85lxckrtzg'), isNotNull);
+      expect(manifests, 0);
+      enhanced.close();
+      direct.close();
+      client.close();
+    },
+  );
+
+  test(
+    'direct refusal falls back to independently verified extraction',
+    () async {
+      final api = MockClient((request) async {
+        if (request.method == 'GET') return http.Response('', 503);
+        return http.Response(
+          jsonEncode({
+            'playabilityStatus': {'status': 'LOGIN_REQUIRED'},
+          }),
+          200,
+        );
+      });
+      final probe = MockClient(
+        (_) async => http.Response(
+          'audio bytes',
+          206,
+          headers: {'content-type': 'audio/mp4'},
+        ),
+      );
       final enhanced = YouTubeExplodeAudioResolver(
         probeClient: probe,
         manifestLookup: (_, _) async => [candidate()],
       );
-      final direct = YouTubeMusicDirectResolver(client: unused);
+      final direct = YouTubeMusicDirectResolver(client: api);
       final combined = YouTubeMusicFallbackResolver(
         explode: enhanced,
         direct: direct,
       );
       final issues = <StreamingPlaybackIssue>[];
-      expect(
-        await combined.resolve('Z85lxckrtzg', onIssue: issues.add),
-        isNotNull,
-      );
+      final stream = await combined.resolve('Z85lxckrtzg', onIssue: issues.add);
+      expect(stream?.uri.host, 'rr1.googlevideo.com');
       expect(issues, isEmpty);
       enhanced.close();
       direct.close();
       probe.close();
-      unused.close();
+      api.close();
     },
   );
 

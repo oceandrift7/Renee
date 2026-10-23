@@ -11,6 +11,7 @@ import 'streaming_playback_coordinator.dart';
 import 'streaming_source.dart';
 import 'track_matcher.dart';
 import 'youtube_music_direct_resolver.dart';
+import 'youtube_music_signed_session.dart';
 import 'youtube_explode_audio_resolver.dart';
 import 'youtube_music_fallback_resolver.dart';
 import 'youtube_music_streaming_source.dart';
@@ -54,12 +55,11 @@ class ReneeOnlinePlayback {
     WidgetRef ref,
     Track track, {
     int? requestGeneration,
-  }) async =>
-      (await tryPlayDiagnosed(
-        ref,
-        track,
-        requestGeneration: requestGeneration,
-      )).result;
+  }) async => (await tryPlayDiagnosed(
+    ref,
+    track,
+    requestGeneration: requestGeneration,
+  )).result;
 
   Future<ReneeOnlinePlaybackAttempt> tryPlayDiagnosed(
     WidgetRef ref,
@@ -95,12 +95,11 @@ class ReneeOnlinePlayback {
         id: track.id,
         title: track.name,
         artist: track.artistName,
-        duration: track.duration > 0
-            ? Duration(seconds: track.duration)
-            : null,
+        duration: track.duration > 0 ? Duration(seconds: track.duration) : null,
         isrc: track.isrc,
         album: track.albumName,
-        artworkUrl: catalogArtwork != null &&
+        artworkUrl:
+            catalogArtwork != null &&
                 catalogArtwork.scheme == 'https' &&
                 catalogArtwork.host.isNotEmpty
             ? catalogArtwork
@@ -109,7 +108,14 @@ class ReneeOnlinePlayback {
 
       StreamingPlaybackIssue? providerIssue;
       StreamingPlaybackIssue? pipelineIssue;
-      final directResolver = YouTubeMusicDirectResolver();
+      // A future, user-consented sign-in flow may provide an encrypted
+      // on-device Music session. Never attempt to read Google credentials from
+      // Safari, the Keychain, or another app without explicit authorization.
+      final signedInSession = await const YouTubeMusicSessionStore().read();
+      if (!isCurrent()) return superseded;
+      final directResolver = YouTubeMusicDirectResolver(
+        signedInSession: signedInSession,
+      );
       final extractedResolver = YouTubeExplodeAudioResolver();
       final fallbackResolver = YouTubeMusicFallbackResolver(
         explode: extractedResolver,

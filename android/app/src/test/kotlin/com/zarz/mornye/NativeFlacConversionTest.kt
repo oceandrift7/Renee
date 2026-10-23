@@ -141,18 +141,16 @@ class NativeFlacConversionTest {
                     var encoded = false
                     convertToStagedFlac(input.path, output.path, "flac", { arguments ->
                         if ("-compression_level" in arguments) encoded = true
-                        if (mode == "failed-remux" && "copy" in arguments) {
-                            false to "forced remux failure"
-                        } else {
-                            execute(arguments).also { result ->
-                                if (mode == "corrupt-remux" && "copy" in arguments && result.first) {
-                                    val bytes = output.readBytes()
-                                    for (index in bytes.size - 50 until bytes.size - 34) {
-                                        bytes[index] = (bytes[index].toInt() xor 0x55).toByte()
-                                    }
-                                    output.writeBytes(bytes)
-                                }
-                            }
+                        when {
+                            mode == "failed-remux" && "copy" in arguments ->
+                                false to "forced remux failure"
+                            // FFmpeg may tolerate a few damaged bytes in a FLAC
+                            // stream. Simulate a failed decode validation
+                            // deterministically instead of assuming every host
+                            // decoder will reject the same bit flip.
+                            mode == "corrupt-remux" && "null" in arguments && !encoded ->
+                                false to "forced remux decode validation failure"
+                            else -> execute(arguments)
                         }
                     }, {})
                     // Host FFmpeg versions may reject an otherwise valid MP4

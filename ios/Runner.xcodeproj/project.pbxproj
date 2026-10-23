@@ -30,6 +30,7 @@
 		A7FCE2361461C6C5FBC10719 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 403DAD1CF5A7C09D11A461EF /* Pods_RunnerTests.framework */; };
 		C03400000000000000000001 /* CoreBackend.swift in Sources */ = {isa = PBXBuildFile; fileRef = C03400000000000000000002 /* CoreBackend.swift */; };
 		D08A594730CF000100000001 /* DownloadProgressSubscription.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08A594730CF000100000002 /* DownloadProgressSubscription.swift */; };
+		AB7280000000000000000011 /* ReneeYouTubeMusicBrowser.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB7280000000000000000012 /* ReneeYouTubeMusicBrowser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -111,6 +112,7 @@
 		CE79C187C33AB874567BE0FA /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		D08A594730CF000100000002 /* DownloadProgressSubscription.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadProgressSubscription.swift; sourceTree = "<group>"; };
 		FB3B03A8181A430FB2E2796D /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
+		AB7280000000000000000012 /* ReneeYouTubeMusicBrowser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReneeYouTubeMusicBrowser.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -215,6 +217,7 @@
 				1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */,
 				1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */,
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
+				AB7280000000000000000012 /* ReneeYouTubeMusicBrowser.swift */,
 				F59500000000000000000004 /* PlayerWidgetBridge.swift */,
 				A0D100000000000000000002 /* AudioOutputView.swift */,
 				A0D100000000000000000004 /* MusicHaptics.swift */,
@@ -477,6 +480,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
+				AB7280000000000000000011 /* ReneeYouTubeMusicBrowser.swift in Sources */,
 				F59500000000000000000011 /* PlayerWidgetState.swift in Sources */,
 				F59500000000000000000012 /* PlayerControlIntent.swift in Sources */,
 				F59500000000000000000013 /* PlayerWidgetBridge.swift in Sources */,

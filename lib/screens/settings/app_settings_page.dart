@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart' show CupertinoActivityIndicator;
 import 'package:mornye/theme/mornye_icons.dart';
@@ -11,6 +13,7 @@ import 'package:mornye/widgets/settings_group.dart';
 import 'package:mornye/widgets/app_icon.dart';
 import 'package:mornye/widgets/app_loading_indicator.dart';
 import 'package:mornye/widgets/app_sliver_header.dart';
+import 'package:mornye/screens/settings/youtube_music_connection_page.dart';
 
 class AppSettingsPage extends ConsumerWidget {
   const AppSettingsPage({super.key});
@@ -43,6 +46,18 @@ class AppSettingsPage extends ConsumerWidget {
                         .read(settingsProvider.notifier)
                         .setShowExtensionStore(v),
                   ),
+                  if (Platform.isIOS)
+                    SettingsItem(
+                      icon: Icons.account_circle_outlined,
+                      title: 'YouTube Music connection (experimental)',
+                      subtitle:
+                          'Connect a private on-device YouTube Music session',
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const YouTubeMusicConnectionPage(),
+                        ),
+                      ),
+                    ),
                   _VerificationBrowserModeSelector(
                     currentMode: settings.extensionVerificationBrowserMode,
                     onChanged: (mode) => ref
@@ -305,8 +320,9 @@ class _UpdateChannelSelector extends StatelessWidget {
                       currentChannel == 'preview'
                           ? context.l10n.optionsUpdateChannelPreview
                           : context.l10n.optionsUpdateChannelStable,
-                      style: Theme.of(context).textTheme.bodyMedium
-                          ?.copyWith(color: colorScheme.onSurfaceVariant),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -341,8 +357,9 @@ class _UpdateChannelSelector extends StatelessWidget {
               Expanded(
                 child: Text(
                   context.l10n.optionsUpdateChannelWarning,
-                  style: Theme.of(context).textTheme.bodySmall
-                      ?.copyWith(color: colorScheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
             ],

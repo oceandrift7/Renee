@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:mornye/utils/logger.dart';
 import 'package:mornye/services/playback_equalizer.dart';
+import 'package:mornye/services/streaming/network_audio_header_proxy.dart';
 
 final _log = AppLogger('AudioOutput');
 
@@ -220,12 +221,20 @@ class MusicPlaybackDeck {
     _source = null;
     _routeLost = false;
     _nativeStarted = false;
+    // BitChord/Lokal-style client-bound media headers must accompany *every*
+    // AVPlayer range request. Route through an authenticated, loopback-only
+    // byte-range relay instead of passing an unusable raw URL to AVPlayer.
+    // Nothing is downloaded to disk; the relay forwards requests as needed.
     if (headers.isNotEmpty) {
-      throw UnsupportedError(
-        'Custom stream request headers are not supported by the native player',
+      final localUrl = await NetworkAudioHeaderProxy.shared.prepare(
+        Uri.parse(url),
+        headers: headers,
       );
+      await _setOrdinarySource(UrlSource(localUrl.toString()));
+    } else {
+      NetworkAudioHeaderProxy.shared.revoke();
+      await _setOrdinarySource(UrlSource(url));
     }
-    await _setOrdinarySource(UrlSource(url));
   }
 
   Future<void> setSource(
@@ -238,6 +247,7 @@ class MusicPlaybackDeck {
     bool dapExclusive = false,
   }) async {
     await stop();
+    NetworkAudioHeaderProxy.shared.revoke();
     _source = source;
     _routeLost = false;
     _nativeStarted = false;
