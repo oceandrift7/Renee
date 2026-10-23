@@ -18,8 +18,7 @@ class YouTubeMusicConnectionPage extends StatefulWidget {
 
 class _YouTubeMusicConnectionPageState
     extends State<YouTubeMusicConnectionPage> {
-  static const _browser =
-      MethodChannel('com.renee/ytmusic_auth_browser');
+  static const _browser = MethodChannel('com.renee/ytmusic_auth_browser');
   static const _sessions = YouTubeMusicSessionStore();
 
   bool _busy = false;
@@ -65,19 +64,25 @@ class _YouTubeMusicConnectionPageState
       });
     } on MissingPluginException {
       if (mounted) {
-        setState(() => _message = 'This browser is only available in the iOS build.');
+        setState(
+          () => _message = 'This browser is only available in the iOS build.',
+        );
       }
     } on PlatformException {
       if (mounted) {
-        setState(() => _message =
-            'The YouTube Music browser could not open. Try again.');
+        setState(
+          () =>
+              _message = 'The YouTube Music browser could not open. Try again.',
+        );
       }
     } catch (_) {
       // Never display session cookie values, credentials, or native exceptions.
       if (mounted) {
-        setState(() => _message =
-            'The browser did not provide a usable signed-in session. '
-            'Google may be blocking embedded sign-in.');
+        setState(
+          () => _message =
+              'The browser did not provide a usable signed-in session. '
+              'Google may be blocking embedded sign-in.',
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -121,8 +126,10 @@ class _YouTubeMusicConnectionPageState
       });
     } catch (_) {
       if (mounted) {
-        setState(() => _message =
-            'Could not remove the saved session. Please try again.');
+        setState(
+          () => _message =
+              'Could not remove the saved session. Please try again.',
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -137,8 +144,11 @@ class _YouTubeMusicConnectionPageState
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Icon(Icons.account_circle_outlined,
-              size: 56, color: theme.colorScheme.primary),
+          Icon(
+            Icons.account_circle_outlined,
+            size: 56,
+            color: theme.colorScheme.primary,
+          ),
           const SizedBox(height: 16),
           Text(
             _saved ? 'Session saved on this iPhone' : 'Not connected',
@@ -170,7 +180,9 @@ class _YouTubeMusicConnectionPageState
           FilledButton.icon(
             onPressed: _busy || !Platform.isIOS ? null : _connect,
             icon: const Icon(Icons.open_in_browser),
-            label: Text(_saved ? 'Replace saved session' : 'Open YouTube Music browser'),
+            label: Text(
+              _saved ? 'Replace saved session' : 'Open YouTube Music browser',
+            ),
           ),
           if (_saved) ...[
             const SizedBox(height: 8),
