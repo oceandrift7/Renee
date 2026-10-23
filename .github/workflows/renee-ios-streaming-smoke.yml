@@ -19,7 +19,7 @@ on:
   workflow_dispatch:
     inputs:
       youtube_video_id:
-        description: 'Optional public 11-character video ID for live provider playback validation'
+        description: 'Optional publicly playable 11-character YouTube video ID for live AVPlayer validation'
         type: string
         required: false
         default: ''
@@ -94,12 +94,16 @@ jobs:
           flutter test integration_test/renee_youtube_js_bridge_test.dart \
             -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded \
             2>&1 | tee build/renee-diagnostics/javascriptcore-test.log
-      - name: Optional live YouTube Music iOS playback check (provider-dependent)
-        continue-on-error: true
+      - name: Live public YouTube audio playback check (provider-dependent)
+        # Do not let a bot/login rejection silently turn the workflow green.
+        # Flutter simulator compilation can hang before the Dart timeout starts.
+        timeout-minutes: 20
         if: ${{ github.event_name == 'push' || inputs.youtube_video_id != '' }}
         shell: bash
         env:
-          RENEE_TEST_ID: ${{ github.event_name == 'push' && 'Z85lxckrtzg' || inputs.youtube_video_id }}
+          # Baseline is the publicly available short 'Me at the zoo' video,
+          # not a commercial music recording that may require authentication.
+          RENEE_TEST_ID: ${{ github.event_name == 'push' && 'jNQXAC9IVRw' || inputs.youtube_video_id }}
         run: |
           set -euo pipefail
           if [[ ! "$RENEE_TEST_ID" =~ ^[A-Za-z0-9_-]{11}$ ]]; then
