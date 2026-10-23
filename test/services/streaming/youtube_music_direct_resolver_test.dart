@@ -278,6 +278,8 @@ void main() {
   test(
     'uses a public visitor ID in client context and request header',
     () async {
+      const longVisitor = 'CgtXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX=';
+      const rawJsVisitor = r'CgtXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\u003d';
       final client = MockClient((request) async {
         if (request.method == 'GET') {
           if (request.url.host.endsWith('.googlevideo.com')) {
@@ -288,15 +290,15 @@ void main() {
             );
           }
           return http.Response(
-            '<script>{"visitorData":"CgtTestVisitorValue123"}</script>',
+            '<script>{"VISITOR_DATA":"$rawJsVisitor"}</script>',
             200,
           );
         }
-        expect(request.headers['x-goog-visitor-id'], 'CgtTestVisitorValue123');
+        expect(request.headers['x-goog-visitor-id'], longVisitor);
         final payload = jsonDecode(request.body) as Map<String, dynamic>;
         final context = payload['context'] as Map<String, dynamic>;
         final clientContext = context['client'] as Map<String, dynamic>;
-        expect(clientContext['visitorData'], 'CgtTestVisitorValue123');
+        expect(clientContext['visitorData'], longVisitor);
         expect(clientContext['clientName'], 'VISIONOS');
         expect(request.headers['x-youtube-client-name'], '101');
         return http.Response(
@@ -314,6 +316,29 @@ void main() {
       client.close();
     },
   );
+
+  test('parses JavaScript-escaped and long anonymous visitor data', () {
+    final visitor = 'Cgt' + List.filled(360, 'X').join() + '=';
+    final escaped = 'Cgt' + List.filled(360, 'X').join() + r'\u003d';
+    expect(
+      YouTubeMusicDirectResolver.visitorFromHomepage(
+        '<script>{"VISITOR_DATA":"$escaped"}</script>',
+      ),
+      visitor,
+    );
+    expect(
+      YouTubeMusicDirectResolver.visitorFromHomepage(
+        r'<script>{"EOM_VISITOR_DATA":"CgtLongTest\x3d"}</script>',
+      ),
+      'CgtLongTest=',
+    );
+    expect(
+      YouTubeMusicDirectResolver.visitorFromHomepage(
+        '<script>{"VISITOR_DATA":"Cgt@@invalid"}</script>',
+      ),
+      isNull,
+    );
+  });
 
   test(
     'falls back after LOGIN_REQUIRED without leaking failed status',
