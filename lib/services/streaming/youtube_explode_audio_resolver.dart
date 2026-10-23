@@ -139,7 +139,7 @@ class YouTubeExplodeAudioResolver {
         final byDistance = aDiff.compareTo(bDiff);
         return byDistance != 0
             ? byDistance
-            : b.bitrate.compareTo(a.bitrate);
+            : a.bitrate.compareTo(b.bitrate);
       });
     final seen = <Uri>{};
     return [
@@ -198,8 +198,11 @@ class YouTubeExplodeAudioResolver {
       }
       List<ExtractedAacCandidate> found;
       try {
-        found = await _loadManifest(videoId, profile)
-            .timeout(manifestTimeout);
+        found = await _loadManifest(videoId, profile).timeout(
+          profile.endsWith('_CIPHER')
+              ? manifestTimeout + jsStartupTimeout
+              : manifestTimeout,
+        );
       } on TimeoutException {
         attempts.add('$profile:TIMEOUT');
         continue;
