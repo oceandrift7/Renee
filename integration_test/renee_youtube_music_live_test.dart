@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mornye/services/music_playback_deck.dart';
 import 'package:mornye/services/streaming/youtube_music_direct_resolver.dart';
+import 'package:mornye/services/streaming/youtube_explode_audio_resolver.dart';
+import 'package:mornye/services/streaming/youtube_music_fallback_resolver.dart';
 import 'package:mornye/services/streaming/streaming_playback_issue.dart';
 
 /// An explicit, real-provider check: requires a publicly playable YouTube
@@ -21,8 +23,13 @@ void main() {
   testWidgets(
     'Real YouTube Music resource starts in native iOS AVPlayer',
     (tester) async {
-      final resolver = YouTubeMusicDirectResolver(
+      final direct = YouTubeMusicDirectResolver(
         requestTimeout: const Duration(seconds: 15),
+      );
+      final extracted = YouTubeExplodeAudioResolver();
+      final resolver = YouTubeMusicFallbackResolver(
+        explode: extracted,
+        direct: direct,
       );
       final deck = MusicPlaybackDeck(playerId: 'renee-live-ytm-test');
       final started = Stopwatch()..start();
@@ -64,7 +71,8 @@ void main() {
             reason: 'A resolved URL alone does not prove audible playback.');
       } finally {
         await deck.dispose();
-        resolver.close();
+        direct.close();
+        extracted.close();
       }
     },
     skip: videoId.isEmpty,
