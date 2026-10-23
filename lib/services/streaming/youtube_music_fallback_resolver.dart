@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'streaming_playback_issue.dart';
 import 'streaming_source.dart';
 import 'youtube_explode_audio_resolver.dart';
@@ -22,17 +24,33 @@ class YouTubeMusicFallbackResolver {
     var extractorAttempts = <String>[];
     StreamingPlaybackIssue? directIssue;
 
-    final enhanced = await explode.resolve(
-      videoId,
-      onFailure: (attempts) => extractorAttempts = attempts,
-    );
-    if (enhanced != null) return enhanced;
+    try {
+      final enhanced = await explode.resolve(
+        videoId,
+        onFailure: (attempts) => extractorAttempts = attempts,
+      ).timeout(const Duration(seconds: 65));
+      if (enhanced != null) return enhanced;
+    } on TimeoutException {
+      extractorAttempts = ['EXTRACT:TIMEOUT'];
+    } catch (_) {
+      extractorAttempts = ['EXTRACT:FAILED'];
+    }
 
-    final fallback = await direct.resolve(
-      videoId,
-      onIssue: (issue) => directIssue = issue,
-    );
-    if (fallback != null) return fallback;
+    try {
+      final fallback = await direct.resolve(
+        videoId,
+        onIssue: (issue) => directIssue = issue,
+      ).timeout(const Duration(seconds: 36));
+      if (fallback != null) return fallback;
+    } on TimeoutException {
+      directIssue = const StreamingPlaybackIssue(
+        StreamingPlaybackIssueCode.youtubeTimeout,
+      );
+    } catch (_) {
+      directIssue = const StreamingPlaybackIssue(
+        StreamingPlaybackIssueCode.youtubeInvalidResponse,
+      );
+    }
 
     final issue = directIssue ??
         const StreamingPlaybackIssue(
