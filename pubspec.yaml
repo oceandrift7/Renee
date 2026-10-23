@@ -81,7 +81,7 @@ dependencies:
 
   video_player: ^2.14.1
 
-  xml: ^7.1.0
+  xml: ^6.6.1
   html: ^0.15.7
   dart_smb2: 0.1.3
   synchronized: ^3.4.0
