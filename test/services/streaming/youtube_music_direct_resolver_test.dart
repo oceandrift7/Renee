@@ -278,8 +278,8 @@ void main() {
   test(
     'uses a public visitor ID in client context and request header',
     () async {
-      final longVisitor = 'Cgt' + List.filled(350, 'X').join() + '=';
-      final rawJsVisitor = 'Cgt' + List.filled(350, 'X').join() + r'\u003d';
+      final longVisitor = 'Cgt${List.filled(350, 'X').join()}=';
+      final rawJsVisitor = 'Cgt${List.filled(350, 'X').join()}' r'\u003d';
       final client = MockClient((request) async {
         if (request.method == 'GET') {
           if (request.url.host.endsWith('.googlevideo.com')) {
