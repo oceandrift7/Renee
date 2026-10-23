@@ -35,7 +35,7 @@ void main() {
 
   test('selects 128kbps AAC with deduplicated 96kbps alternatives', () {
     final options = YouTubeExplodeAudioResolver.candidateUrls([
-      candidate(bitrate: 96000),
+      candidate(bitrate: 96000, host: 'rr3.googlevideo.com'),
       candidate(),
       candidate(),
       candidate(bitrate: 160000, host: 'rr2.googlevideo.com'),
