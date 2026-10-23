@@ -35,6 +35,7 @@ class YouTubePlayerProfile {
 
   /// Required by the anonymous embedded player client as thirdParty.embedUrl.
   final String? embedUrl;
+
   /// Googlevideo requires the same client identity on the media request.
   final bool mediaNeedsUserAgent;
 
