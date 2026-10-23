@@ -104,7 +104,7 @@ void main() {
     final client = MockClient((_) async => http.Response('no', 403));
     final resolver = YouTubeExplodeAudioResolver(
       probeClient: client,
-      manifestLookup: (_, __) async => [candidate()],
+      manifestLookup: (_, _) async => [candidate()],
     );
     List<String>? attempts;
     expect(await resolver.resolve('Z85lxckrtzg',
@@ -125,7 +125,7 @@ void main() {
     });
     final enhanced = YouTubeExplodeAudioResolver(
       probeClient: probe,
-      manifestLookup: (_, __) async => [candidate()],
+      manifestLookup: (_, _) async => [candidate()],
     );
     final direct = YouTubeMusicDirectResolver(client: unused);
     final combined = YouTubeMusicFallbackResolver(
@@ -153,7 +153,7 @@ void main() {
     });
     final enhanced = YouTubeExplodeAudioResolver(
       probeClient: probe,
-      manifestLookup: (_, __) async => const [],
+      manifestLookup: (_, _) async => const [],
     );
     final direct = YouTubeMusicDirectResolver(client: api);
     final combined = YouTubeMusicFallbackResolver(
