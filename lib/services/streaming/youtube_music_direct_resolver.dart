@@ -344,7 +344,7 @@ class YouTubeMusicDirectResolver {
       // Never forward signing cookies or Authorization to Googlevideo.
       final mediaHeaders = <String, String>{
         'User-Agent': headers['User-Agent']!,
-        'Referer': YouTubeMusicSignedSession.origin + '/',
+        'Referer': '${YouTubeMusicSignedSession.origin}/',
       };
       for (final uri in [picked.uri, ...picked.fallbackUris]) {
         if (await _probeMedia(uri, headers: mediaHeaders) == null) {
