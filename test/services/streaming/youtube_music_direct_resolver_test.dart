@@ -150,6 +150,11 @@ void main() {
       var calls = 0;
       final client = MockClient((request) async {
         if (request.method == 'GET') {
+          if (request.url.host.endsWith('.googlevideo.com')) {
+            expect(request.headers['range'], 'bytes=0-16383');
+            return http.Response('audio bytes', 206,
+                headers: {'content-type': 'audio/mp4'});
+          }
           return http.Response('<html></html>', 200);
         }
         calls++;
@@ -264,6 +269,10 @@ void main() {
   test('uses a public visitor ID in client context and request header', () async {
     final client = MockClient((request) async {
       if (request.method == 'GET') {
+        if (request.url.host.endsWith('.googlevideo.com')) {
+          return http.Response('audio bytes', 206,
+              headers: {'content-type': 'audio/mp4'});
+        }
         return http.Response(
           '<script>{"visitorData":"CgtTestVisitorValue123"}</script>',
           200,
@@ -289,7 +298,12 @@ void main() {
   test('falls back after LOGIN_REQUIRED without leaking failed status', () async {
     var posted = 0;
     final client = MockClient((request) async {
-      if (request.method == 'GET') return http.Response('', 503);
+      if (request.method == 'GET') {
+        return request.url.host.endsWith('.googlevideo.com')
+            ? http.Response('audio bytes', 206,
+                headers: {'content-type': 'audio/mp4'})
+            : http.Response('', 503);
+      }
       posted++;
       final body = jsonDecode(request.body) as Map<String, dynamic>;
       expect(body['videoId'], 'Z85lxckrtzg');
@@ -337,4 +351,92 @@ void main() {
     expect(issues.single.userMessage, isNot(contains('secret-private-url')));
     client.close();
   });
+
+  test('skips a refused media URL and verifies the next client', () async {
+    var posts = 0;
+    var probes = 0;
+    final client = MockClient((request) async {
+      if (request.method == 'GET') {
+        if (!request.url.host.endsWith('.googlevideo.com')) {
+          return http.Response('', 503);
+        }
+        probes++;
+        expect(request.headers['range'], 'bytes=0-16383');
+        return probes == 1
+            ? http.Response('forbidden', 403)
+            : http.Response('audio bytes', 206,
+                headers: {'content-type': 'audio/mp4'});
+      }
+      posts++;
+      return http.Response(jsonEncode(payload([
+        {
+          ...aac,
+          'url': 'https://rr${posts}.googlevideo.com/videoplayback?expire=9999999999',
+        },
+      ])), 200);
+    });
+    final resolver = YouTubeMusicDirectResolver(client: client);
+    final issues = <StreamingPlaybackIssue>[];
+    final result = await resolver.resolve('Z85lxckrtzg', onIssue: issues.add);
+    expect(result?.uri.host, 'rr2.googlevideo.com');
+    expect(posts, 2);
+    expect(probes, 2);
+    expect(issues, isEmpty);
+    client.close();
+  });
+
+  test('uses verified AAC backup when primary media is rejected', () async {
+    var probes = 0;
+    var posts = 0;
+    final client = MockClient((request) async {
+      if (request.method == 'GET') {
+        if (!request.url.host.endsWith('.googlevideo.com')) {
+          return http.Response('', 503);
+        }
+        probes++;
+        return request.url.host == 'rr1.googlevideo.com'
+            ? http.Response('<html>challenge</html>', 200,
+                headers: {'content-type': 'text/html'})
+            : http.Response('audio bytes', 206,
+                headers: {'content-type': 'audio/mp4'});
+      }
+      posts++;
+      return http.Response(jsonEncode(payload([
+        aac,
+        {
+          ...aac,
+          'bitrate': 96000,
+          'url': 'https://rr2.googlevideo.com/videoplayback?expire=9999999999',
+        },
+      ])), 200);
+    });
+    final resolver = YouTubeMusicDirectResolver(client: client);
+    final result = await resolver.resolve('Z85lxckrtzg');
+    expect(result?.uri.host, 'rr2.googlevideo.com');
+    expect(posts, 1);
+    expect(probes, 2);
+    client.close();
+  });
+
+  test('reports media rejection after every profile fails verification', () async {
+    var posts = 0;
+    final client = MockClient((request) async {
+      if (request.method == 'GET') {
+        return request.url.host.endsWith('.googlevideo.com')
+            ? http.Response('not audio', 403)
+            : http.Response('', 503);
+      }
+      posts++;
+      return http.Response(jsonEncode(payload([aac])), 200);
+    });
+    final resolver = YouTubeMusicDirectResolver(client: client);
+    StreamingPlaybackIssue? issue;
+    expect(await resolver.resolve('Z85lxckrtzg',
+        onIssue: (value) => issue = value), isNull);
+    expect(posts, 4);
+    expect(issue?.clientAttempts, hasLength(4));
+    expect(issue?.clientAttempts, everyElement(contains('MEDIA_HTTP_403')));
+    client.close();
+  });
+
 }
