@@ -163,6 +163,7 @@ jobs:
           set -euo pipefail
           # Keep the full Xcode diagnostics when Flutter's summary only reports
           # a generic provisioning or compilation failure.
+          mkdir -p build
           if ! flutter build ios --release --no-codesign --target lib/main.dart -v > build/renee-ios-build.log 2>&1; then
             grep -nE 'error:|Error Domain|provisioning|Provisioning|Signing|Failed to build|PhaseScriptExecution|Command PhaseScriptExecution|BUILD FAILED|^.*(Error|error|failed):' build/renee-ios-build.log | tail -100 | cut -c1-600 || true
             tail -100 build/renee-ios-build.log
