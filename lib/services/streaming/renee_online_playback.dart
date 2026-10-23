@@ -11,6 +11,8 @@ import 'streaming_playback_coordinator.dart';
 import 'streaming_source.dart';
 import 'track_matcher.dart';
 import 'youtube_music_direct_resolver.dart';
+import 'youtube_explode_audio_resolver.dart';
+import 'youtube_music_fallback_resolver.dart';
 import 'youtube_music_streaming_source.dart';
 
 /// One-shot online playback: resolve a fresh URL for every Play request and
@@ -108,8 +110,13 @@ class ReneeOnlinePlayback {
       StreamingPlaybackIssue? providerIssue;
       StreamingPlaybackIssue? pipelineIssue;
       final directResolver = YouTubeMusicDirectResolver();
+      final extractedResolver = YouTubeExplodeAudioResolver();
+      final fallbackResolver = YouTubeMusicFallbackResolver(
+        explode: extractedResolver,
+        direct: directResolver,
+      );
       final youtube = YouTubeMusicStreamingSource(
-        resolveAudio: (id) => directResolver.resolve(
+        resolveAudio: (id) => fallbackResolver.resolve(
           id,
           onIssue: (issue) => providerIssue = issue,
         ),
@@ -144,6 +151,7 @@ class ReneeOnlinePlayback {
       } finally {
         youtube.close();
         directResolver.close();
+        extractedResolver.close();
       }
     } catch (_) {
       if (!isCurrent()) return superseded;
