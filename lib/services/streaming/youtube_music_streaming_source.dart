@@ -20,7 +20,7 @@ class YouTubeMusicStreamingSource implements StreamingSource {
   YouTubeMusicStreamingSource({
     required YouTubeAudioResourceResolver resolveAudio,
     YouTubeMusicSearch? catalogSearch,
-    this.lookupTimeout = const Duration(seconds: 60),
+    this.lookupTimeout = const Duration(seconds: 110),
   }) : _resolveAudio = resolveAudio,
        _search = catalogSearch ?? YouTubeMusicSearch(),
        _ownsSearch = catalogSearch == null;
@@ -28,7 +28,7 @@ class YouTubeMusicStreamingSource implements StreamingSource {
   final YouTubeAudioResourceResolver _resolveAudio;
   final YouTubeMusicSearch _search;
   final bool _ownsSearch;
-  // Accommodate sequential client fallback and two short media probes per client.
+  // Allow SDK-less and cipher-aware extraction before legacy client fallback.
   final Duration lookupTimeout;
 
   @override
