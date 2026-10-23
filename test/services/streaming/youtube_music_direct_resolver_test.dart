@@ -346,13 +346,18 @@ void main() {
       var posted = 0;
       final client = MockClient((request) async {
         if (request.method == 'GET') {
-          return request.url.host.endsWith('.googlevideo.com')
-              ? http.Response(
-                  'audio bytes',
-                  206,
-                  headers: {'content-type': 'audio/mp4'},
-                )
-              : http.Response('', 503);
+          if (request.url.host.endsWith('.googlevideo.com')) {
+            expect(
+              request.headers['user-agent'],
+              contains('com.google.android.apps.youtube.vr.oculus/1.65.10'),
+            );
+            return http.Response(
+              'audio bytes',
+              206,
+              headers: {'content-type': 'audio/mp4'},
+            );
+          }
+          return http.Response('', 503);
         }
         posted++;
         final body = jsonDecode(request.body) as Map<String, dynamic>;
@@ -373,6 +378,7 @@ void main() {
       final resolver = YouTubeMusicDirectResolver(client: client);
       final result = await resolver.resolve('Z85lxckrtzg', onIssue: issues.add);
       expect(result?.uri.host, 'rr1.googlevideo.com');
+      expect(result?.headers['User-Agent'], contains('youtube.vr.oculus'));
       expect(posted, 2);
       expect(issues, isEmpty);
       client.close();
