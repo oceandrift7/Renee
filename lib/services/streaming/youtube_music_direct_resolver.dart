@@ -54,6 +54,7 @@ class YouTubeMusicDirectResolver {
     http.Client? client,
     this.requestTimeout = const Duration(seconds: 5),
     this.visitorTimeout = const Duration(seconds: 3),
+    this.probeTimeout = const Duration(seconds: 4),
     List<YouTubePlayerProfile>? profiles,
   }) : _client = client ?? http.Client(),
        _ownsClient = client == null,
@@ -63,6 +64,7 @@ class YouTubeMusicDirectResolver {
   final bool _ownsClient;
   final Duration requestTimeout;
   final Duration visitorTimeout;
+  final Duration probeTimeout;
   final List<YouTubePlayerProfile> _profiles;
 
   static const int minimumAudioBitrate = 96000;
@@ -147,6 +149,49 @@ class YouTubeMusicDirectResolver {
     } catch (_) {
       // Bootstrap is optional. Never display an HTML response or token.
       return null;
+    }
+  }
+
+  /// Check a small byte range before handing any signed URL to AVPlayer.
+  /// No complete song is downloaded, and signed URLs never enter diagnostics.
+  Future<String?> _probeMedia(Uri url) async {
+    try {
+      final request = http.Request('GET', url)
+        ..followRedirects = false
+        ..headers['Range'] = 'bytes=0-16383';
+      final response = await _client.send(request).timeout(probeTimeout);
+      if (response.statusCode != 200 && response.statusCode != 206) {
+        return 'MEDIA_HTTP_${response.statusCode}';
+      }
+      final contentType =
+          (response.headers['content-type'] ?? '').split(';').first.trim().toLowerCase();
+      if (contentType.isNotEmpty &&
+          !contentType.startsWith('audio/') &&
+          !contentType.startsWith('video/') &&
+          contentType != 'application/octet-stream') {
+        return 'MEDIA_TYPE';
+      }
+      final chunk = await response.stream.first.timeout(probeTimeout);
+      if (chunk.isEmpty) return 'MEDIA_EMPTY';
+      final prefix = ascii.decode(chunk.take(96).toList(), allowInvalid: true)
+          .trimLeft()
+          .toLowerCase();
+      if (prefix.startsWith('<!doctype html') ||
+          prefix.startsWith('<html') ||
+          prefix.startsWith('<?xml')) {
+        return 'MEDIA_CHALLENGE';
+      }
+      return null;
+    } on TimeoutException {
+      return 'MEDIA_TIMEOUT';
+    } on SocketException {
+      return 'MEDIA_NETWORK';
+    } on http.ClientException {
+      return 'MEDIA_NETWORK';
+    } on StateError {
+      return 'MEDIA_EMPTY';
+    } catch (_) {
+      return 'MEDIA_ERROR';
     }
   }
 
@@ -257,7 +302,28 @@ class YouTubeMusicDirectResolver {
           continue;
         }
         final resource = resourceFromPlayerResponse(decoded);
-        if (resource != null) return resource;
+        if (resource != null) {
+          // If Googlevideo refuses one client, try its AAC backup and then
+          // a different player-client profile rather than failing playback.
+          final urls = [resource.uri, ...resource.fallbackUris];
+          String? lastFailure;
+          for (final url in urls) {
+            final refusal = await _probeMedia(url);
+            if (refusal != null) {
+              lastFailure = refusal;
+              continue;
+            }
+            return StreamResource(uri: url);
+          }
+          record(
+            profile,
+            const StreamingPlaybackIssue(
+              StreamingPlaybackIssueCode.noAudioResource,
+            ),
+            lastFailure ?? 'MEDIA_REJECTED',
+          );
+          continue;
+        }
         final data = decoded['streamingData'];
         final hasFormats = data is Map &&
             ((data['adaptiveFormats'] is List &&
