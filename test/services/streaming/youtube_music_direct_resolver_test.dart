@@ -439,4 +439,32 @@ void main() {
     client.close();
   });
 
+
+  test('cools down media-refused clients for the same song only', () async {
+    var posts = 0;
+    final client = MockClient((request) async {
+      if (request.method == 'GET') {
+        return request.url.host.endsWith('.googlevideo.com')
+            ? http.Response('refused', 403)
+            : http.Response('', 503);
+      }
+      posts++;
+      return http.Response(jsonEncode(payload([aac])), 200);
+    });
+    final resolver = YouTubeMusicDirectResolver(client: client);
+    final firstIssues = <StreamingPlaybackIssue>[];
+    expect(await resolver.resolve('Z85lxckrtzg', onIssue: firstIssues.add),
+        isNull);
+    expect(posts, 4);
+    final secondIssues = <StreamingPlaybackIssue>[];
+    expect(await resolver.resolve('Z85lxckrtzg', onIssue: secondIssues.add),
+        isNull);
+    expect(posts, 4);
+    expect(secondIssues.single.clientAttempts,
+        everyElement(contains('MEDIA_COOLDOWN')));
+    expect(await resolver.resolve('abcdefghijk'), isNull);
+    expect(posts, 8);
+    client.close();
+  });
+
 }
