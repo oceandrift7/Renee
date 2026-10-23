@@ -52,7 +52,9 @@ class YouTubeMusicSignedSession {
     if (sid == null ||
         !RegExp(r'^[0-9A-Za-z._%-]{1,2048}$').hasMatch(sid) ||
         !RegExp(r'^\d{1,3}$').hasMatch(authUser) ||
-        !RegExp(r'^[0-9A-Za-z._-]{1,96}
+        !RegExp(r'^[0-9A-Za-z._-]{1,96}$').hasMatch(clientVersion) ||
+        (apiKey != null &&
+            !RegExp(r'^AIza[0-9A-Za-z_-]{20,100}$').hasMatch(apiKey!))) {
       return null;
     }
     final entries = <String>[];
