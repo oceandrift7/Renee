@@ -22,6 +22,7 @@ void main() {
       'script': 'JSON.stringify(jsc({requests: [1, 2, 3]}))',
     });
     expect(raw, isNotNull);
-    expect(jsonDecode(raw!)['responses'], [1, 2, 3]);
+    final decoded = jsonDecode(raw!) as Map<String, dynamic>;
+    expect(decoded['responses'], [1, 2, 3]);
   });
 }
