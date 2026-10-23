@@ -1,5 +1,6 @@
 import 'package:mornye/services/music_player_service.dart';
 
+import 'network_audio_header_proxy.dart';
 import 'streaming_playback_issue.dart';
 import 'streaming_provider_policy.dart';
 import 'streaming_match_resolver.dart';
@@ -76,13 +77,6 @@ class StreamingPlaybackCoordinator {
     }
 
     final resource = selected.resource;
-    // audioplayers cannot currently forward custom headers to iOS AVPlayer.
-    if (resource.headers.isNotEmpty) {
-      onIssue?.call(
-        const StreamingPlaybackIssue(StreamingPlaybackIssueCode.invalidResource),
-      );
-      return false;
-    }
 
     // The catalog owns display metadata; the online provider only supplies
     // a recording ID and playable resource. Never replace catalog titles,
@@ -93,7 +87,9 @@ class StreamingPlaybackCoordinator {
       if (isCurrentRequest != null && !isCurrentRequest()) return false;
       if (url.scheme != 'https' ||
           url.host.isEmpty ||
-          url.userInfo.isNotEmpty) {
+          url.userInfo.isNotEmpty ||
+          (resource.headers.isNotEmpty &&
+              !NetworkAudioHeaderProxy.isTrustedUpstream(url))) {
         onIssue?.call(
           const StreamingPlaybackIssue(
             StreamingPlaybackIssueCode.invalidResource,
@@ -105,6 +101,7 @@ class StreamingPlaybackCoordinator {
       final item = PlayableMedia(
         id: 'stream:${selected.sourceId}:${selected.track.id}',
         source: url.toString(),
+        networkHeaders: resource.headers,
         title: track.title,
         artist: track.artist,
         album: track.album ?? '',
