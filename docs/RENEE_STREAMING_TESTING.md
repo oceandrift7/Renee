@@ -67,6 +67,46 @@ Record the iPhone model, iOS version, song, network type, observed startup
 time, stall count, and any error message. **Never share signed stream URLs,
 authentication headers, session tokens, or accounts** in public issues.
 
+## Native iOS YouTube Music browser experiment (WKWebView)
+
+An **experimental YouTube Music connection** entry now appears under
+**Settings → App Settings** on iOS. Selecting it opens the real
+`https://music.youtube.com/` in a new, **ephemeral WKWebView**. Renée does
+not spoof the browser user agent, inject login JavaScript, read password
+inputs or obtain credentials from Safari.
+
+**Manual iPhone acceptance criteria** (no CI runner can perform Google
+login on a user's behalf):
+
+1. Open Settings → App Settings → YouTube Music connection (experimental).
+   Confirm the native page loads the actual YouTube Music domain.
+2. Try normal interactive sign-in if offered. **If Google refuses embedded
+   browser sign-in, report the generic UI refusal**; do not collect
+   credentials or spoof the browser to defeat its account restrictions.
+3. Only when the top-level page is `https://music.youtube.com`, it exposes
+   `ytcfg.LOGGED_IN=true`, a client version, and the browser has a matching
+   YouTube-domain signing cookie, tap **Use session**.
+4. Confirm that **Not now** retains the browser but persists no secrets.
+   **Connect** explicitly allows a one-time handoff of YouTube-domain
+   cookies and the signed-in page's public client context to Flutter, which
+   checks them and saves them via `flutter_secure_storage` / iOS Keychain.
+5. Close/reopen Renée, and verify that the page shows **Session saved on this
+   iPhone**. Tap **Disconnect** and verify that Keychain-stored credentials
+   are removed. The browser uses non-persistent website data, so no Google
+   session cookies are left by this test browser after it is dismissed.
+6. Try a public YouTube recording and then an ordinary YouTube Music song.
+   Neither the UI, a successful cookie save, nor passing unit tests establishes
+   that audio playback works. Record only sanitized error codes, never cookies
+   or signed URLs. Finally lock the iPhone and check background buffering.
+
+**Important:** Apple's WKWebView support does not override Google's
+embedded OAuth sign-in restrictions. If Google displays
+`disallowed_useragent` or denies login, the experiment has found a
+platform limitation, not a reason to hard-code a fake browser identity.
+Opening Safari is a user convenience; it does *not* transfer Safari's
+cookies into Renée. A better, officially supported connection or playback
+provider may be required before account streaming can be shipped.
+
 ## `LOGIN_REQUIRED` investigation and signed-in session foundations
 
 `LOGIN_REQUIRED` **does not conclusively mean** that a user must type a
