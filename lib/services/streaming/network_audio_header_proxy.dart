@@ -82,8 +82,9 @@ class NetworkAudioHeaderProxy {
       throw ArgumentError('Unsupported upstream request header');
     }
     final server = await _listen();
+    final random = Random.secure();
     final token = base64UrlEncode(
-      List<int>.generate(24, (_) => Random.secure().nextInt(256)),
+      List<int>.generate(24, (_) => random.nextInt(256)),
     ).replaceAll('=', '');
     _track = _ProxyTrack(token, upstream, Map.of(headers));
     return Uri(
