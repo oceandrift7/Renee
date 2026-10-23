@@ -8,6 +8,9 @@ on:
       - 'integration_test/renee_youtube_js_bridge_test.dart'
       - 'ios/Runner/AppDelegate.swift'
       - 'pubspec.yaml'
+      - 'pubspec.lock'
+      - 'lib/utils/lyrics_parser.dart'
+      - 'test/lyrics_parser_test.dart'
       - 'integration_test/renee_youtube_music_live_test.dart'
       - 'lib/services/streaming/**'
       - 'lib/widgets/renee_stream_button.dart'
@@ -49,16 +52,23 @@ jobs:
             rust_backend/target
           key: renee-ios-smoke-${{ runner.os }}-${{ hashFiles('rust_backend/rust-toolchain.toml') }}-${{ hashFiles('rust_backend/Cargo.lock') }}
           restore-keys: renee-ios-smoke-${{ runner.os }}-
-      - name: Build native iOS backend for device and simulator
-        run: bash scripts/build_rust_backend.sh ios
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
           flutter-version-file: .fvmrc
           cache: true
-      - name: Fetch dependencies and configure native pods
+      # Fail quickly on shared Dart compilation errors before building Rust,
+      # booting a simulator, or consuming a macOS Xcode build.
+      - name: Fetch Flutter dependencies
+        run: flutter pub get
+      - name: Preflight shared Dart sources and TTML regression tests
         run: |
-          flutter pub get
+          flutter analyze lib/utils/lyrics_parser.dart lib/services/streaming
+          flutter test test/lyrics_parser_test.dart
+      - name: Build native iOS backend for device and simulator
+        run: bash scripts/build_rust_backend.sh ios
+      - name: Configure native iOS pods
+        run: |
           cd ios
           pod install
       - name: Start iPhone simulator
@@ -94,7 +104,6 @@ jobs:
             -d "$RENEE_SIM_ID" --timeout 180s --reporter expanded \
             --dart-define="RENEE_YTM_TEST_VIDEO_ID=$RENEE_TEST_ID"
       - name: Build unsigned iPhone app for physical-device testing
-        if: always()
         run: |
           set -euo pipefail
           # Keep the full Xcode diagnostics when Flutter's summary only reports
