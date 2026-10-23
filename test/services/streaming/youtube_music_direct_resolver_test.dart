@@ -475,6 +475,60 @@ void main() {
   });
 
   test(
+    'embedded profile supplies third-party context and verified audio',
+    () async {
+      var profileCalls = 0;
+      final payloadWithAudio = payload([aac]);
+      final client = MockClient((request) async {
+        if (request.method == 'GET') {
+          if (request.url.host.endsWith('.googlevideo.com')) {
+            expect(request.headers['range'], 'bytes=0-16383');
+            return http.Response(
+              'audio bytes',
+              206,
+              headers: {'content-type': 'audio/mp4'},
+            );
+          }
+          return http.Response('', 503);
+        }
+        profileCalls++;
+        final payload = jsonDecode(request.body) as Map<String, dynamic>;
+        final context = payload['context'] as Map<String, dynamic>;
+        final clientContext = context['client'] as Map<String, dynamic>;
+        if (profileCalls < 4) {
+          expect(context, isNot(contains('thirdParty')));
+          return http.Response(
+            jsonEncode({
+              'playabilityStatus': {'status': 'LOGIN_REQUIRED'},
+            }),
+            200,
+          );
+        }
+        expect(request.headers['x-youtube-client-name'], '56');
+        expect(request.headers['referer'], 'https://www.youtube.com/');
+        expect(clientContext['clientName'], 'WEB_EMBEDDED_PLAYER');
+        expect(clientContext['clientVersion'], '2.20260708.00.00');
+        expect(clientContext['userAgent'], contains('Safari'));
+        expect(
+          context['thirdParty'],
+          {'embedUrl': 'https://www.youtube.com/'},
+        );
+        return http.Response(jsonEncode(payloadWithAudio), 200);
+      });
+      // The fixture represents a successfully permitted embed, never a
+      // workaround for recordings YouTube reports as restricted.
+      final resolver = YouTubeMusicDirectResolver(client: client);
+      final issues = <StreamingPlaybackIssue>[];
+      final media = await resolver.resolve('Z85lxckrtzg', onIssue: issues.add);
+      expect(media?.uri.host, 'rr1.googlevideo.com');
+      expect(profileCalls, 4);
+      expect(issues, isEmpty);
+      resolver.close();
+      client.close();
+    },
+  );
+
+  test(
     'reports media rejection after every profile fails verification',
     () async {
       var posts = 0;
